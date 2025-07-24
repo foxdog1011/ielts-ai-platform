@@ -1,0 +1,14 @@
+{
+  "name": "ielts-ai-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "autoprefixer": "^10.4.21",
+    "openai": "^5.10.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11"
+  }
+}

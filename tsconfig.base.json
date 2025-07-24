@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ielts/ui": ["packages/ui/src"]
+    }
+  }
+}
