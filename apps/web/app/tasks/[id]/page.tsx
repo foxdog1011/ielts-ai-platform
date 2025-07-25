@@ -1,19 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { tasks, Task } from "@/lib/tasks";
 
-export default function TaskPage({ params }: { params: { id: string } }) {
+export default function TaskPage() {
+  const params = useParams();
+  const taskId = params?.id?.toString();
   const [essay, setEssay] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const router = useRouter();
 
-  const task: Task | undefined = tasks.find((t: Task) => t.id === params.id);
+  const task: Task | undefined = tasks.find((t: Task) => t.id === taskId);
 
   if (!task) return <div>Task not found.</div>;
 
+
   const handleSubmit = async () => {
+    console.log("🚀 handleSubmit triggered");
     const res = await fetch("/api/submit", {
       method: "POST",
       body: JSON.stringify({ id: task.id, essay }),
@@ -21,7 +25,7 @@ export default function TaskPage({ params }: { params: { id: string } }) {
     });
 
     const data = await res.json();
-    console.log("GPT Feedback JSON:", data.feedback);
+    console.log("API 回傳內容：", data);
     setFeedback(data.feedback);
   };
 
@@ -38,6 +42,7 @@ export default function TaskPage({ params }: { params: { id: string } }) {
       />
 
       <button
+        type="button"
         onClick={handleSubmit}
         className="bg-blue-500 text-white px-4 py-2 rounded"
       >
