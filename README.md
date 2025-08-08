@@ -1,4 +1,3 @@
-````markdown
 # IELTS AI Platform
 
 > Next.js monorepo for IELTS Writing & Speaking AI feedback
@@ -6,56 +5,65 @@
 ---
 
 ## Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Quick Start](#quick-start)
-- [Environment Variables](#environment-variables)
-- [Development Workflow](#development-workflow)
-- [API Contract](#api-contract)
-  - [/api/submit (Writing Task)](#apisubmit-writing-task)
-  - [/api/speaking (Speaking Task, optional)](#apispeaking-speaking-task-optional)
-- [Types & Validation](#types--validation)
-- [Docker Setup (Optional)](#docker-setup-optional)
-- [CI / GitHub Actions (Optional)](#ci--github-actions-optional)
-- [Roadmap](#roadmap)
-- [Contribution Guidelines](#contribution-guidelines)
-- [License](#license)
+
+* [Overview](#overview)
+* [Features](#features)
+* [Project Structure](#project-structure)
+* [Quick Start](#quick-start)
+* [Environment Variables](#environment-variables)
+* [Development Workflow](#development-workflow)
+* [API Contract](#api-contract)
+
+  * [/api/submit (Writing Task)](#apisubmit-writing-task)
+  * [/api/speaking (Speaking Task, optional)](#apispeaking-speaking-task-optional)
+* [Types & Validation](#types--validation)
+* [Docker Setup (Optional)](#docker-setup-optional)
+* [CI / GitHub Actions (Optional)](#ci--github-actions-optional)
+* [Roadmap](#roadmap)
+* [Contribution Guidelines](#contribution-guidelines)
+* [License](#license)
 
 ---
 
 ## Overview
+
 This project is the **IELTS AI Feedback Platform**, designed to simulate a real IELTS exam environment while providing actionable AI feedback.
-- **Writing Task 2**: Real-time word/character counting, validation before submission, AI feedback (Band scores, paragraph comments, improvements, rewritten version).
-- **Speaking**: 2-minute timer, recording controls (start/stop/re-record), prompt display, and optional audio upload with AI feedback.
+
+* **Writing Task 2**: Real-time word/character counting, validation before submission, AI feedback (Band scores, paragraph comments, improvements, rewritten version).
+* **Speaking**: 2-minute timer, recording controls (start/stop/re-record), prompt display, and optional audio upload with AI feedback.
 
 **Tech stack**: `Next.js (App Router) + TypeScript + TailwindCSS` with Monorepo structure (`apps/`, `packages/`). The AI backend integrates with OpenAI but can be swapped out.
 
 ---
 
 ## Features
+
 ### Writing
-- Real-time word/character count (default 250 words target)
-- Pre-submission validation (no empty/too short essays)
-- Visual feedback for Loading / Error / Success
-- AI feedback: Band scores, paragraph comments, rewritten version
-- Structured placeholders to guide essay format
+
+* Real-time word/character count (default 250 words target)
+* Pre-submission validation (no empty/too short essays)
+* Visual feedback for Loading / Error / Success
+* AI feedback: Band scores, paragraph comments, rewritten version
+* Structured placeholders to guide essay format
 
 ### Speaking
-- 2-minute countdown timer (MM:SS)
-- Recording controls: Start / Stop / Record again
-- Visual states (emoji / style changes)
-- Optional: Audio upload & playback, AI feedback
+
+* 2-minute countdown timer (MM\:SS)
+* Recording controls: Start / Stop / Record again
+* Visual states (emoji / style changes)
+* Optional: Audio upload & playback, AI feedback
 
 ### Home Page
-- Card-based navigation (Writing / Speaking)
-- Displays task requirements (word/time limits)
-- Gradient backgrounds, icons, highlights section
+
+* Card-based navigation (Writing / Speaking)
+* Displays task requirements (word/time limits)
+* Gradient backgrounds, icons, highlights section
 
 ---
 
 ## Project Structure
-```plaintext
+
+```
 .
 ├─ apps/
 │  └─ web/                # Next.js frontend (App Router, API Routes, UI)
@@ -66,7 +74,7 @@ This project is the **IELTS AI Feedback Platform**, designed to simulate a real 
 ├─ package.json           # Monorepo workspace config
 ├─ tsconfig.base.json
 └─ yarn.lock
-````
+```
 
 **Purpose:**
 
@@ -273,6 +281,3 @@ jobs:
 ## License
 
 MIT
-
-```
-```
