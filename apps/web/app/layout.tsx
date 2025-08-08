@@ -11,7 +11,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-200px)]">{children}</main>
+        <main className="mx-auto max-w-5xl px-4 py-10">
+          {children}
+        </main>
 
         <footer className="mx-auto max-w-5xl px-4 pb-10 text-xs text-gray-500">
           © {new Date().getFullYear()} IELTS AI – demo

@@ -2,11 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Typography tweaks */
 :root { --leading: 1.5; }
 body { line-height: var(--leading); }
-
 h1,h2,h3 { letter-spacing: -0.01em; }
 
-/***** utilities *****/
-.container-page { @apply mx-auto max-w-5xl px-4; }
+@layer utilities {
+  .container-page { @apply mx-auto max-w-5xl px-4; }
+}
