@@ -91,7 +91,7 @@ export default function TaskPage() {
     }
 
     return (
-      <div className="max-w-3xl mx-auto mt-10 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-blue-700">IELTS Speaking Task</h1>
           <p className="text-gray-600">You have 2 minutes to speak on this topic. Prepare for 1 minute first.</p>
@@ -109,7 +109,9 @@ export default function TaskPage() {
           {!isRecording && !hasRecorded && (
             <Button 
               onClick={startRecording}
-              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg"
+              variant="danger"
+              size="lg"
+              className="px-8"
             >
               🎤 Start Recording
             </Button>
@@ -122,7 +124,8 @@ export default function TaskPage() {
               </div>
               <Button 
                 onClick={stopRecording}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2"
+                variant="secondary"
+                size="md"
               >
                 ⏹️ Stop Recording
               </Button>
@@ -140,13 +143,15 @@ export default function TaskPage() {
                     setHasRecorded(false)
                     setRecordingTime(0)
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  variant="primary"
+                  size="md"
                 >
                   🔄 Record Again
                 </Button>
                 <Button 
                   onClick={() => alert('Submit functionality coming soon!')}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  variant="success"
+                  size="md"
                 >
                   📤 Submit for Feedback
                 </Button>
@@ -171,7 +176,7 @@ export default function TaskPage() {
 
   if (type === 'writing') {
     return (
-      <div className="max-w-3xl mx-auto mt-10 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-blue-700">IELTS Writing Task 2</h1>
           <p className="text-gray-600">Write at least 250 words discussing both views and giving your opinion.</p>
@@ -184,10 +189,10 @@ export default function TaskPage() {
           </div>
           <Textarea
             rows={12}
-            placeholder="Write your Task 2 essay here. Remember to:\n• Introduce the topic and state your opinion\n• Discuss both viewpoints with examples\n• Conclude by restating your position\n• Use formal language and clear structure"
+            placeholder="Write your Task 2 essay here. Remember to:&#10;• Introduce the topic and state your opinion&#10;• Discuss both viewpoints with examples&#10;• Conclude by restating your position&#10;• Use formal language and clear structure"
             value={essay}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEssay(e.target.value)}
-            className={`w-full ${error ? 'border-red-500' : ''}`}
+            error={!!error}
           />
           {wordCount > 0 && wordCount < 50 && (
             <p className="text-amber-600 text-sm"> Your essay is quite short. Aim for at least 250 words.</p>
@@ -203,7 +208,8 @@ export default function TaskPage() {
         <Button 
           onClick={handleSubmit}
           disabled={loadingState === 'submitting'}
-          className={`w-full ${loadingState === 'submitting' ? 'opacity-50 cursor-not-allowed' : ''}`}
+          size="lg"
+          className="w-full"
         >
           {loadingState === 'submitting' ? '✨ Getting AI Feedback...' : 'Submit for Feedback'}
         </Button>

@@ -1,13 +1,12 @@
 'use client'
 
-import { Button } from '@ielts/ui'
 import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
   const router = useRouter()
 
   return (
-    <div className="max-w-4xl mx-auto mt-20 space-y-8 text-center">
+    <div className="max-w-4xl mx-auto px-4 py-20 space-y-8 text-center">
       <div className="space-y-4">
         <h1 className="text-4xl font-bold text-blue-700">🎯 AI IELTS Feedback</h1>
         <p className="text-xl text-gray-600">Get instant AI-powered feedback on your IELTS practice</p>

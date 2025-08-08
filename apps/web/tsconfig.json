@@ -1,7 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": ".", // 讓 "@/..." 以本資料夾為根
+    "paths": {
+      "@/*": [
+        "./*"
+      ], // 支援 import "@/components/WordCounter"
+      "@ielts/ui": [
+        "../../packages/ui/src"
+      ],
+      "@packages/*": [
+        "../../packages/*"
+      ]
+    },
     "target": "ES2017",
     "lib": [
       "dom",
@@ -23,12 +34,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "paths": {
-      "@/*": ["./*"],
-      "@ielts/ui": ["../../packages/ui/src"],
-      "@packages/*": ["../../packages/*"]
-    },
-
+    "forceConsistentCasingInFileNames": true // **重要**：檔名大小寫不一致時會直接報錯（WSL/Linux 常見問題）
+    ,
     "plugins": [
       {
         "name": "next"

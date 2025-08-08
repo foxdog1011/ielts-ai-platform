@@ -4,9 +4,15 @@ import { NextResponse } from 'next/server'
 export async function POST(req: Request) {
   const { id, essay } = await req.json()
 
-  // 簡單模擬處理後回傳 resultId（這邊直接回傳 id 當作 resultId）
-  const resultId = id
+  if (!essay || essay.trim().length === 0) {
+    return NextResponse.json({ error: "Essay content is required" }, { status: 400 })
+  }
 
-  // 理想情況是這裡會寫入 DB，我們這裡簡化為暫存處理
-  return NextResponse.json({ resultId })
+  // Simple simulation of processing and returning resultId
+  const resultId = id || Date.now().toString()
+  
+  // TODO: In a real app, this would save to database
+  console.log(`Processing essay submission - ID: ${resultId}, Length: ${essay.length}`)
+
+  return NextResponse.json({ resultId, message: "Essay submitted successfully" })
 }
