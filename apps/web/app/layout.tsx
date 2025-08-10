@@ -1,4 +1,5 @@
-import './globals.css'
+// apps/web/app/layout.tsx
+import './globals.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
         </header>
 
-        <main className="mx-auto max-w-5xl px-4 py-10">
+        <main className="w-full mx-auto max-w-5xl px-4 py-10">
           {children}
         </main>
 
@@ -20,5 +21,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
       </body>
     </html>
-  )
+  );
 }

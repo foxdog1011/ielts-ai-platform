@@ -15,10 +15,13 @@ export default function SpeakingTaskPage() {
   const chunksRef = useRef<Blob[]>([])
 
   useEffect(() => {
-    let t: any
-    if (status === 'recording' && seconds > 0) t = setInterval(() => setSeconds((s) => s - 1), 1000)
-    else if (status === 'recording' && seconds === 0) handleStop()
+    if (status !== 'recording') return
+    const t = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 0)), 1000)
     return () => clearInterval(t)
+  }, [status])
+
+  useEffect(() => {
+    if (status === 'recording' && seconds === 0) handleStop()
   }, [status, seconds])
 
   function format(sec: number) {
@@ -33,7 +36,6 @@ export default function SpeakingTaskPage() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     const mr = new MediaRecorder(stream)
     mediaRecorderRef.current = mr
-
     mr.ondataavailable = (e) => chunksRef.current.push(e.data)
     mr.onstop = () => setStatus('finished')
     mr.start()
@@ -51,7 +53,7 @@ export default function SpeakingTaskPage() {
     chunksRef.current = []
   }
 
-  const tone = status === 'recording' ? 'warn' : status === 'finished' ? 'success' : 'info'
+  const tone: 'info' | 'warn' | 'success' = status === 'recording' ? 'warn' : status === 'finished' ? 'success' : 'info'
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -62,8 +64,9 @@ export default function SpeakingTaskPage() {
       <Card>
         <CardHeader title="IELTS Speaking (Part 2)" subtitle="Speak for up to 2 minutes." tone="speak" />
         <CardSection>
+          {/* 固定骨架，僅更新文字，避免初始結構差異 */}
           <div className="flex items-center justify-between">
-            <Badge tone={tone as any}>{status.toUpperCase()}</Badge>
+            <Badge tone={tone}>{status.toUpperCase()}</Badge>
             <div className="tabular-nums text-2xl font-semibold">{format(seconds)}</div>
           </div>
 
@@ -73,27 +76,28 @@ export default function SpeakingTaskPage() {
           </div>
 
           <div className="flex gap-3">
-            {status !== 'recording' && (
+            {status !== 'recording' ? (
               <Button onClick={handleStart} variant="speak">Start Recording</Button>
-            )}
-            {status === 'recording' && (
+            ) : (
               <Button variant="secondary" onClick={handleStop}>Stop</Button>
             )}
-            {status === 'finished' && (
-              <Button variant="ghost" onClick={handleRecordAgain}>Record Again</Button>
-            )}
+            <Button variant="ghost" onClick={handleRecordAgain} disabled={status !== 'finished'}>
+              Record Again
+            </Button>
           </div>
         </CardSection>
       </Card>
 
-      {status === 'finished' && (
-        <Card>
-          <CardHeader title="Next Step" subtitle="Audio playback & AI feedback coming next." tone="speak" />
-          <CardSection>
-            <div className="text-sm text-gray-700">We’ll add audio playback and AI feedback in the next phase.</div>
-          </CardSection>
-        </Card>
-      )}
+      <Card>
+        <CardHeader title="Next Step" subtitle="Audio playback & AI feedback coming next." tone="speak" />
+        <CardSection>
+          <div className="text-sm text-gray-700">
+            {status === 'finished'
+              ? 'Recording finished. Playback & feedback coming next.'
+              : 'We’ll add audio playback and AI feedback in the next phase.'}
+          </div>
+        </CardSection>
+      </Card>
     </div>
   )
 }
