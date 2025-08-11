@@ -2,7 +2,53 @@
 
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
-import { Button, Textarea } from '@ielts/ui'
+import * as React from 'react'
+// Using built-in components temporarily
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger' | 'success';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const Button = ({ children, className = '', variant = 'primary', size = 'md', ...props }: ButtonProps) => {
+  const baseStyles = "font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const variantStyles = {
+    primary: "bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500",
+    secondary: "bg-gray-200 hover:bg-gray-300 text-gray-900 focus:ring-gray-500", 
+    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
+    success: "bg-green-600 hover:bg-green-700 text-white focus:ring-green-500"
+  };
+  const sizeStyles = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-sm", 
+    lg: "px-6 py-3 text-base"
+  };
+  const disabledStyles = props.disabled ? "opacity-50 cursor-not-allowed" : "";
+  
+  return (
+    <button
+      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${disabledStyles} ${className}`.trim()}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  error?: boolean;
+}
+
+const Textarea = ({ className = '', error = false, ...props }: TextareaProps) => {
+  const baseStyles = "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder-gray-500 transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500";
+  const errorStyles = error ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "";
+  
+  return (
+    <textarea
+      className={`${baseStyles} ${errorStyles} ${className}`.trim()}
+      {...props}
+    />
+  );
+};
 
 type LoadingState = 'idle' | 'submitting' | 'success' | 'error'
 
@@ -108,25 +154,23 @@ export default function TaskPage() {
     }
 
     return (
-      <div className="min-h-screen speaking-gradient">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Header Section */}
-          <div className="text-center mb-8 slide-in">
-            <div className="inline-block p-1 rounded-full bg-white/20 backdrop-blur-sm mb-4">
-              <div className="bg-white/80 rounded-full px-6 py-2">
-                <span className="text-2xl">🎤</span>
-              </div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          {/* Apple-Style Header */}
+          <div className="text-center mb-12 apple-fade-in">
+            <div className="w-20 h-20 bg-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <span className="text-4xl font-bold text-purple-700">S</span>
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">IELTS Speaking Task</h1>
-            <p className="text-gray-700 text-lg">Express your ideas with confidence and fluency</p>
+            <h1 className="text-5xl font-semibold text-gray-900 mb-4 tracking-tight">Speaking Task</h1>
+            <p className="text-2xl text-gray-600 max-w-2xl mx-auto">Express your ideas with confidence and fluency.</p>
           </div>
 
           {/* Main Content Card */}
-          <div className="glass-card rounded-3xl p-8 mb-6 slide-in">
+          <div className="apple-card rounded-3xl p-8 mb-6 apple-slide-up">
             {/* Speaking Prompt */}
             <div className="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-r-2xl mb-8">
               <h2 className="font-semibold text-orange-900 mb-3 flex items-center">
-                <span className="text-2xl mr-2">🗣️</span>
+                <span className="text-2xl mr-2">SPEAK</span>
                 Speaking Topic
               </h2>
               <p className="text-orange-800 leading-relaxed mb-4">
@@ -145,7 +189,7 @@ export default function TaskPage() {
             {isPreparationPhase && (
               <div className="text-center mb-8 fade-in-scale">
                 <div className="bg-blue-100 border border-blue-300 rounded-2xl p-8">
-                  <div className="text-6xl mb-4">🕐</div>
+                  <div className="text-6xl mb-4">PREP</div>
                   <h3 className="text-2xl font-bold text-blue-800 mb-2">Preparation Time</h3>
                   <div className="text-4xl font-mono text-blue-600 mb-4">
                     {formatTime(preparationTime)}
@@ -180,7 +224,7 @@ export default function TaskPage() {
                       className="px-12 py-4 text-lg font-semibold rounded-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
                     >
                       <span className="flex items-center">
-                        <span className="mr-2">⏰</span>
+                        <span className="mr-2">TIME</span>
                         Start Preparation (1 min)
                       </span>
                     </Button>
@@ -191,7 +235,7 @@ export default function TaskPage() {
               {!isPreparationPhase && !isRecording && !hasRecorded && preparationTime === 0 && (
                 <div className="space-y-6 fade-in-scale">
                   <div className="bg-red-50 border border-red-200 rounded-2xl p-8">
-                    <div className="text-4xl mb-4">🎤</div>
+                    <div className="text-4xl mb-4">REC</div>
                     <h3 className="text-2xl font-bold text-red-800 mb-2">Time to Record!</h3>
                     <p className="text-red-700 mb-6">You have 2 minutes to present your response</p>
                     <Button 
@@ -201,7 +245,7 @@ export default function TaskPage() {
                       className="px-12 py-4 text-lg font-semibold rounded-2xl transform transition-all duration-300 hover:scale-105"
                     >
                       <span className="flex items-center">
-                        <span className="mr-2">🔴</span>
+                        <span className="mr-2">REC</span>
                         Start Recording
                       </span>
                     </Button>
@@ -212,7 +256,7 @@ export default function TaskPage() {
               {isRecording && (
                 <div className="space-y-6 fade-in-scale">
                   <div className="bg-red-100 border-2 border-red-300 rounded-2xl p-8 pulse-animation">
-                    <div className="text-6xl mb-4 animate-pulse">🔴</div>
+                    <div className="text-6xl mb-4 animate-pulse">REC</div>
                     <h3 className="text-2xl font-bold text-red-800 mb-2">Recording in Progress</h3>
                     <div className="text-5xl font-mono text-red-600 mb-4">
                       {formatTime(recordingTime)}
@@ -236,7 +280,7 @@ export default function TaskPage() {
                       className="px-8 py-3 rounded-2xl"
                     >
                       <span className="flex items-center">
-                        <span className="mr-2">⏹️</span>
+                        <span className="mr-2">STOP</span>
                         Stop Recording
                       </span>
                     </Button>
@@ -247,7 +291,7 @@ export default function TaskPage() {
               {hasRecorded && (
                 <div className="space-y-6 fade-in-scale">
                   <div className="bg-green-100 border border-green-300 rounded-2xl p-8">
-                    <div className="text-5xl mb-4">🎉</div>
+                    <div className="text-5xl mb-4">DONE</div>
                     <h3 className="text-2xl font-bold text-green-800 mb-2">Recording Complete!</h3>
                     <div className="bg-white/70 rounded-xl p-4 mb-6">
                       <p className="text-green-700 text-lg">
@@ -269,19 +313,19 @@ export default function TaskPage() {
                         size="md"
                         className="flex items-center rounded-2xl px-6 py-3"
                       >
-                        <span className="mr-2">🔄</span>
+                        <span className="mr-2">RETRY:</span>
                         Try Again
                       </Button>
                       <Button 
                         onClick={() => {
                           // Simulate feedback generation
-                          alert('🎯 AI Analysis:\n\n✅ Clear pronunciation\n✅ Good structure\n✅ Relevant examples\n\n💡 Consider using more varied vocabulary and smoother transitions between ideas.')
+                          alert('TARGET AI Analysis:\n\n✅ Clear pronunciation\n✅ Good structure\n✅ Relevant examples\n\nTIPS Consider using more varied vocabulary and smoother transitions between ideas.')
                         }}
                         variant="success"
                         size="md"
                         className="flex items-center rounded-2xl px-6 py-3"
                       >
-                        <span className="mr-2">📊</span>
+                        <span className="mr-2">STATS</span>
                         Get AI Feedback
                       </Button>
                     </div>
@@ -292,16 +336,16 @@ export default function TaskPage() {
           </div>
 
           {/* Speaking Tips Card */}
-          <div className="glass-card rounded-3xl p-8 slide-in">
+          <div className="apple-card rounded-3xl p-8 apple-slide-up">
             <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <span className="text-3xl mr-3">💡</span>
+              <span className="text-3xl mr-3">TIPS</span>
               Speaking Excellence Tips
             </h3>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-blue-50 rounded-2xl p-6">
                 <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
-                  <span className="mr-2">🎯</span>
+                  <span className="mr-2">TARGET</span>
                   Structure & Content
                 </h4>
                 <ul className="text-blue-700 space-y-2 text-sm">
@@ -314,7 +358,7 @@ export default function TaskPage() {
               
               <div className="bg-green-50 rounded-2xl p-6">
                 <h4 className="font-semibold text-green-800 mb-3 flex items-center">
-                  <span className="mr-2">🗣️</span>
+                  <span className="mr-2">SPEAK</span>
                   Delivery & Language
                 </h4>
                 <ul className="text-green-700 space-y-2 text-sm">
@@ -335,25 +379,23 @@ export default function TaskPage() {
     const progressPercentage = Math.min((wordCount / 250) * 100, 100)
     
     return (
-      <div className="min-h-screen writing-gradient">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          {/* Header Section */}
-          <div className="text-center mb-8 slide-in">
-            <div className="inline-block p-1 rounded-full bg-white/20 backdrop-blur-sm mb-4">
-              <div className="bg-white/80 rounded-full px-6 py-2">
-                <span className="text-2xl">✍️</span>
-              </div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          {/* Apple-Style Header */}
+          <div className="text-center mb-12 apple-fade-in">
+            <div className="w-20 h-20 bg-blue-100 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <span className="text-4xl font-bold text-blue-700">W</span>
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">IELTS Writing Task 2</h1>
-            <p className="text-gray-700 text-lg">Express your thoughts clearly and persuasively</p>
+            <h1 className="text-5xl font-semibold text-gray-900 mb-4 tracking-tight">Writing Task</h1>
+            <p className="text-2xl text-gray-600 max-w-2xl mx-auto">Express your ideas with clarity and precision.</p>
           </div>
 
           {/* Main Content Card */}
-          <div className="glass-card rounded-3xl p-8 mb-6 slide-in">
+          <div className="apple-card rounded-3xl p-8 mb-6 apple-slide-up">
             {/* Essay Prompt */}
             <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-2xl mb-8">
               <h2 className="font-semibold text-blue-900 mb-3 flex items-center">
-                <span className="text-2xl mr-2">💭</span>
+                <span className="text-2xl mr-2">TOPIC</span>
                 Essay Topic
               </h2>
               <p className="text-blue-800 leading-relaxed">
@@ -367,7 +409,7 @@ export default function TaskPage() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-semibold text-gray-700 flex items-center">
-                  <span className="text-xl mr-2">📊</span>
+                  <span className="text-xl mr-2">STATS</span>
                   Progress
                 </h3>
                 <div className="text-sm text-gray-600 flex gap-6">
@@ -390,14 +432,14 @@ export default function TaskPage() {
               
               {wordCount > 0 && wordCount < 200 && (
                 <p className="text-amber-600 text-sm mt-2 flex items-center fade-in-scale">
-                  <span className="mr-1">⚡</span>
+                  <span className="mr-1">NOTE</span>
                   Keep writing! Aim for at least 250 words for a complete response.
                 </p>
               )}
               
               {wordCount >= 250 && (
                 <p className="text-green-600 text-sm mt-2 flex items-center fade-in-scale">
-                  <span className="mr-1">🎉</span>
+                  <span className="mr-1">DONE</span>
                   Excellent! You've reached the target word count.
                 </p>
               )}
@@ -406,7 +448,7 @@ export default function TaskPage() {
             {/* Writing Area */}
             <div className="space-y-4">
               <label className="block font-semibold text-gray-700 flex items-center">
-                <span className="text-xl mr-2">✏️</span>
+                <span className="text-xl mr-2">ESSAY</span>
                 Your Essay
               </label>
               
@@ -431,7 +473,7 @@ Remember to:
                 {essay.length === 0 && (
                   <div className="absolute top-4 right-4 float-animation">
                     <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
-                      Start with your introduction! 💪
+                      Start with your introduction!
                     </div>
                   </div>
                 )}
@@ -442,7 +484,7 @@ Remember to:
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl fade-in-scale">
                 <p className="text-red-700 flex items-center">
-                  <span className="text-xl mr-2">⚠️</span>
+                  <span className="text-xl mr-2">ERROR</span>
                   {error}
                 </p>
               </div>
@@ -462,12 +504,12 @@ Remember to:
               >
                 {loadingState === 'submitting' ? (
                   <span className="flex items-center">
-                    <span className="animate-spin mr-2">⚡</span>
+                    <span className="animate-spin mr-2">...</span>
                     Getting AI Feedback...
                   </span>
                 ) : (
                   <span className="flex items-center">
-                    <span className="mr-2">🚀</span>
+                    <span className="mr-2">SUBMIT</span>
                     Submit for Feedback
                   </span>
                 )}
@@ -477,10 +519,10 @@ Remember to:
 
           {/* Feedback Section */}
           {loadingState === 'success' && feedback && (
-            <div className="glass-card rounded-3xl p-8 slide-in">
+            <div className="apple-card rounded-3xl p-8 apple-slide-up">
               <div className="text-center mb-6">
                 <div className="inline-block p-3 bg-green-100 rounded-full mb-4">
-                  <span className="text-3xl">🎯</span>
+                  <span className="text-3xl">TARGET</span>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800">AI Feedback & Analysis</h2>
                 <p className="text-gray-600 mt-2">Here's your personalized writing assessment</p>
@@ -511,7 +553,7 @@ Remember to:
                   variant="primary"
                   className="flex items-center"
                 >
-                  <span className="mr-2">📄</span>
+                  <span className="mr-2">SAVE</span>
                   Save Feedback
                 </Button>
               </div>

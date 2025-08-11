@@ -1,82 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Typography */
-body { 
-  line-height: 1.5; 
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  body {
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
 }
 
-h1, h2, h3 { 
-  letter-spacing: -0.01em; 
+@layer components {
+  /* Button hover states with smooth transitions */
+  .btn-primary {
+    @apply bg-blue-800 hover:bg-blue-900 text-white font-medium rounded-2xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-blue-800 font-medium rounded-2xl border-2 border-blue-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2;
+  }
+  
+  /* Card components with professional styling */
+  .card {
+    @apply bg-white rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300;
+  }
+  
+  /* Feature icon hover effects */
+  .feature-icon {
+    @apply w-16 h-16 rounded-2xl flex items-center justify-center mx-auto transition-colors duration-200;
+  }
+  
+  /* Section spacing consistency */
+  .section {
+    @apply py-20;
+  }
+  
+  .section-header {
+    @apply text-center mb-16;
+  }
 }
 
-/* Custom Components */
-.glass-card {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+@layer utilities {
+  /* Custom focus states for accessibility */
+  .focus-visible-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2;
+  }
+  
+  /* Smooth hover scale effects */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+  
+  /* Text color hierarchy */
+  .text-primary {
+    @apply text-gray-900;
+  }
+  
+  .text-secondary {
+    @apply text-gray-600;
+  }
+  
+  .text-accent {
+    @apply text-blue-800;
+  }
 }
 
-.writing-gradient {
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+/* Legacy Apple-style animations (keeping for existing functionality) */
+.apple-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 16px rgba(0, 0, 0, 0.06);
 }
 
-.speaking-gradient {
-  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+.apple-button {
+  background: #007AFF;
+  border-radius: 12px;
+  transition: all 0.2s ease-out;
+  font-weight: 510;
+  letter-spacing: -0.022em;
 }
 
-.pulse-animation {
-  animation: pulse-glow 2s ease-in-out infinite;
+.apple-button:hover {
+  background: #0051D5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+}
+
+.apple-slide-up {
+  animation: appleSlideUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.apple-fade-in {
+  animation: appleFadeIn 1s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes appleSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes appleFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* New animations for the refined design */
+.fade-in-scale {
+  animation: fadeInScale 0.6s ease-out forwards;
+  opacity: 0;
 }
 
 .float-animation {
   animation: float 3s ease-in-out infinite;
 }
 
-.slide-in {
-  animation: slideIn 0.5s ease-out forwards;
-}
-
-.fade-in-scale {
-  animation: fadeInScale 0.3s ease-out forwards;
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .progress-bar {
-  background: linear-gradient(90deg, #4ade80, #22c55e);
-  animation: progressGlow 2s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
-    transform: scale(1.02);
-  }
-}
-
-@keyframes float {
-  0%, 100% { 
-    transform: translateY(0px); 
-  }
-  50% { 
-    transform: translateY(-10px); 
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: linear-gradient(90deg, #10B981, #3B82F6, #8B5CF6, #EF4444);
+  background-size: 400% 100%;
+  animation: gradient 2s ease infinite;
 }
 
 @keyframes fadeInScale {
@@ -90,11 +161,18 @@ h1, h2, h3 {
   }
 }
 
-@keyframes progressGlow {
-  0%, 100% { 
-    filter: brightness(1); 
-  }
-  50% { 
-    filter: brightness(1.2); 
-  }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
