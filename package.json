@@ -9,6 +9,11 @@
     "autoprefixer": "^10.4.21",
     "openai": "^5.10.2",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "@upstash/redis": "^1.35.3"
   }
 }

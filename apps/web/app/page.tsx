@@ -1,218 +1,269 @@
-'use client'
+import Link from "next/link";
+import { getLatestSummaries } from "../lib/history"; // ⬅️ 依你的實際路徑調整
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+export default async function HomePage() {
+  // 讀取最近一次的寫作/口說摘要（沒有資料時回傳 null）
+  const latest = await getLatestSummaries();
+  const writing = latest.writing;
+  const speaking = latest.speaking;
 
-export default function HomePage() {
-  const [email, setEmail] = useState('')
-  const router = useRouter()
+  // 取出要顯示的指標
+  const writingBand = writing?.band?.overall;
+  const writingTarget = writing?.targetWords != null ? String(writing.targetWords) : "—";
 
-  const featureCards = [
-    { 
-      title: 'Writing Task 2', 
-      icon: 'W', 
-      description: 'Comprehensive essay analysis with detailed feedback on structure and coherence',
-      href: '/tasks/1/writing',
-      iconBg: 'from-blue-100 to-blue-200'
-    },
-    { 
-      title: 'Speaking Part 2', 
-      icon: 'S', 
-      description: 'Advanced voice analysis with pronunciation and fluency assessment',
-      href: '/tasks/1/speaking',
-      iconBg: 'from-emerald-100 to-emerald-200'
-    },
-    { 
-      title: 'Band Score Breakdown', 
-      icon: 'B', 
-      description: 'Detailed criterion-based scoring with improvement recommendations',
-      href: '/tasks/1/writing',
-      iconBg: 'from-purple-100 to-purple-200'
-    },
-    { 
-      title: 'Feedback History', 
-      icon: 'H', 
-      description: 'Track your progress over time with comprehensive assessment records',
-      href: '/tasks/1/writing',
-      iconBg: 'from-orange-100 to-orange-200'
-    },
-    { 
-      title: 'Pronunciation Heatmap', 
-      icon: 'P', 
-      description: 'Visual analysis of speech patterns with targeted improvement areas',
-      href: '/tasks/1/speaking',
-      iconBg: 'from-red-100 to-red-200'
-    },
-    { 
-      title: 'Time-boxed Practice', 
-      icon: 'T', 
-      description: 'Realistic exam conditions with precise timing and structured feedback',
-      href: '/tasks/1/writing',
-      iconBg: 'from-amber-100 to-amber-200'
-    }
-  ]
+  const speakingContent = speaking?.bandContent?.overall;
+  const speakingSpeech  = speaking?.bandSpeech?.overall;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-white">
+    <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
+      <BackgroundDecor />
+
       {/* Header */}
-      <header className="border-b border-zinc-200/60 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-zinc-900 tracking-tight">IELTS AI</div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <a 
-                href="#assessments" 
-                className="text-zinc-700 hover:text-zinc-900 transition-colors duration-200 font-medium"
-              >
-                Assessments
-              </a>
-              <a 
-                href="#pricing" 
-                className="text-zinc-700 hover:text-zinc-900 transition-colors duration-200 font-medium"
-              >
-                Pricing
-              </a>
-              <a 
-                href="#faq" 
-                className="text-zinc-700 hover:text-zinc-900 transition-colors duration-200 font-medium"
-              >
-                FAQ
-              </a>
-            </nav>
-            <button className="bg-gradient-to-r from-zinc-200 via-zinc-300 to-zinc-400 hover:from-zinc-300 hover:via-zinc-400 hover:to-zinc-500 text-zinc-900 px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 shadow-sm hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2">
-              Sign in
-            </button>
+      <header className="relative mx-auto max-w-6xl px-6 sm:px-8 pt-10 pb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-zinc-100 ring-1 ring-inset ring-zinc-200" aria-hidden />
+            <h1 className="text-[17px] font-medium tracking-tight">IELTS AI</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/history" className="text-[12px] text-zinc-500 hover:text-zinc-800">
+              History →
+            </Link>
+            <span className="text-[11px] text-zinc-500">beta</span>
           </div>
         </div>
       </header>
 
-      <main>
-        {/* Hero Section */}
-        <section className="py-20 lg:py-28">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-zinc-900 leading-tight mb-6 tracking-tight">
-                Instant IELTS AI Assessment
-              </h1>
-              <p className="text-xl lg:text-2xl text-zinc-600 leading-relaxed mb-10 max-w-3xl mx-auto">
-                Writing & Speaking scores with actionable feedback—ready in minutes.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button 
-                  onClick={() => router.push('/tasks/1/writing')}
-                  className="bg-gradient-to-r from-zinc-800 via-zinc-900 to-black hover:from-zinc-900 hover:via-black hover:to-zinc-900 text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2 hover:scale-105 transform">
-                  Start Free Assessment
-                </button>
-                <button 
-                  onClick={() => router.push('/tasks/1/speaking')}
-                  className="bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-300 hover:from-zinc-200 hover:via-zinc-300 hover:to-zinc-400 text-zinc-900 px-10 py-4 rounded-xl font-semibold text-lg border border-zinc-300 hover:border-zinc-400 transition-all duration-300 shadow-sm hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2">
-                  Explore Features
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+      {/* Hero */}
+      <section className="relative mx-auto max-w-6xl px-6 sm:px-8">
+        <div className="rounded-3xl border border-zinc-200/80 bg-white/80 p-8 sm:p-12 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/60">
+          <h2 className="text-[26px] sm:text-[30px] leading-[1.2] font-semibold tracking-tight">
+            Less Distraction. More Expression.
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-zinc-600">
+            為 Writing 與 Speaking 打造清晰、精準、專注的練習體驗。
+          </p>
 
-        {/* Feature Cards */}
-        <section className="py-16 bg-gradient-to-b from-white to-zinc-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-4xl font-bold text-zinc-900 mb-4 tracking-tight">
-                Assessment Features
-              </h2>
-              <p className="text-lg text-zinc-600 max-w-2xl mx-auto leading-relaxed">
-                Choose your practice area and start improving with AI-powered feedback
-              </p>
+          {/* Primary actions: Writing / Speaking */}
+          <div className="mt-10 grid gap-5 sm:grid-cols-2">
+            <FeatureCard
+              title="Writing Task 2"
+              desc="即時分項評分、逐段建議、優化版本"
+              href="/tasks/1/writing"
+              tone="brand"
+              metrics={[
+                { label: "最近 Overall", value: bandFmt(writingBand) },
+                { label: "目標字數", value: writingTarget },
+              ]}
+            />
+            <FeatureCard
+              title="Speaking (Part 2)"
+              desc="兩分鐘限時錄音、轉文字、口語反饋"
+              href="/tasks/1/speaking"
+              tone="speak"
+              metrics={[
+                { label: "Content", value: bandFmt(speakingContent) },
+                { label: "Speech", value: bandFmt(speakingSpeech) },
+              ]}
+            />
+          </div>
+
+          {/* Value highlights */}
+          <Highlights />
+
+          {/* How it works */}
+          <HowItWorks />
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative mx-auto max-w-6xl px-6 sm:px-8 py-10">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-6 sm:p-8 text-center shadow-sm backdrop-blur">
+          <h3 className="text-[18px] font-medium tracking-tight">準備好開始了嗎？</h3>
+          <p className="mt-2 text-sm text-zinc-600">從一篇作文或一次兩分鐘口說開始，建立你的進步曲線。</p>
+          <div className="mt-5 flex justify-center gap-3">
+            <Link
+              href="/tasks/1/writing"
+              className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              開始 Writing
+            </Link>
+            <Link
+              href="/tasks/1/speaking"
+              className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm hover:bg-amber-100"
+            >
+              開始 Speaking
+            </Link>
+          </div>
+          <p className="mt-4 text-[12px] text-zinc-500">
+            目前僅提供 Writing / Speaking，其他功能將於後續釋出
+          </p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative mx-auto max-w-6xl px-6 sm:px-8 py-10">
+        <p className="text-[12px] text-zinc-400">© {new Date().getFullYear()} IELTS AI</p>
+      </footer>
+    </main>
+  );
+}
+
+/* 背景：淡放射漸層 + 細格線 + 角落色塊 */
+function BackgroundDecor() {
+  return (
+    <>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(60% 40% at 30% -10%, rgba(9,9,11,0.06), transparent 60%), radial-gradient(50% 35% at 80% 0%, rgba(24,24,27,0.05), transparent 65%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(#d4d4d8 1px, transparent 1px), radial-gradient(#e4e4e7 1px, transparent 1px)",
+          backgroundSize: "22px 22px, 44px 44px",
+          backgroundPosition: "0 0, 11px 11px",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 -left-24 h-[320px] w-[320px] -z-10 rounded-3xl blur-2xl"
+        style={{ background: "radial-gradient(closest-side, rgba(59,130,246,0.16), transparent 75%)" }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-28 -right-24 h-[300px] w-[300px] -z-10 rounded-3xl blur-2xl"
+        style={{ background: "radial-gradient(closest-side, rgba(245,158,11,0.14), transparent 75%)" }}
+      />
+    </>
+  );
+}
+
+/* 兩個主功能卡：左緣色帶 + 小指標（顯示最新分數） */
+function FeatureCard({
+  title,
+  desc,
+  href,
+  tone,
+  metrics,
+}: {
+  title: string;
+  desc: string;
+  href: string;
+  tone: "brand" | "speak";
+  metrics: { label: string; value: string }[];
+}) {
+  const palette =
+    tone === "brand"
+      ? { band: "from-blue-500/70 via-sky-400/60 to-blue-500/70", ring: "ring-blue-300/40 group-hover:ring-blue-400/50", dot: "bg-blue-500/20" }
+      : { band: "from-amber-500/70 via-orange-400/60 to-amber-500/70", ring: "ring-amber-300/40 group-hover:ring-amber-400/50", dot: "bg-amber-500/20" };
+
+  return (
+    <Link
+      href={href}
+      className={[
+        "group relative block overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 p-6 sm:p-7 shadow-sm backdrop-blur",
+        "transition-[transform,box-shadow] duration-200 will-change-transform",
+        "hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.06)]",
+        "ring-1 ring-inset", palette.ring,
+      ].join(" ")}
+      aria-label={title}
+    >
+      {/* 左側斜切色帶 */}
+      <div aria-hidden className={["absolute -left-8 top-0 h-full w-24 -skew-x-[14deg] opacity-90 bg-gradient-to-b", palette.band].join(" ")} />
+      <div className="relative ml-6 sm:ml-8">
+        <div className="flex items-start gap-4">
+          {/* 小色塊 */}
+          <div className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-inset ring-white/60 backdrop-blur bg-white/60">
+            <div className={`h-full w-full rounded-xl ${palette.dot}`} />
+          </div>
+          {/* 文案 */}
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[17px] font-medium tracking-tight">{title}</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {featureCards.map((card, index) => (
-                <button
-                  key={index}
-                  onClick={() => router.push(card.href)}
-                  className="group bg-gradient-to-br from-zinc-100 via-zinc-200 to-zinc-300 hover:from-zinc-200 hover:via-zinc-300 hover:to-zinc-400 p-6 lg:p-8 rounded-2xl border border-zinc-300 hover:border-zinc-400 transition-all duration-300 shadow-sm hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2 focus-visible:shadow-inner text-left w-full min-h-[200px] flex flex-col"
-                  aria-label={`Access ${card.title}: ${card.description}`}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${card.iconBg} rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow duration-300`}>
-                      <span className="text-xl font-bold text-zinc-900">{card.icon}</span>
-                    </div>
-                    <div className="text-zinc-400 group-hover:text-zinc-600 transition-colors duration-300 mt-1">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col">
-                    <h3 className="text-xl font-semibold text-zinc-900 mb-3 leading-tight">
-                      {card.title}
-                    </h3>
-                    <p className="text-zinc-600 leading-relaxed text-sm lg:text-base flex-1">
-                      {card.description}
-                    </p>
-                  </div>
-                </button>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-zinc-600">{desc}</p>
+            {/* 指標 */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {metrics.map((m) => (
+                <div key={m.label} className="rounded-lg border border-zinc-200 bg-white/70 px-3 py-2 text-[12px] text-zinc-600">
+                  <div className="text-[11px] text-zinc-500">{m.label}</div>
+                  <div className="mt-0.5 font-medium text-zinc-800">{m.value}</div>
+                </div>
               ))}
             </div>
           </div>
-        </section>
-
-        {/* CTA Strip */}
-        <section className="py-12 bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-300 border-y border-zinc-300/60">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-              <div className="text-center lg:text-left">
-                <h3 className="text-2xl font-bold text-zinc-900 mb-2">
-                  Ready to boost your IELTS score?
-                </h3>
-                <p className="text-zinc-700 text-lg">
-                  Join thousands of students achieving higher band scores with AI feedback.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto lg:min-w-96">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  className="flex-1 px-4 py-3 rounded-xl border border-zinc-300 bg-white/90 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-zinc-400/50 focus:border-zinc-400 transition-all duration-200 text-zinc-900 placeholder-zinc-500"
-                />
-                <button className="bg-gradient-to-r from-zinc-800 via-zinc-900 to-black hover:from-zinc-900 hover:via-black hover:to-zinc-900 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/50 focus-visible:ring-offset-2 whitespace-nowrap">
-                  Get Started
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-8 bg-white border-t border-zinc-200/60">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-zinc-900 font-bold text-lg tracking-tight">IELTS AI</div>
-            <div className="flex items-center space-x-8 text-sm text-zinc-600">
-              <a 
-                href="#privacy" 
-                className="hover:text-zinc-900 transition-colors duration-200 font-medium"
-              >
-                Privacy
-              </a>
-              <a 
-                href="#terms" 
-                className="hover:text-zinc-900 transition-colors duration-200 font-medium"
-              >
-                Terms
-              </a>
-              <a 
-                href="#contact" 
-                className="hover:text-zinc-900 transition-colors duration-200 font-medium"
-              >
-                Contact
-              </a>
-            </div>
-          </div>
+          <span className="ml-2 mt-1 hidden text-zinc-400 transition-colors group-hover:text-zinc-700 sm:block" aria-hidden>→</span>
         </div>
-      </footer>
+      </div>
+    </Link>
+  );
+}
+
+/* 三個亮點：讓價值一眼看懂 */
+function Highlights() {
+  const items = [
+    {
+      t: "真考向度評分",
+      d: "依 IELTS 四大構面產生反饋：Task, Coherence, Lexical, Grammar",
+    },
+    {
+      t: "可比對的進步",
+      d: "保存每次結果，形成趨勢曲線，聚焦高影響錯誤",
+    },
+    {
+      t: "無痛上手",
+      d: "0 安裝、0 複雜設定，輸入即評測，2 分鐘得到可行建議",
+    },
+  ];
+  return (
+    <div className="mt-10 grid gap-3 sm:grid-cols-3">
+      {items.map((it) => (
+        <div key={it.t} className="rounded-xl border border-zinc-200 bg-white/70 p-4">
+          <div className="text-[13px] font-medium text-zinc-900">{it.t}</div>
+          <div className="mt-1 text-[12px] leading-relaxed text-zinc-600">{it.d}</div>
+        </div>
+      ))}
     </div>
-  )
+  );
+}
+
+/* 三步驟流程 */
+function HowItWorks() {
+  const steps = [
+    { n: 1, t: "輸入題目與內容", d: "Writing 貼上作文；Speaking 準備 2 分鐘主題" },
+    { n: 2, t: "一鍵送出 / 錄音", d: "Writing 即時分析；Speaking 自動計時與轉文字" },
+    { n: 3, t: "取得分數與建議", d: "分項評分、重點改寫、下次目標" },
+  ];
+  return (
+    <div className="mt-10 rounded-2xl border border-zinc-200 bg-white/70 p-5">
+      <div className="text-[13px] font-medium text-zinc-900">如何運作</div>
+      <ol className="mt-3 grid gap-3 sm:grid-cols-3">
+        {steps.map((s) => (
+          <li key={s.n} className="rounded-xl border border-zinc-200 bg-white/60 p-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-zinc-300 text-[12px] text-zinc-700">{s.n}</span>
+              <span className="text-[13px] font-medium">{s.t}</span>
+            </div>
+            <p className="mt-1 text-[12px] text-zinc-600">{s.d}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/* 小工具 */
+function bandFmt(n?: number) {
+  if (n == null) return "—";
+  const s = Number(n).toFixed(1);
+  return s.endsWith(".0") ? s.slice(0, -2) : s;
 }

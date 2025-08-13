@@ -1,25 +1,30 @@
-// apps/web/app/layout.tsx
-import './globals.css';
+import "./globals.css";
+import { Plus_Jakarta_Sans, Noto_Serif_TC } from "next/font/google";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const notoSerifTC = Noto_Serif_TC({
+  // Noto Serif TC 沒有 CJK 子集參數可選，保留 latin 即可；中文字形會載入。
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-noto-serif-tc",
+  display: "swap",
+});
+
+export const metadata = {
+  title: "IELTS AI",
+  description: "IELTS Writing & Speaking Practice Platform",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-gray-900">
-        <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur">
-          <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
-            <a href="/" className="text-sm font-semibold">IELTS AI Platform</a>
-            <a href="/" className="text-sm text-gray-600 hover:text-gray-900">Home</a>
-          </div>
-        </header>
-
-        <main className="w-full mx-auto max-w-5xl px-4 py-10">
-          {children}
-        </main>
-
-        <footer className="mx-auto max-w-5xl px-4 pb-10 text-xs text-gray-500">
-          © {new Date().getFullYear()} IELTS AI – demo
-        </footer>
-      </body>
+    <html lang="zh-Hant" className={`${plusJakarta.variable} ${notoSerifTC.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }
