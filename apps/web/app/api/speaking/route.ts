@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { OpenAI } from "openai";
-import { saveSpeaking } from "../../../lib/history";
 
 /**
  * 入參：
@@ -27,10 +26,12 @@ const BodySchema = z.object({
   mime: z.string().min(1),
   durationSec: z.number().int().min(1).max(600),
   manualTranscript: z.string().optional(),
-  speechMetrics: z.object({
-    pauseRate: z.number().min(0).max(1).optional(),
-    avgPauseSec: z.number().min(0).max(5).optional(),
-  }).optional(),
+  speechMetrics: z
+    .object({
+      pauseRate: z.number().min(0).max(1).optional(),
+      avgPauseSec: z.number().min(0).max(5).optional(),
+    })
+    .optional(),
 });
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
@@ -47,7 +48,8 @@ export async function POST(req: NextRequest) {
 
     // 2) 文本詞數 / WPM
     const wordCount = countWords(transcript);
-    const wpm = wordCount && body.durationSec > 0 ? Math.round(wordCount / (body.durationSec / 60)) : 0;
+    const wpm =
+      wordCount && body.durationSec > 0 ? Math.round(wordCount / (body.durationSec / 60)) : 0;
 
     // 3) 兩通道並行評分
     const [contentEval, speechEval] = await Promise.all([
@@ -77,18 +79,16 @@ export async function POST(req: NextRequest) {
         undefined,
     };
 
-    // 5) 寫入歷史（摘要）
-    await saveSpeaking({
-      taskId: body.taskId,
-      bandContent: data.content.band,
-      bandSpeech: data.speech.band,
-      metrics: data.speech.metrics,
-    });
-
-    return NextResponse.json({ ok: true, data, requestId });
-  } catch (err: any) {
-    const message = err?.issues?.[0]?.message || err?.message || "Failed to evaluate speaking";
-    return NextResponse.json({ ok: false, error: { code: "BAD_REQUEST", message }, requestId }, { status: 400 });
+    return NextResponse.json({ ok: true, requestId, data });
+  } catch (e: any) {
+    return NextResponse.json(
+      {
+        ok: false,
+        requestId,
+        error: { message: e?.message || "speaking route error" },
+      },
+      { status: 400 }
+    );
   }
 }
 
@@ -97,8 +97,13 @@ export async function POST(req: NextRequest) {
 function countWords(t: string) {
   const s = t?.trim();
   if (!s) return 0;
-  return s.replace(/\n/g, " ").split(" ").map((x) => x.trim()).filter(Boolean).length;
+  return s
+    .replace(/\n/g, " ")
+    .split(" ")
+    .map((x) => x.trim())
+    .filter(Boolean).length;
 }
+
 function extFromMime(mime: string) {
   if (mime.includes("webm")) return "webm";
   if (mime.includes("mp4")) return "mp4";
@@ -106,10 +111,15 @@ function extFromMime(mime: string) {
   if (mime.includes("mpeg")) return "mp3";
   return "dat";
 }
+
 async function transcribeWithWhisper(audioBase64: string, mime: string) {
   const buf = Buffer.from(audioBase64, "base64");
+  // Node 18+ 提供 File；若你的執行環境沒有 File，可以改用 ReadableStream 與名稱物件
   const file = new File([buf], `audio.${extFromMime(mime)}`, { type: mime });
-  const res = await openai.audio.transcriptions.create({ file, model: "whisper-1" });
+  const res = await openai.audio.transcriptions.create({
+    file,
+    model: "whisper-1",
+  });
   // @ts-ignore
   return (res.text as string) || (res as any).text || "";
 }
@@ -138,7 +148,11 @@ async function evaluateContentChannel(transcript: string) {
 
   const text = chat.choices?.[0]?.message?.content || "{}";
   let data: any = {};
-  try { data = JSON.parse(text); } catch { data = {}; }
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = {};
+  }
   // @ts-ignore
   data.tokensUsed = data.tokensUsed || chat.usage?.total_tokens;
   return data;
@@ -166,8 +180,12 @@ async function evaluateSpeechChannel(args: {
   const user = [
     `Duration: ${Math.round(durationSec)}s`,
     `WPM: ${wpm}`,
-    pauseRate !== undefined ? `PauseRate(>250ms): ${(pauseRate * 100).toFixed(1)}%` : "PauseRate: (n/a)",
-    avgPauseSec !== undefined ? `AvgPause: ${avgPauseSec.toFixed(2)}s` : "AvgPause: (n/a)",
+    pauseRate !== undefined
+      ? `PauseRate(>250ms): ${(pauseRate * 100).toFixed(1)}%`
+      : "PauseRate: (n/a)",
+    avgPauseSec !== undefined
+      ? `AvgPause: ${avgPauseSec.toFixed(2)}s`
+      : "AvgPause: (n/a)",
     "Transcript (for lexical hints, do NOT grade content here):",
     transcript || "(empty)",
   ].join("\n");
@@ -185,7 +203,11 @@ async function evaluateSpeechChannel(args: {
 
   const text = chat.choices?.[0]?.message?.content || "{}";
   let data: any = {};
-  try { data = JSON.parse(text); } catch { data = {}; }
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = {};
+  }
   // @ts-ignore
   data.tokensUsed = data.tokensUsed || chat.usage?.total_tokens;
   return data;
@@ -205,9 +227,15 @@ function normalizeContent(x: any) {
     suggestions: Array.isArray(x?.suggestions) ? x.suggestions : [],
   };
 }
+
 function normalizeSpeech(
   x: any,
-  metrics: { durationSec: number; wpm: number; pauseRate?: number; avgPauseSec?: number }
+  metrics: {
+    durationSec: number;
+    wpm: number;
+    pauseRate?: number;
+    avgPauseSec?: number;
+  }
 ) {
   const band = x?.band || {};
   return {
@@ -225,7 +253,8 @@ function normalizeSpeech(
     suggestions: Array.isArray(x?.suggestions) ? x.suggestions : [],
   };
 }
+
 function pickNum(v: any) {
   const n = Number(v);
-  return isFinite(n) ? n : undefined;
+  return Number.isFinite(n) ? n : undefined;
 }

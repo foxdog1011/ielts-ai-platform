@@ -4,8 +4,9 @@
     "baseUrl": ".", // 讓 "@/..." 以本資料夾為根
     "paths": {
       "@/*": [
+        "app/*",
         "./*"
-      ], // 支援 import "@/components/WordCounter"
+      ],
       "@ielts/ui": [
         "../../packages/ui/src"
       ],

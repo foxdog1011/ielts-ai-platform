@@ -1,18 +1,11 @@
+// apps/web/app/page.tsx
 import Link from "next/link";
-import { getLatestSummaries } from "../lib/history"; // ⬅️ 依你的實際路徑調整
+import QuickStart from "./QuickStart";
+import { latestHistory } from "../lib/history";
 
 export default async function HomePage() {
-  // 讀取最近一次的寫作/口說摘要（沒有資料時回傳 null）
-  const latest = await getLatestSummaries();
-  const writing = latest.writing;
-  const speaking = latest.speaking;
-
-  // 取出要顯示的指標
-  const writingBand = writing?.band?.overall;
-  const writingTarget = writing?.targetWords != null ? String(writing.targetWords) : "—";
-
-  const speakingContent = speaking?.bandContent?.overall;
-  const speakingSpeech  = speaking?.bandSpeech?.overall;
+  const latestW = await latestHistory("writing");
+  const latestS = await latestHistory("speaking");
 
   return (
     <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
@@ -25,12 +18,7 @@ export default async function HomePage() {
             <div className="h-8 w-8 rounded-xl bg-zinc-100 ring-1 ring-inset ring-zinc-200" aria-hidden />
             <h1 className="text-[17px] font-medium tracking-tight">IELTS AI</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/history" className="text-[12px] text-zinc-500 hover:text-zinc-800">
-              History →
-            </Link>
-            <span className="text-[11px] text-zinc-500">beta</span>
-          </div>
+          <span className="text-[11px] text-zinc-500">beta</span>
         </div>
       </header>
 
@@ -44,34 +32,27 @@ export default async function HomePage() {
             為 Writing 與 Speaking 打造清晰、精準、專注的練習體驗。
           </p>
 
+          <QuickStart />
+
           {/* Primary actions: Writing / Speaking */}
-          <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2">
             <FeatureCard
               title="Writing Task 2"
               desc="即時分項評分、逐段建議、優化版本"
               href="/tasks/1/writing"
               tone="brand"
-              metrics={[
-                { label: "最近 Overall", value: bandFmt(writingBand) },
-                { label: "目標字數", value: writingTarget },
-              ]}
+              meta={latestW?.type === "writing" ? `最近：${fmtBand(latestW.band?.overall)} /9` : "尚未有紀錄"}
             />
             <FeatureCard
               title="Speaking (Part 2)"
               desc="兩分鐘限時錄音、轉文字、口語反饋"
               href="/tasks/1/speaking"
               tone="speak"
-              metrics={[
-                { label: "Content", value: bandFmt(speakingContent) },
-                { label: "Speech", value: bandFmt(speakingSpeech) },
-              ]}
+              meta={latestS?.type === "speaking" ? `最近：${fmtBand(latestS.band?.overall ?? latestS.band?.content)} /9` : "尚未有紀錄"}
             />
           </div>
 
-          {/* Value highlights */}
           <Highlights />
-
-          {/* How it works */}
           <HowItWorks />
         </div>
       </section>
@@ -95,9 +76,7 @@ export default async function HomePage() {
               開始 Speaking
             </Link>
           </div>
-          <p className="mt-4 text-[12px] text-zinc-500">
-            目前僅提供 Writing / Speaking，其他功能將於後續釋出
-          </p>
+          <p className="mt-4 text-[12px] text-zinc-500">目前僅提供 Writing / Speaking，其他功能將於後續釋出</p>
         </div>
       </section>
 
@@ -147,30 +126,29 @@ function BackgroundDecor() {
   );
 }
 
-/* 兩個主功能卡：左緣色帶 + 小指標（顯示最新分數） */
 function FeatureCard({
   title,
   desc,
   href,
   tone,
-  metrics,
+  meta,
 }: {
   title: string;
   desc: string;
   href: string;
   tone: "brand" | "speak";
-  metrics: { label: string; value: string }[];
+  meta?: string;
 }) {
   const palette =
     tone === "brand"
-      ? { band: "from-blue-500/70 via-sky-400/60 to-blue-500/70", ring: "ring-blue-300/40 group-hover:ring-blue-400/50", dot: "bg-blue-500/20" }
-      : { band: "from-amber-500/70 via-orange-400/60 to-amber-500/70", ring: "ring-amber-300/40 group-hover:ring-amber-400/50", dot: "bg-amber-500/20" };
+      ? { band: "from-blue-500/70 via-sky-400/60 to-blue-500/70", ring: "ring-blue-300/40 hover:ring-blue-400/50", dot: "bg-blue-500/20" }
+      : { band: "from-amber-500/70 via-orange-400/60 to-amber-500/70", ring: "ring-amber-300/40 hover:ring-amber-400/50", dot: "bg-amber-500/20" };
 
   return (
     <Link
       href={href}
       className={[
-        "group relative block overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 p-6 sm:p-7 shadow-sm backdrop-blur",
+        "relative block overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 p-6 sm:p-7 shadow-sm backdrop-blur",
         "transition-[transform,box-shadow] duration-200 will-change-transform",
         "hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.06)]",
         "ring-1 ring-inset", palette.ring,
@@ -191,15 +169,13 @@ function FeatureCard({
               <h3 className="text-[17px] font-medium tracking-tight">{title}</h3>
             </div>
             <p className="mt-1.5 text-[14px] leading-relaxed text-zinc-600">{desc}</p>
-            {/* 指標 */}
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              {metrics.map((m) => (
-                <div key={m.label} className="rounded-lg border border-zinc-200 bg-white/70 px-3 py-2 text-[12px] text-zinc-600">
-                  <div className="text-[11px] text-zinc-500">{m.label}</div>
-                  <div className="mt-0.5 font-medium text-zinc-800">{m.value}</div>
-                </div>
-              ))}
-            </div>
+
+            {/* 最近一次分數 */}
+            {meta && (
+              <div className="mt-3 inline-flex items-center rounded-lg border border-zinc-200 bg-white/70 px-2 py-1 text-[12px] text-zinc-700">
+                {meta}
+              </div>
+            )}
           </div>
           <span className="ml-2 mt-1 hidden text-zinc-400 transition-colors group-hover:text-zinc-700 sm:block" aria-hidden>→</span>
         </div>
@@ -208,21 +184,11 @@ function FeatureCard({
   );
 }
 
-/* 三個亮點：讓價值一眼看懂 */
 function Highlights() {
   const items = [
-    {
-      t: "真考向度評分",
-      d: "依 IELTS 四大構面產生反饋：Task, Coherence, Lexical, Grammar",
-    },
-    {
-      t: "可比對的進步",
-      d: "保存每次結果，形成趨勢曲線，聚焦高影響錯誤",
-    },
-    {
-      t: "無痛上手",
-      d: "0 安裝、0 複雜設定，輸入即評測，2 分鐘得到可行建議",
-    },
+    { t: "真考向度評分", d: "依 IELTS 四大構面產生反饋：Task, Coherence, Lexical, Grammar" },
+    { t: "可比對的進步", d: "保存每次結果，形成趨勢曲線，聚焦高影響錯誤" },
+    { t: "無痛上手", d: "0 安裝、0 複雜設定，輸入即評測，2 分鐘得到可行建議" },
   ];
   return (
     <div className="mt-10 grid gap-3 sm:grid-cols-3">
@@ -236,7 +202,6 @@ function Highlights() {
   );
 }
 
-/* 三步驟流程 */
 function HowItWorks() {
   const steps = [
     { n: 1, t: "輸入題目與內容", d: "Writing 貼上作文；Speaking 準備 2 分鐘主題" },
@@ -261,9 +226,8 @@ function HowItWorks() {
   );
 }
 
-/* 小工具 */
-function bandFmt(n?: number) {
-  if (n == null) return "—";
-  const s = Number(n).toFixed(1);
-  return s.endsWith(".0") ? s.slice(0, -2) : s;
+function fmtBand(n?: number) {
+  if (n == null || isNaN(n)) return "-";
+  const s = Number(n).toFixed(1).replace(/\.0$/, "");
+  return s;
 }
