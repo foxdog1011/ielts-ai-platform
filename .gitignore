@@ -1,20 +1,33 @@
-# dependencies
+# Node
 node_modules/
+apps/web/.next/
+apps/web/.vercel/
+*.log
 
-# build output
-.next/
-dist/
-out/
-.turbo/
+# Env / secrets
+.env*
+apps/web/.env*
+!apps/web/.env.example
 
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Python
+__pycache__/
+*.pyc
+ml/.venv/
+ml/.cache/
+ml/tmp/
+ml/artifacts/
+ml/data/
+!ml/data/README.md
 
-# env files
-.env
-.env.local
+# Outputs / datasets / large
+tmp/
+data/
+*.zip
+*.tar.gz
+*.csv
 
-# system
+# OS/editor
 .DS_Store
+Thumbs.db
+.vscode/
+EOF

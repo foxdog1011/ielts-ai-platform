@@ -1,0 +1,10 @@
+pandas
+numpy
+scikit-learn
+xgboost
+sentence-transformers
+torch
+librosa
+soundfile
+tqdm
+matplotlib

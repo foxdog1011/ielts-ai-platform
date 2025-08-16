@@ -1,11 +1,11 @@
 // apps/web/app/page.tsx
 import Link from "next/link";
 import QuickStart from "./QuickStart";
-import { latestOfType } from "@/lib/history";
+import { listHistory } from "@/lib/history";
 
 export default async function HomePage() {
-  const latestW = await latestOfType("writing");
-  const latestS = await latestOfType("speaking");
+  const [latestW] = await listHistory({ type: "writing", limit: 1 });
+  const [latestS] = await listHistory({ type: "speaking", limit: 1 });
 
   return (
     <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
