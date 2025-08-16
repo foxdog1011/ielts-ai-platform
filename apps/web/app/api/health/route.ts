@@ -1,55 +1,99 @@
-// apps/web/app/api/health/route.ts
-import { NextResponse } from "next/server";
-import fs from "node:fs";
-import path from "node:path";
+// apps/web/app/api/history/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { listHistory, saveHistory, type HistoryRecord, type WritingRecord, type SpeakingRecord } from "@/lib/history";
 
-export async function GET() {
-  const env = {
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? "set" : "",
-    OPENAI_MODEL: process.env.OPENAI_MODEL || "",
-    ASR_MODEL: process.env.ASR_MODEL || "",
-    ML_CWD: process.env.ML_CWD || "",
-    PYTHON_BIN: process.env.PYTHON_BIN || "",
-    ALLOWED_AUDIO_ROOTS: (process.env.ALLOWED_AUDIO_ROOTS || "")
-      .split(/[,:]/).map(s => s.trim()).filter(Boolean),
-  };
+// GET /api/history?type=writing&limit=20&offset=0
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const typeParam = searchParams.get("type");
+  const limitParam = searchParams.get("limit");
+  const offsetParam = searchParams.get("offset");
 
-  const scorePath = env.ML_CWD ? path.join(env.ML_CWD, "src", "score_cli.py") : "";
-  let exists = false;
-  let statError: string | null = null;
+  const type: "writing" | "speaking" | undefined =
+    typeParam === "writing" || typeParam === "speaking" ? (typeParam as any) : undefined;
 
-  if (scorePath) {
-    try {
-      exists = fs.existsSync(scorePath);
-      if (exists) fs.statSync(scorePath); // 進一步確認可讀
-    } catch (e: any) {
-      exists = false;
-      statError = e?.message || String(e);
+  const limit = Number.isFinite(Number(limitParam)) ? Number(limitParam) : 50;
+  const offset = Number.isFinite(Number(offsetParam)) ? Number(offsetParam) : 0;
+
+  const rows = await listHistory({ type, limit, offset });
+  return NextResponse.json({ ok: true, data: rows });
+}
+
+// POST /api/history
+const Body = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("writing"),
+    taskId: z.string().min(1),
+    prompt: z.string().min(1),
+    durationSec: z.number().int().nonnegative(),
+    words: z.number().int().nonnegative().optional(),
+    band: z
+      .object({
+        overall: z.number().optional(),
+        taskResponse: z.number().optional(),
+        coherence: z.number().optional(),
+        lexical: z.number().optional(),
+        grammar: z.number().optional(),
+      })
+      .nullable()
+      .optional(),
+    ts: z.number().optional(),
+  }),
+  z.object({
+    type: z.literal("speaking"),
+    taskId: z.string().min(1),
+    prompt: z.string().min(1),
+    durationSec: z.number().int().nonnegative(),
+    band: z
+      .object({
+        overall: z.number().optional(),
+        content: z.number().optional(),
+        grammar: z.number().optional(),
+        vocab: z.number().optional(),
+        fluency: z.number().optional(),
+        pronunciation: z.number().optional(),
+      })
+      .nullable()
+      .optional(),
+    ts: z.number().optional(),
+  }),
+]);
+
+export async function POST(req: NextRequest) {
+  try {
+    const parsed = Body.parse(await req.json());
+    let rec: HistoryRecord;
+
+    if (parsed.type === "writing") {
+      const w: WritingRecord = {
+        type: "writing",
+        taskId: parsed.taskId,
+        prompt: parsed.prompt,
+        durationSec: parsed.durationSec,
+        words: parsed.words,
+        band: parsed.band ?? null,
+        ts: parsed.ts,
+      };
+      rec = w;
+    } else {
+      const s: SpeakingRecord = {
+        type: "speaking",
+        taskId: parsed.taskId,
+        prompt: parsed.prompt,
+        durationSec: parsed.durationSec,
+        band: parsed.band ?? null,
+        ts: parsed.ts,
+      };
+      rec = s;
     }
+
+    const saved = await saveHistory(rec);
+    return NextResponse.json({ ok: true, data: saved });
+  } catch (e: any) {
+    return NextResponse.json(
+      { ok: false, error: { message: e?.message || "Invalid body" } },
+      { status: 400 }
+    );
   }
-
-  // quantile map
-  const qPath = path.join(process.cwd(), "public", "calibration", "quantile_map.json");
-  const qExists = fs.existsSync(qPath);
-
-  // KV 檢查
-  const hasUrl = !!process.env.KV_REST_API_URL;
-  const hasToken = !!process.env.KV_REST_API_TOKEN;
-
-  return NextResponse.json({
-    ok: true,
-    data: {
-      env,
-      kv: {
-        provider: hasUrl && hasToken ? "vercel-kv" : "memory",
-        hasUrl,
-        hasToken,
-        ok: true,
-      },
-      files: {
-        score_cli_py: { path: scorePath, exists, statError },
-        calibration: { path: qPath, exists: qExists },
-      },
-    },
-  });
 }

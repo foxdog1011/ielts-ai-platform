@@ -1,23 +1,32 @@
+// apps/web/app/api/prompts/generate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { OpenAI } from "openai";
-import { savePromptsUniq, type PromptItem, type PromptType, type WritingPart, type SpeakingPart } from  "../../../../lib/promptStore";
+import {
+  savePromptsUniq,
+  type PromptItem,
+  type PromptType,
+  type WritingPart,
+  type SpeakingPart,
+} from "@/lib/promptStore";
+
 const BodySchema = z.object({
-  type: z.enum(["writing","speaking"]),
-  part: z.string(), // 由下方校驗
+  type: z.enum(["writing", "speaking"]),
+  part: z.string(), // 由下方做白名單檢查
   count: z.number().int().min(1).max(50).default(10),
   topics: z.array(z.string()).max(10).default([]),
-  level: z.enum(["5.0-6.0","6.0-7.0","7.0-8.0"]).optional(),
+  level: z.enum(["5.0-6.0", "6.0-7.0", "7.0-8.0"]).optional(),
 });
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 export async function POST(req: NextRequest) {
   try {
     const body = BodySchema.parse(await req.json());
+
     // 驗 part 合法
-    const writingParts: WritingPart[] = ["task1-ac","task1-gt","task2"];
-    const speakingParts: SpeakingPart[] = ["part1","part2","part3"];
+    const writingParts: WritingPart[] = ["task1-ac", "task1-gt", "task2"];
+    const speakingParts: SpeakingPart[] = ["part1", "part2", "part3"];
     if (body.type === "writing" && !writingParts.includes(body.part as WritingPart)) {
       return bad("Invalid writing part");
     }
@@ -28,22 +37,40 @@ export async function POST(req: NextRequest) {
     const sys = makeSystem(body.type as PromptType, body.part as any);
     const user = makeUser(body);
 
-    const chat = await openai.chat.completions.create({
+    // ✅ 改用 Responses API
+    const res = await client.responses.create({
       model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content: user },
-      ],
-      response_format: { type: "json_object" },
+      instructions: sys,     // 原本 system prompt
+      input: user,           // 原本 user prompt
+      text: { format: "json" }, // 取代舊的 response_format
       temperature: 0.6,
-      max_tokens: 1800,
+      max_output_tokens: 1800,
     });
 
-    const text = chat.choices?.[0]?.message?.content || "{}";
-    let data: any = {};
-    try { data = JSON.parse(text); } catch { data = {}; }
+    // 輸出抽取（兼容不同 SDK 小版本）
+    const text =
+      (res as any).output_text ??
+      (res as any)?.output?.[0]?.content?.[0]?.text ??
+      (res as any)?.content?.[0]?.text ??
+      "";
 
-    const rows: Omit<PromptItem, "id" | "ts" | "hash">[] = normalize(body.type as PromptType, body.part as any, data, body.level);
+    let data: any = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // 假如模型意外回了包一層字串的 JSON
+      const maybe = String(text || "").trim();
+      const unwrapped = maybe.startsWith('"') && maybe.endsWith('"') ? JSON.parse(JSON.parse(maybe)) : null;
+      data = unwrapped || {};
+    }
+
+    const rows: Omit<PromptItem, "id" | "ts" | "hash">[] = normalize(
+      body.type as PromptType,
+      body.part as any,
+      data,
+      body.level
+    );
+
     const saved = await savePromptsUniq(rows);
     return NextResponse.json({ ok: true, data: { created: saved.length, items: saved } });
   } catch (err: any) {
@@ -95,7 +122,12 @@ function makeUser(body: z.infer<typeof BodySchema>) {
   ].join("\n");
 }
 
-function normalize(type: PromptType, part: WritingPart | SpeakingPart, data: any, level?: PromptItem["level"]) {
+function normalize(
+  type: PromptType,
+  part: WritingPart | SpeakingPart,
+  data: any,
+  level?: PromptItem["level"]
+) {
   const arr = Array.isArray(data?.items) ? data.items : [];
   return arr
     .map((raw: any) => ({
@@ -103,8 +135,13 @@ function normalize(type: PromptType, part: WritingPart | SpeakingPart, data: any
       part,
       level,
       prompt: String(raw?.prompt || "").trim(),
-      topicTags: (Array.isArray(raw?.topicTags) ? raw.topicTags : []).map((t: any) => String(t || "").trim().toLowerCase()).filter(Boolean).slice(0,4),
-      followup: Array.isArray(raw?.followup) ? raw.followup.map((q:any)=>String(q||"").trim()).filter(Boolean).slice(0,6) : undefined,
+      topicTags: (Array.isArray(raw?.topicTags) ? raw.topicTags : [])
+        .map((t: any) => String(t || "").trim().toLowerCase())
+        .filter(Boolean)
+        .slice(0, 4),
+      followup: Array.isArray(raw?.followup)
+        ? raw.followup.map((q: any) => String(q || "").trim()).filter(Boolean).slice(0, 6)
+        : undefined,
       source: "ai-gen" as const,
     }))
     .filter((x: any) => x.prompt?.length > 10);

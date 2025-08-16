@@ -1,10 +1,10 @@
 // apps/web/lib/history.ts
-// 紀錄練習歷史：list / latest / save（走檔案型 KV）
-// 重要：不再使用 kvListLen，統一用 kvListRangeJSON 後端做分頁。
+// 只依賴 lib/kv.ts 的 listScores / saveScore / ScorePayload
 
-import { kvListPushJSON, kvListRangeJSON } from "./kv";
+import { unstable_noStore as noStore } from "next/cache";
+import { listScores, saveScore, type ScorePayload } from "@/lib/kv";
 
-type WritingBand = {
+export type WritingBand = {
   overall?: number;
   taskResponse?: number;
   coherence?: number;
@@ -12,111 +12,111 @@ type WritingBand = {
   grammar?: number;
 };
 
-type SpeakingBand = {
+export type SpeakingBand = {
   overall?: number;
   content?: number;
-  speech?: number;
+  grammar?: number;
+  vocab?: number;
+  fluency?: number;
+  pronunciation?: number;
 };
 
-export type WritingHistoryInput = {
-  type: "writing";
+export type BaseRecord = {
   taskId: string;
-  prompt: string;
-  durationSec: number;
-  words?: number;
-  band?: WritingBand | null;
-  ts?: number; // 可覆寫時間戳（預設 Date.now()）
+  prompt?: string;
+  durationSec?: number;
+  ts?: number;
+  createdAt?: string;
 };
 
-export type SpeakingHistoryInput = {
-  type: "speaking";
-  taskId: string;
-  prompt: string;
-  durationSec: number;
-  band?: SpeakingBand | null;
-  ts?: number; // 可覆寫時間戳（預設 Date.now()）
-};
-
-export type HistoryInput = WritingHistoryInput | SpeakingHistoryInput;
-
-export type HistoryRowBase = {
-  id: string;
-  ts: number;
-  type: "writing" | "speaking";
-  taskId: string;
-  prompt: string;
-  durationSec: number;
-};
-
-export type WritingHistoryRow = HistoryRowBase & {
+export type WritingRecord = BaseRecord & {
   type: "writing";
   words?: number;
   band?: WritingBand | null;
 };
 
-export type SpeakingHistoryRow = HistoryRowBase & {
+export type SpeakingRecord = BaseRecord & {
   type: "speaking";
   band?: SpeakingBand | null;
+  speakingFeatures?: Record<string, number | string | boolean>;
 };
 
-export type HistoryRow = WritingHistoryRow | SpeakingHistoryRow;
+export type HistoryRecord = WritingRecord | SpeakingRecord;
 
-function listKey() {
-  return "history:list:v1";
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+const TAKE_CAP = 200;
+
+function toEpochMs(rec: Partial<HistoryRecord>): number {
+  if (typeof rec.ts === "number" && Number.isFinite(rec.ts)) return rec.ts;
+  if (rec.createdAt) {
+    const t = Date.parse(rec.createdAt);
+    if (!Number.isNaN(t)) return t;
+  }
+  return Date.now();
 }
 
-function makeId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+/** 把「舊→新」反轉成「新→舊」，再做 offset/limit 切片 */
+function pageNewestFirst<T>(itemsOldToNew: T[], limit: number, offset: number): T[] {
+  const newestFirst = [...itemsOldToNew].reverse();
+  return newestFirst.slice(offset, offset + limit);
 }
 
-export async function saveHistory(input: HistoryInput): Promise<HistoryRow> {
-  const now = typeof input.ts === "number" ? input.ts : Date.now();
-  const id = makeId();
-
-  const row: HistoryRow = {
-    id,
-    ts: now,
-    type: input.type,
-    taskId: input.taskId,
-    prompt: input.prompt,
-    durationSec: input.durationSec,
-    ...(input.type === "writing"
-      ? {
-          words: input.words,
-          band: input.band ?? null,
-        }
-      : {
-          band: input.band ?? null,
-        }),
-  } as HistoryRow;
-
-  await kvListPushJSON(listKey(), row);
-  return row;
+/** 寫入一筆歷史（委派給 saveScore） */
+export async function saveHistory(rec: HistoryRecord): Promise<HistoryRecord> {
+  noStore();
+  const { type, ...payload } = rec as any;
+  const out = await saveScore(type, payload as Omit<ScorePayload, "createdAt">);
+  return { type, ...(out as any) };
 }
 
+/** 讀取歷史（最新在前） */
 export async function listHistory(opts: {
   type?: "writing" | "speaking";
   limit?: number;
   offset?: number;
-} = {}): Promise<HistoryRow[]> {
-  const { type, limit = 50, offset = 0 } = opts;
+} = {}): Promise<HistoryRecord[]> {
+  noStore();
+  const type = opts.type;
+  const limit = clamp(Number(opts.limit ?? 50), 1, 100);
+  const offset = Math.max(0, Number(opts.offset ?? 0));
+  const take = clamp(limit + offset, 1, TAKE_CAP);
 
-  // 取完整清單（DEV 數量很小，OK；正式可換成後端分頁）
-  const all = (await kvListRangeJSON(listKey())) as HistoryRow[];
+  if (type === "speaking" || type === "writing") {
+    const base = (await listScores(type, take)) as unknown[]; // 舊→新
+    const page = pageNewestFirst(base, limit, offset);
+    return page.map((x: unknown) => {
+      const item = x as Record<string, unknown>;
+      return { type, ...item } as HistoryRecord;
+    });
+  }
 
-  // 依時間倒序（新→舊）
-  const sorted = [...all].sort((a: HistoryRow, b: HistoryRow) => (b.ts || 0) - (a.ts || 0));
+  // 同時取兩類，最後合併
+  type KVItem = Record<string, unknown>;
 
-  const filtered = type ? sorted.filter((r) => r.type === type) : sorted;
+  const [spkRaw, wriRaw] = (await Promise.all([
+    listScores("speaking", take),
+    listScores("writing", take),
+  ])) as [unknown[], unknown[]];
 
-  const start = Math.max(0, offset);
-  const end = Math.max(start, start + (limit || 0));
-  return filtered.slice(start, end);
+  const spk = (spkRaw as unknown[]).map((x: unknown) => x as KVItem);
+  const wri = (wriRaw as unknown[]).map((x: unknown) => x as KVItem);
+
+  const all: HistoryRecord[] = [
+    ...(spk.map((x: KVItem) => ({ type: "speaking" as const, ...x })) as any),
+    ...(wri.map((x: KVItem) => ({ type: "writing" as const, ...x })) as any),
+  ];
+
+  all.sort((a, b) => toEpochMs(b) - toEpochMs(a)); // 新→舊
+  return all.slice(offset, offset + limit);
 }
 
-export async function latestHistory(
-  type?: "writing" | "speaking"
-): Promise<HistoryRow | undefined> {
-  const rows = await listHistory({ type, limit: 1, offset: 0 });
-  return rows[0];
+/** 取最新 N 筆（不分 type） */
+export async function latestHistory(limit = 10): Promise<HistoryRecord[]> {
+  return listHistory({ limit, offset: 0 });
+}
+
+/** 取某一類型的最新一筆（方便頁面使用） */
+export async function latestOfType(type: "writing" | "speaking") {
+  const [x] = await listHistory({ type, limit: 1 });
+  return x;
 }

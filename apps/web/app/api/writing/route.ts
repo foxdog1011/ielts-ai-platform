@@ -1,177 +1,235 @@
+// apps/web/app/api/writing/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { spawn } from "child_process";
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
+import { z } from "zod";
 import OpenAI from "openai";
 import { saveScore } from "@/lib/kv";
 
-export const runtime = "nodejs";
+// ---------- Zod schema ----------
+const Body = z.object({
+  taskId: z.string().min(1),
+  prompt: z.string().min(1),
+  essay: z.string().min(1),
+  targetWords: z.number().int().positive().optional(),
+  seconds: z.number().int().nonnegative().optional(),
+});
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-const TEMPERATURE = +(process.env.TEMPERATURE || 0.2);
-const ML_CWD = process.env.ML_CWD || process.cwd();
-const CALI_PATH =
-  process.env.CALIBRATION_PATH ||
-  path.join(process.cwd(), "public", "calibration", "quantile_map.json");
-const PY_BIN = process.env.PYTHON_BIN || "python3";
-
-type Curve = { overall01: number[]; band: number[]; mode: string };
-function loadCurve(): Curve {
-  const raw = fs.readFileSync(CALI_PATH, "utf-8");
-  return JSON.parse(raw);
+// ---------- helpers ----------
+function clamp(n: number, lo: number, hi: number) {
+  return Math.max(lo, Math.min(hi, n));
 }
-function calibrateBand(overall01: number, curve: Curve): number {
-  const x = Math.max(0, Math.min(1, Number.isFinite(overall01) ? overall01 : 0));
-  const xs = curve.overall01, ys = curve.band;
-  let i = 0, j = xs.length - 1;
-  while (i + 1 < j) { const m = (i + j) >> 1; (xs[m] <= x ? i = m : j = m); }
-  const t = (x - xs[i]) / Math.max(1e-9, xs[j] - xs[i]);
-  const y = ys[i] + t * (ys[j] - ys[i]);
-  return Math.round(y * 2) / 2;
+function toHalfBand(n: number) {
+  // 四捨五入到 0.5
+  return Math.round(n * 2) / 2;
+}
+function countWords(text: string) {
+  const t = text.trim();
+  if (!t) return 0;
+  return t.replace(/\n/g, " ").split(" ").map(s => s.trim()).filter(Boolean).length;
 }
 
-function runPythonContent({ text }: { text: string }) {
-  return new Promise<{ ok: boolean; json?: any; err?: string }>((resolve) => {
-    const args = ["src/score_cli.py", "--text", text];
-    const py = spawn(PY_BIN, args, { cwd: ML_CWD, env: { ...process.env, PYTHONUNBUFFERED: "1" } });
-    let out = "", err = "";
-    py.stdout.on("data", d => out += d.toString());
-    py.stderr.on("data", d => err += d.toString());
-    py.on("close", code => {
-      if (code === 0) { try { resolve({ ok: true, json: JSON.parse(out) }); } catch (e: any) { resolve({ ok: false, err: "Invalid JSON: "+e?.message }); } }
-      else { console.error("[PY-ERR writing]", err); resolve({ ok: false, err: err || `python exited ${code}` }); }
-    });
-  });
-}
+type Band = {
+  overall?: number | null;
+  taskResponse?: number | null;
+  coherence?: number | null;
+  lexical?: number | null;
+  grammar?: number | null;
+};
 
-async function scoreWritingLLM(promptText: string, essay: string) {
-  const messages: any[] = [
-    { role: "system", content: "You are an IELTS Writing Task 2 examiner. Score taskResponse, coherence, lexical, grammar in 0..1, and overall_text in 0..1; suggest band_text in {4.0..9.0 step 0.5}. Also return paragraphFeedback (index/comment), improvements[], and a concise rewritten intro. Return via the function only." },
-    { role: "user", content: `Prompt:\n${promptText}\n\nEssay:\n${essay}` },
-  ];
-  const tools: any[] = [{
-    type: "function",
-    function: {
-      name: "return_writing_scores",
-      description: "Return scores for IELTS Writing Task 2.",
-      parameters: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          taskResponse:  { type: "number", minimum: 0, maximum: 1 },
-          coherence:     { type: "number", minimum: 0, maximum: 1 },
-          lexical:       { type: "number", minimum: 0, maximum: 1 },
-          grammar:       { type: "number", minimum: 0, maximum: 1 },
-          overall_text:  { type: "number", minimum: 0, maximum: 1 },
-          band_text:     { type: "number", enum: [4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5,8.0,8.5,9.0] },
-          paragraphFeedback: {
-            type: "array",
-            items: { type: "object", properties: { index: { type: "number" }, comment: { type: "string" } } }
-          },
-          improvements:  { type: "array", items: { type: "string" } },
-          rewritten:     { type: "string" },
-        },
-        required: ["taskResponse","coherence","lexical","grammar","overall_text","band_text"]
-      }
-    }
-  }];
+function normalizeBand(b: Partial<Band> | null | undefined): Required<Band> {
+  const o = (b?.overall ?? null);
+  const tr = (b?.taskResponse ?? null);
+  const cc = (b?.coherence ?? null);
+  const lr = (b?.lexical ?? null);
+  const gr = (b?.grammar ?? null);
 
-  const completion = await openai.chat.completions.create({
-    model: OPENAI_MODEL,
-    temperature: TEMPERATURE,
-    messages, tools,
-    tool_choice: { type: "function", function: { name: "return_writing_scores" } },
-  });
-
-  const m: any = completion.choices[0].message;
-  const call = m.tool_calls?.[0];
-  const usage = (completion as any).usage;
-  if (call?.function?.arguments) return { ...JSON.parse(call.function.arguments), tokensUsed: usage?.total_tokens };
-  try { return { ...(m.content ? JSON.parse(m.content as string) : {}), tokensUsed: usage?.total_tokens }; }
-  catch { throw new Error("LLM did not return structured output."); }
-}
-
-function fuseWriting(llm: any, py: any) {
-  const tr = Number(llm?.taskResponse);
-  const coh = Number(llm?.coherence);
-  const lex = Number(llm?.lexical);
-  const gra = Number(llm?.grammar);
-  const overall_text = Number(llm?.overall_text);
-  const content01 = Number(py?.subscores_01?.content);
-  const textProxy = Number.isFinite(overall_text)
-    ? overall_text
-    : [tr,coh,lex,gra].every(Number.isFinite) ? (0.35*tr + 0.25*coh + 0.2*lex + 0.2*gra) : NaN;
-
-  let parts: number[] = [], wts: number[] = [];
-  if (Number.isFinite(textProxy)) { parts.push(textProxy); wts.push(0.6); }
-  if (Number.isFinite(content01)) { parts.push(content01); wts.push(0.4); }
-
-  const overall01 = parts.length ? parts.reduce((s,v,i)=>s+v*wts[i],0)/wts.reduce((a,b)=>a+b,0) : (Number.isFinite(textProxy)?textProxy:0);
+  // clamp & half-steps 如果非 null
+  const fix = (x: number | null) =>
+    x == null || Number.isNaN(x) ? null : toHalfBand(clamp(Number(x), 0, 9));
 
   return {
-    overall_01: Math.max(0, Math.min(1, overall01)),
-    subscores_01: {
-      taskResponse: Number.isFinite(tr) ? tr : null,
-      coherence:    Number.isFinite(coh)? coh: null,
-      lexical:      Number.isFinite(lex)? lex: null,
-      grammar:      Number.isFinite(gra)? gra: null,
-      content:      Number.isFinite(content01)? content01: null,
-    },
-    paragraphFeedback: Array.isArray(llm?.paragraphFeedback) ? llm.paragraphFeedback : [],
-    improvements: Array.isArray(llm?.improvements) ? llm.improvements : [],
-    rewritten: typeof llm?.rewritten === "string" ? llm.rewritten : "",
-    tokensUsed: llm?.tokensUsed,
+    overall: fix(o),
+    taskResponse: fix(tr),
+    coherence: fix(cc),
+    lexical: fix(lr),
+    grammar: fix(gr),
   };
 }
 
-export async function POST(req: NextRequest) {
-  const requestId = crypto.randomUUID();
-  try {
-    const { taskId, prompt, essay } = await req.json();
+function deriveOverall(b: Required<Band>): number {
+  // 如果 overall 缺，就用四構面平均
+  const parts = [b.taskResponse, b.coherence, b.lexical, b.grammar].filter(
+    (x): x is number => typeof x === "number"
+  );
+  if (typeof b.overall === "number") return toHalfBand(clamp(b.overall, 0, 9));
+  if (parts.length === 0) return 5.5;
+  const avg = parts.reduce((a, c) => a + c, 0) / parts.length;
+  return toHalfBand(clamp(avg, 0, 9));
+}
 
-    let pyOut: any = null; let pyErr: string | null = null;
-    if (essay) {
-      const r = await runPythonContent({ text: essay });
-      pyOut = r.ok ? r.json : null;
-      pyErr = r.ok ? null : (r.err || null);
+// ---------- LLM prompt ----------
+function buildSystem() {
+  return `You are an IELTS Writing Task 2 rater. Score strictly on four criteria:
+- Task Response (TR)
+- Coherence and Cohesion (CC)
+- Lexical Resource (LR)
+- Grammatical Range and Accuracy (GRA)
+
+Return concise, actionable comments. Scores are 0.0–9.0 and can use half steps (e.g., 5.5, 6.0, 6.5).`;
+}
+
+function buildUser(prompt: string, essay: string) {
+  return `PROMPT:
+${prompt}
+
+ESSAY:
+${essay}
+`;
+}
+
+// ---------- JSON schema for model ----------
+const responseSchema = {
+  type: "object",
+  properties: {
+    band: {
+      type: "object",
+      properties: {
+        taskResponse: { type: "number" },
+        coherence: { type: "number" },
+        lexical: { type: "number" },
+        grammar: { type: "number" },
+        overall: { type: "number" },
+      },
+      required: ["taskResponse", "coherence", "lexical", "grammar"],
+    },
+    paragraphFeedback: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          index: { type: "number" },
+          comment: { type: "string" },
+        },
+        required: ["index", "comment"],
+      },
+    },
+    improvements: {
+      type: "array",
+      items: { type: "string" },
+    },
+    rewritten: { type: "string" },
+  },
+  required: ["band"],
+} as const;
+
+// ---------- handler ----------
+export async function POST(req: NextRequest) {
+  try {
+    const body = Body.parse(await req.json());
+    const { taskId, prompt, essay, targetWords, seconds } = body;
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!,
+    });
+
+    // 使用 JSON 模式要用 Responses API（OpenAI SDK v5）
+    const start = Date.now();
+    const resp = await openai.responses.create({
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      input: [
+        { role: "system", content: buildSystem() },
+        { role: "user", content: buildUser(prompt, essay) },
+      ],
+      // JSON schema（function-like）
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "ielts_writing_result",
+          schema: responseSchema,
+          strict: true,
+        },
+      },
+      temperature: Number(process.env.TEMPERATURE ?? 0.2),
+    } as any);
+
+    // 解析 JSON
+    const outText = resp.output_text || "{}";
+    let parsed: any = {};
+    try {
+      parsed = JSON.parse(outText);
+    } catch {
+      parsed = {};
     }
 
-    const llm = await scoreWritingLLM(String(prompt || ""), String(essay || ""));
-    const fused = fuseWriting(llm, pyOut);
-    const curve = loadCurve();
-    const band = calibrateBand(fused.overall_01, curve);
+    // 固定補齊 & clamp + half step
+    const bandRaw: Partial<Band> = parsed?.band || {};
+    let band = normalizeBand(bandRaw);
+    band.overall = deriveOverall(band);
 
+    // 其他欄位
+    const paragraphFeedback: { index: number; comment: string }[] = Array.isArray(parsed?.paragraphFeedback)
+      ? parsed.paragraphFeedback
+          .map((x: any) => ({
+            index: Number(x?.index ?? 0),
+            comment: String(x?.comment ?? "").slice(0, 800),
+          }))
+          .filter((x: any) => x.comment)
+      : [];
+
+    const improvements: string[] = Array.isArray(parsed?.improvements)
+      ? parsed.improvements.map((s: any) => String(s ?? "")).filter(Boolean).slice(0, 10)
+      : [];
+
+    const rewritten: string =
+      typeof parsed?.rewritten === "string" && parsed.rewritten.trim()
+        ? parsed.rewritten
+        : "";
+
+    const tokensUsed =
+      (resp?.usage?.total_tokens as number | undefined) ??
+      (resp?.usage as any)?.total_tokens ??
+      undefined;
+
+    // ---------- 寫入歷史（自動） ----------
+    try {
+      const words = countWords(essay);
+      await saveScore("writing", {
+        taskId,
+        prompt,
+        durationSec: seconds ?? undefined,
+        words,
+        band,
+      });
+    } catch (e) {
+      // 保持靜默，不阻斷主流程
+      console.warn("[history] saveScore failed:", (e as Error)?.message);
+    }
+
+    // ---------- 回傳 ----------
     const data = {
-      band: {
-        overall: band,
-        taskResponse: fused.subscores_01.taskResponse,
-        coherence:    fused.subscores_01.coherence,
-        lexical:      fused.subscores_01.lexical,
-        grammar:      fused.subscores_01.grammar,
-      },
-      paragraphFeedback: fused.paragraphFeedback,
-      improvements: fused.improvements,
-      rewritten: fused.rewritten,
-      tokensUsed: fused.tokensUsed,
+      band,
+      paragraphFeedback,
+      improvements,
+      rewritten,
+      tokensUsed,
       debug: {
-        overall_01: fused.overall_01,
-        calibration_mode: curve.mode,
-        used_local: !!pyOut,
         used_llm: true,
-        local_err: pyErr,
+        used_local: false,
+        calibration_mode: "none",
+        latency_ms: Date.now() - start,
       },
     };
 
-    try {
-      await saveScore("writing", { taskId: taskId || "task-2", band: data.band });
-    } catch (e) {
-      console.warn("[KV save writing] fail:", (e as any)?.message || e);
-    }
-
-    return NextResponse.json({ ok: true, data, requestId }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: { code: "SERVER_ERROR", message: String(err?.message || err) }, requestId }, { status: 500 });
+    return NextResponse.json({ ok: true, data });
+  } catch (e: any) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: {
+          code: "BAD_REQUEST",
+          message: e?.message || "Invalid body",
+        },
+      },
+      { status: 400 }
+    );
   }
 }

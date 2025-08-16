@@ -1,10 +1,13 @@
+// apps/web/app/api/prompts/random/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  pickRandomPrompt,
   listPrompts,
-  savePromptsUniq,
+  seedFromFiles,
   type WritingPart,
   type SpeakingPart,
+  type PromptLevel,
 } from "@/lib/promptStore";
 
 const WRITING_PARTS = ["task1-ac", "task1-gt", "task2"] as const;
@@ -39,37 +42,31 @@ export async function GET(req: NextRequest) {
     }
     const { type, part, topic, level } = parsed.data;
 
-    // 依序降級：全部條件 → 去掉 topic/level → 只保留 type → 全部放寬
-    const attempts: Array<Parameters<typeof listPrompts>[0]> = [
-      { type: type as any, part: part as any, topic, level: level as any, limit: 200, offset: 0 },
-      { type: type as any, part: part as any, limit: 200, offset: 0 },
-      { type: type as any, limit: 200, offset: 0 },
-      { limit: 200, offset: 0 },
-    ];
-
-    let candidates: any[] = [];
-    for (const opt of attempts) {
-      candidates = await listPrompts(opt);
-      if (candidates.length) break;
-    }
-
-    // 若依然沒有資料：寫入一批內建種子題目，再回傳其中一題
-    if (!candidates.length) {
-      const seeded = await ensureSeeds();
-      if (seeded.length) {
-        candidates = seeded;
+    // 先試抽一題
+    let picked = await pickRandomPrompt({ type: type as any, part: part as any, topic: topic || undefined, level: level as PromptLevel | undefined });
+    if (!picked) {
+      // 題庫空 → 先 seed 一批
+      await seedFromFiles();
+      // 再抽一次（降級策略：依序放寬條件）
+      const attempts: Array<Parameters<typeof listPrompts>[0]> = [
+        { type: type as any, part: part as any, topic: topic || undefined, level: level as any, limit: 200, offset: 0 },
+        { type: type as any, part: part as any, limit: 200, offset: 0 },
+        { type: type as any, limit: 200, offset: 0 },
+        { limit: 200, offset: 0 },
+      ];
+      for (const opt of attempts) {
+        const rows = await listPrompts(opt);
+        if (rows.length) { picked = rows[Math.floor(Math.random() * rows.length)]; break; }
       }
     }
 
-    if (!candidates.length) {
-      // 最終兜底（理論上到不了這裡）
+    if (!picked) {
       return NextResponse.json(
-        { ok: false, error: { message: "no prompt found (empty bank). Try generating some first." } },
+        { ok: false, error: { message: "no prompt found (even after seeding)" } },
         { status: 404 }
       );
     }
 
-    const picked = candidates[Math.floor(Math.random() * candidates.length)];
     return NextResponse.json({ ok: true, data: picked });
   } catch (e: any) {
     return NextResponse.json(
@@ -78,66 +75,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
-/** 若題庫為空，寫入一小批種子題（writing task2 + speaking part2） */
-async function ensureSeeds() {
-  const seeds = SEED_PROMPTS.map((p) => ({
-    ...p,
-    source: "seed" as const,
-  }));
-  const saved = await savePromptsUniq(seeds);
-  // 回傳剛寫入的題目（若已存在，savePromptsUniq 會去重，回傳可能為空）
-  return saved;
-}
-
-const SEED_PROMPTS: Array<{
-  type: "writing" | "speaking";
-  part: WritingPart | SpeakingPart;
-  topicTags: string[];
-  level?: "5.0-6.0" | "6.0-7.0" | "7.0-8.0";
-  prompt: string;
-  followup?: string[];
-}> = [
-  // Writing Task 2
-  {
-    type: "writing",
-    part: "task2",
-    topicTags: ["education", "technology"],
-    level: "6.0-7.0",
-    prompt:
-      "Some people believe that technology has made students less focused, while others think it has improved their learning efficiency. Discuss both views and give your own opinion.",
-  },
-  {
-    type: "writing",
-    part: "task2",
-    topicTags: ["environment", "government"],
-    level: "6.0-7.0",
-    prompt:
-      "Many governments are investing in public transport to reduce traffic and pollution. To what extent do you agree or disagree?",
-  },
-  // Speaking Part 2 (Cue Card)
-  {
-    type: "speaking",
-    part: "part2",
-    topicTags: ["person", "inspiration"],
-    level: "6.0-7.0",
-    prompt:
-      "Describe a person who has inspired you. You should say:\n- who the person is\n- how you know this person\n- what this person did\nand explain why this person inspired you.",
-    followup: [
-      "Do you think role models are necessary for young people?",
-      "Can public figures influence social values?",
-    ],
-  },
-  {
-    type: "speaking",
-    part: "part2",
-    topicTags: ["place", "travel"],
-    level: "6.0-7.0",
-    prompt:
-      "Describe a place you visited that left a strong impression on you. You should say:\n- where it is\n- when you went there\n- what you did there\nand explain why it was memorable.",
-    followup: [
-      "Do you prefer traveling alone or with others?",
-      "How has tourism changed in your country in recent years?",
-    ],
-  },
-];

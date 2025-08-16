@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/Toast';
 
@@ -9,12 +9,28 @@ type EvalResp = {
   ok: boolean;
   requestId?: string;
   data?: {
-    transcript?: string;
-    band?: { overall?: number; content?: number; grammar?: number; vocab?: number; fluency?: number; pronunciation?: number };
-    speakingFeatures?: Record<string, number | string | boolean>;
-    feedback?: string;
+    transcript: string;
+    content?: {
+      band?: {
+        overall?: number;
+        taskResponse?: number;
+        coherence?: number;
+        vocabulary?: number;
+        grammar?: number;
+      };
+      suggestions?: string[];
+    };
+    speech?: {
+      band?: { overall?: number; pronunciation?: number; fluency?: number };
+      metrics?: {
+        durationSec?: number;
+        wpm?: number;
+        pauseRate?: number | null;
+        avgPauseSec?: number | null;
+      };
+      suggestions?: string[];
+    };
     tokensUsed?: number;
-    debug?: Record<string, unknown>;
   };
   error?: { message: string };
 };
@@ -29,16 +45,18 @@ function getPromptText(d: any): string {
 
 export default function SpeakingPage() {
   const toast = useToast();
+  const router = useRouter();
   const routeParams = useParams<{ id?: string | string[] }>();
   const taskId = Array.isArray(routeParams?.id) ? routeParams?.id?.[0] : routeParams?.id || '1';
   const searchParams = useSearchParams();
   const qFromUrl = (searchParams?.get('q') || '').trim();
+  const resetFlag = (searchParams?.get('reset') || '').trim() === '1';
 
   const [prompt, setPrompt] = useState('');
   const [loadingPrompt, setLoadingPrompt] = useState(false);
 
   // 錄音
-  const [recState, setRecState] = useState<'idle'|'recording'|'finished'>('idle');
+  const [recState, setRecState] = useState<'idle' | 'recording' | 'finished'>('idle');
   const [durationSec, setDurationSec] = useState(0);
   const durTimerRef = useRef<NodeJS.Timeout | null>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
@@ -52,32 +70,58 @@ export default function SpeakingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [resp, setResp] = useState<EvalResp['data']>();
 
-  // 初始化題目
+  // ---------- 初始化題目 ----------
   useEffect(() => {
     (async () => {
-      if (qFromUrl) { setPrompt(qFromUrl); return; }
+      if (qFromUrl && qFromUrl.toLowerCase() === 'random') {
+        await fetchRandomPrompt();
+        return;
+      }
+      if (qFromUrl) {
+        setPrompt(qFromUrl);
+        return;
+      }
+      // 預設就抽一題
       await fetchRandomPrompt();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qFromUrl]);
+  }, [qFromUrl, taskId]);
 
-  async function fetchRandomPrompt(retryOnce = true) {
+  // 帶 reset=1 → 清一次並去除參數
+  useEffect(() => {
+    if (resetFlag) {
+      resetAll(false);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('reset');
+      router.replace(url.pathname + (url.search ? url.search : ''));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetFlag]);
+
+  // ---------- 抽題（強韌流程） ----------
+  async function fetchRandomPrompt() {
+    setLoadingPrompt(true);
+    setResp(undefined);
     try {
-      setLoadingPrompt(true);
-      const res = await fetch(`/api/prompts/random?type=speaking&part=part2`, { cache: 'no-store' });
-      const json = await res.json();
-      const text = getPromptText(json?.data);
-      if (json?.ok && text) { setPrompt(text); return; }
-      if (retryOnce) {
-        await fetch('/api/prompts/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'speaking', part: 'part2', count: 10 }),
-        });
-        await fetchRandomPrompt(false);
-      } else {
-        toast.push('暫無題目可抽，稍後再試');
-      }
+      // 1) 直接抽
+      const r1 = await tryRandom();
+      if (r1) return;
+
+      // 2) 無 → 先種子
+      await fetch('/api/prompts/seed', { method: 'POST' });
+      const r2 = await tryRandom();
+      if (r2) return;
+
+      // 3) 再無 → 生成一批
+      await fetch('/api/prompts/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'speaking', part: 'part2', count: 8 }),
+      });
+      const r3 = await tryRandom();
+      if (r3) return;
+
+      toast.push('暫無題目可抽，稍後再試');
     } catch {
       toast.push('抽題失敗');
     } finally {
@@ -85,14 +129,27 @@ export default function SpeakingPage() {
     }
   }
 
-  // 錄音
+  async function tryRandom(): Promise<boolean> {
+    const res = await fetch(`/api/prompts/random?type=speaking&part=part2`, { cache: 'no-store' });
+    const json = await res.json();
+    const text = getPromptText(json?.data);
+    if (json?.ok && text) {
+      setPrompt(text);
+      return true;
+    }
+    return false;
+  }
+
+  // ---------- 錄音 ----------
   async function startRec() {
     setResp(undefined);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       chunksRef.current = [];
-      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(blob);
@@ -119,16 +176,17 @@ export default function SpeakingPage() {
     setRecState('finished');
   }
 
-  function resetRec() {
+  function resetAll(showToast = true) {
     setRecState('idle');
     setDurationSec(0);
     setResp(undefined);
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl('');
     setManualTranscript('');
+    if (showToast) toast.push('已開始新一輪');
   }
 
-  // 送審
+  // ---------- 送審 ----------
   async function submit() {
     if (!audioUrl && !manualTranscript.trim()) {
       toast.push('請先錄音或填寫逐字稿');
@@ -137,39 +195,25 @@ export default function SpeakingPage() {
     setSubmitting(true);
     setResp(undefined);
     try {
-      let serverAudioPath = "";
-
-      // 若前端有錄音，先上傳到 /api/upload-audio 換成伺服器檔案路徑
+      let audioBase64 = '';
+      let mime = 'audio/webm';
       if (audioUrl) {
         const blob = await (await fetch(audioUrl)).blob();
-        const mime = blob.type || 'audio/webm';
+        mime = blob.type || 'audio/webm';
         const buf = await blob.arrayBuffer();
-        // 將 binary 轉 base64
-        let binary = '';
-        const bytes = new Uint8Array(buf);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
-        const audioBase64 = btoa(binary);
-
-        const up = await fetch('/api/upload-audio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ audioBase64, mime }),
-        }).then(r => r.json());
-
-        if (!up?.ok || !up?.data?.path) throw new Error(up?.error?.message || '上傳失敗');
-        serverAudioPath = up.data.path;
+        audioBase64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
       }
 
-      // 呼叫後端評分（沿用既有 /api/speaking 接口，吃 audioPath）
       const res = await fetch('/api/speaking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           taskId,
-          prompt,
-          audioPath: serverAudioPath || undefined,
-          transcript: manualTranscript.trim() || undefined,
+          audioBase64,
+          mime,
+          durationSec: Math.max(1, durationSec),
+          manualTranscript: manualTranscript.trim() || undefined,
+          // speechMetrics: { pauseRate: 0.12, avgPauseSec: 0.45 }, //（可選）若你前端有做停頓分析
         }),
       });
       const json: EvalResp = await res.json();
@@ -177,7 +221,7 @@ export default function SpeakingPage() {
       setResp(json.data);
       toast.push('已取得評分');
 
-      // 寫入歷史
+      // 寫入歷史（用你的 /api/history）
       try {
         await fetch('/api/history', {
           method: 'POST',
@@ -186,11 +230,11 @@ export default function SpeakingPage() {
             type: 'speaking',
             taskId,
             prompt,
-            durationSec: Math.max(1, durationSec),
+            durationSec: durationSec,
             band: {
-              overall: json.data?.band?.overall,
-              content: json.data?.band?.content,
-              speech: json.data?.band?.overall, // 保留 overall 以利首頁摘要
+              overall: json.data?.content?.band?.overall ?? json.data?.speech?.band?.overall ?? undefined,
+              content: json.data?.content?.band?.overall ?? undefined,
+              speech: json.data?.speech?.band?.overall ?? undefined,
             },
             ts: Date.now(),
           }),
@@ -211,22 +255,30 @@ export default function SpeakingPage() {
       <header className="mx-auto max-w-6xl px-6 sm:px-8 pt-8 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">← 回首頁</Link>
+            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">
+              ← 回首頁
+            </Link>
             <h1 className="text-[18px] font-medium tracking-tight">Speaking（Part 2）</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/evidence/calibration" className="text-[12px] text-blue-600 hover:underline">
-              校準曲線
-            </Link>
+          <div className="flex items-center gap-2">
             <button
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
               className={[
                 'rounded-xl border px-3 py-1.5 text-[12px]',
-                loadingPrompt ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400' : 'border-zinc-300 bg-white hover:bg-zinc-50'
+                loadingPrompt
+                  ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400'
+                  : 'border-zinc-300 bg-white hover:bg-zinc-50',
               ].join(' ')}
             >
               {loadingPrompt ? '抽題中…' : '換一題'}
+            </button>
+            <button
+              onClick={() => resetAll(true)}
+              className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-[12px] hover:bg-zinc-50"
+              title="清空錄音/稿/結果並重新開始"
+            >
+              開始新一輪
             </button>
             <div className="text-[11px] text-zinc-500">Task #{taskId}</div>
           </div>
@@ -286,7 +338,7 @@ export default function SpeakingPage() {
                   </button>
                 )}
                 <button
-                  onClick={resetRec}
+                  onClick={() => resetAll(true)}
                   className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm hover:bg-zinc-50"
                 >
                   重新開始
@@ -329,52 +381,63 @@ export default function SpeakingPage() {
 
               {!resp && (
                 <div className="mt-3 text-[12px] text-zinc-500">
-                  送出後將顯示內容面（Content/Grammar/Vocab）與語音面（Pronunciation/Fluency）的分數與建議。
+                  送出後將顯示內容面（TR/CC/LR/GRA）與語音面（Pronunciation/Fluency）的分數與建議。
                 </div>
               )}
 
-              {resp?.band && (
+              {resp?.content?.band && (
                 <div className="mt-3 rounded-lg border border-zinc-200 bg-white/70 p-3">
-                  <div className="text-[12px] font-medium">Scores</div>
+                  <div className="text-[12px] font-medium">Content</div>
                   <div className="mt-1 grid gap-1 text-[12px] text-zinc-700">
-                    <Score label="Overall" v={resp.band.overall} />
-                    <Score label="Content" v={resp.band.content} />
-                    <Score label="Grammar" v={resp.band.grammar} />
-                    <Score label="Vocabulary" v={resp.band.vocab} />
-                    <Score label="Fluency" v={resp.band.fluency} />
-                    <Score label="Pronunciation" v={resp.band.pronunciation} />
+                    <Score label="Overall" v={resp.content.band.overall} />
+                    <Score label="Task Resp." v={resp.content.band.taskResponse} />
+                    <Score label="Coherence" v={resp.content.band.coherence} />
+                    <Score label="Vocabulary" v={resp.content.band.vocabulary} />
+                    <Score label="Grammar" v={resp.content.band.grammar} />
                   </div>
+                  {!!resp.content.suggestions?.length && (
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-zinc-700">
+                      {resp.content.suggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
 
-              {resp?.speakingFeatures && (
+              {resp?.speech?.band && (
                 <div className="mt-3 rounded-lg border border-zinc-200 bg-white/70 p-3">
-                  <div className="text-[12px] font-medium">Speaking features</div>
-                  <div className="mt-1 grid grid-cols-2 gap-1 text-[11px] text-zinc-600">
-                    {[
-                      ["duration_s","Duration","s"],
-                      ["wpm","WPM",""],
-                      ["articulation_wpm","Artic WPM",""],
-                      ["pause_ratio","Pause ratio",""],
-                      ["pause_count_ge300ms","Pauses (≥300ms)",""],
-                      ["avg_pause_s","Avg pause (s)","s"],
-                      ["filler_per_100w","Filler / 100w",""],
-                      ["self_repair_per_100w","Self-repair / 100w",""],
-                      ["f0_std_hz","F0 std (Hz)","Hz"],
-                      ["energy_std","Energy std",""],
-                    ].map(([k, label, unit]) => (
-                      <Metric key={k} label={label} v={fmtVal(resp.speakingFeatures?.[k as keyof typeof resp.speakingFeatures], unit)} />
-                    ))}
+                  <div className="text-[12px] font-medium">Speech</div>
+                  <div className="mt-1 grid gap-1 text-[12px] text-zinc-700">
+                    <Score label="Overall" v={resp.speech.band.overall} />
+                    <Score label="Pronunciation" v={resp.speech.band.pronunciation} />
+                    <Score label="Fluency" v={resp.speech.band.fluency} />
                   </div>
-                </div>
-              )}
-
-              {!!resp?.feedback && (
-                <div className="mt-3 rounded-lg border border-zinc-200 bg-white/70 p-3">
-                  <div className="text-[12px] font-medium">Feedback</div>
-                  <div className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-800">
-                    {resp.feedback}
+                  {!!resp.speech.metrics && (
+                    <div className="mt-2 grid grid-cols-2 gap-1 text-[11px] text-zinc-600">
+                      <Metric label="Duration" v={`${resp.speech.metrics.durationSec ?? 0}s`} />
+                      <Metric label="WPM" v={`${resp.speech.metrics.wpm ?? '-'}`} />
+                      <Metric
+                        label="PauseRate"
+                        v={
+                          resp.speech.metrics.pauseRate != null
+                            ? `${Math.round((resp.speech.metrics.pauseRate || 0) * 100)}%`
+                            : 'n/a'
+                        }
+                      />
+                      <Metric
+                        label="AvgPause"
+                        v={resp.speech.metrics.avgPauseSec != null ? `${resp.speech.metrics.avgPauseSec}s` : 'n/a'}
+                      />
                   </div>
+                  )}
+                  {!!resp.speech.suggestions?.length && (
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-zinc-700">
+                      {resp.speech.suggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               )}
 
@@ -405,12 +468,4 @@ function Metric({ label, v }: { label: string; v: string }) {
       <span className="text-zinc-800">{v}</span>
     </div>
   );
-}
-function fmtVal(v: any, unit?: string) {
-  if (v == null) return "-";
-  if (typeof v === "number") {
-    const s = Number.isFinite(v) ? v.toFixed(2).replace(/\.00$/, "") : "-";
-    return unit ? `${s}${s !== "-" ? unit : ""}` : s;
-  }
-  return String(v);
 }
