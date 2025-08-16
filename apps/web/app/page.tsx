@@ -1,11 +1,11 @@
 // apps/web/app/page.tsx
 import Link from "next/link";
 import QuickStart from "./QuickStart";
-import { latestHistory } from "../lib/history";
+import { latestOfType } from "@/lib/history";
 
 export default async function HomePage() {
-  const latestW = await latestHistory("writing");
-  const latestS = await latestHistory("speaking");
+  const latestW = await latestOfType("writing");
+  const latestS = await latestOfType("speaking");
 
   return (
     <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
@@ -34,21 +34,29 @@ export default async function HomePage() {
 
           <QuickStart />
 
-          {/* Primary actions: Writing / Speaking */}
+          {/* Primary actions */}
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
             <FeatureCard
               title="Writing Task 2"
               desc="即時分項評分、逐段建議、優化版本"
               href="/tasks/1/writing"
               tone="brand"
-              meta={latestW?.type === "writing" ? `最近：${fmtBand(latestW.band?.overall)} /9` : "尚未有紀錄"}
+              meta={
+                latestW
+                  ? `最近：${fmtBand((latestW as any).band?.overall)} /9`
+                  : "尚未有紀錄"
+              }
             />
             <FeatureCard
               title="Speaking (Part 2)"
               desc="兩分鐘限時錄音、轉文字、口語反饋"
               href="/tasks/1/speaking"
               tone="speak"
-              meta={latestS?.type === "speaking" ? `最近：${fmtBand(latestS.band?.overall ?? latestS.band?.content)} /9` : "尚未有紀錄"}
+              meta={
+                latestS
+                  ? `最近：${fmtBand(((latestS as any).band?.overall ?? (latestS as any).band?.content))} /9`
+                  : "尚未有紀錄"
+              }
             />
           </div>
 
@@ -63,16 +71,10 @@ export default async function HomePage() {
           <h3 className="text-[18px] font-medium tracking-tight">準備好開始了嗎？</h3>
           <p className="mt-2 text-sm text-zinc-600">從一篇作文或一次兩分鐘口說開始，建立你的進步曲線。</p>
           <div className="mt-5 flex justify-center gap-3">
-            <Link
-              href="/tasks/1/writing"
-              className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm hover:bg-zinc-50"
-            >
+            <Link href="/tasks/1/writing" className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm hover:bg-zinc-50">
               開始 Writing
             </Link>
-            <Link
-              href="/tasks/1/speaking"
-              className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm hover:bg-amber-100"
-            >
+            <Link href="/tasks/1/speaking" className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm hover:bg-amber-100">
               開始 Speaking
             </Link>
           </div>
@@ -88,7 +90,7 @@ export default async function HomePage() {
   );
 }
 
-/* 背景：淡放射漸層 + 細格線 + 角落色塊 */
+/* 背景裝飾 */
 function BackgroundDecor() {
   return (
     <>
@@ -155,22 +157,17 @@ function FeatureCard({
       ].join(" ")}
       aria-label={title}
     >
-      {/* 左側斜切色帶 */}
       <div aria-hidden className={["absolute -left-8 top-0 h-full w-24 -skew-x-[14deg] opacity-90 bg-gradient-to-b", palette.band].join(" ")} />
       <div className="relative ml-6 sm:ml-8">
         <div className="flex items-start gap-4">
-          {/* 小色塊 */}
           <div className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-inset ring-white/60 backdrop-blur bg-white/60">
             <div className={`h-full w-full rounded-xl ${palette.dot}`} />
           </div>
-          {/* 文案 */}
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h3 className="text-[17px] font-medium tracking-tight">{title}</h3>
             </div>
             <p className="mt-1.5 text-[14px] leading-relaxed text-zinc-600">{desc}</p>
-
-            {/* 最近一次分數 */}
             {meta && (
               <div className="mt-3 inline-flex items-center rounded-lg border border-zinc-200 bg-white/70 px-2 py-1 text-[12px] text-zinc-700">
                 {meta}
@@ -193,7 +190,7 @@ function Highlights() {
   return (
     <div className="mt-10 grid gap-3 sm:grid-cols-3">
       {items.map((it) => (
-        <div key={it.t} className="rounded-xl border border-zinc-200 bg-white/70 p-4">
+        <div key={it.t} className="rounded-xl border border-zinc-200 bg白/70 p-4">
           <div className="text-[13px] font-medium text-zinc-900">{it.t}</div>
           <div className="mt-1 text-[12px] leading-relaxed text-zinc-600">{it.d}</div>
         </div>

@@ -9,10 +9,17 @@ type BandScores = { overall?: number; taskResponse?: number; coherence?: number;
 type ParagraphFeedback = { index: number; comment: string };
 type SubmitResponse = {
   ok: boolean;
-  data?: { band?: BandScores | null; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; };
-  error?: { code: string; message: string };
+  data?: {
+    band?: BandScores | null;
+    paragraphFeedback?: ParagraphFeedback[];
+    improvements?: string[];
+    rewritten?: string;
+    tokensUsed?: number;
+  };
+  error?: { code?: string; message?: string };
   requestId?: string;
 };
+
 function getPromptText(d: any): string {
   if (!d) return '';
   if (typeof d === 'string') return d;
@@ -40,16 +47,12 @@ export default function WritingTaskPage() {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const dirtyRef = useRef(false);
-  const [showRight, setShowRight] = useState(true); // 右欄收合
+  const [showRight, setShowRight] = useState(true);
 
-  // ---------- 初始化題目 ----------
+  // 初始化題目
   useEffect(() => {
     (async () => {
-      if (qFromUrl) {
-        setPrompt(qFromUrl);
-        return;
-      }
-      // 若 localStorage 有上次練習的題目，也可優先載入（可選）
+      if (qFromUrl) { setPrompt(qFromUrl); return; }
       await fetchRandomPrompt();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,11 +64,7 @@ export default function WritingTaskPage() {
       const res = await fetch(`/api/prompts/random?type=writing&part=task2`, { cache: 'no-store' });
       const json = await res.json();
       const text = getPromptText(json?.data);
-      if (json?.ok && text) {
-        setPrompt(text);
-        return;
-      }
-      // 沒拿到就生成一批再抽一次
+      if (json?.ok && text) { setPrompt(text); return; }
       if (retryOnce) {
         await fetch('/api/prompts/generate', {
           method: 'POST',
@@ -76,15 +75,14 @@ export default function WritingTaskPage() {
       } else {
         toast.push('暫無題目可抽，稍後再試');
       }
-    } catch (e) {
+    } catch {
       toast.push('抽題失敗');
     } finally {
       setLoadingPrompt(false);
     }
   }
 
-
-  // ---------- 計時 ----------
+  // 計時
   useEffect(() => {
     if (essay.trim().length > 0 && !timerRef.current) {
       timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
@@ -92,7 +90,7 @@ export default function WritingTaskPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); timerRef.current = null; };
   }, [essay]);
 
-  // ---------- Autosave ----------
+  // Autosave
   const [savedAt, setSavedAt] = useState<number | null>(null);
   useEffect(() => {
     const t = setInterval(() => {
@@ -109,7 +107,7 @@ export default function WritingTaskPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId]);
 
-  // ---------- 離頁提醒 ----------
+  // 離頁提醒
   useEffect(() => {
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
       if (dirtyRef.current && essay.trim().length > 0) {
@@ -121,7 +119,7 @@ export default function WritingTaskPage() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [essay]);
 
-  // ---------- 熱鍵 ----------
+  // 熱鍵
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'enter') {
@@ -176,6 +174,7 @@ export default function WritingTaskPage() {
           }),
         });
       } catch {}
+
       toast.push('已取得評分');
     } catch (e: any) {
       setError(e?.message || '發生未預期錯誤');
@@ -193,7 +192,10 @@ export default function WritingTaskPage() {
             <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">← 回首頁</Link>
             <h1 className="text-[18px] font-medium tracking-tight">Writing Task 2</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <Link href="/evidence/calibration" className="text-[12px] text-blue-600 hover:underline">
+              校準曲線
+            </Link>
             <button
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
@@ -276,9 +278,12 @@ export default function WritingTaskPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="text-[12px] text-zinc-500">目標字數</label>
-                  <input type="range" min={180} max={350} step={10}
-                    value={targetWords} onChange={(e) => { dirtyRef.current = true; setTargetWords(Number(e.target.value)); }}
-                    className="w-52 accent-zinc-700" />
+                  <input
+                    type="range" min={180} max={350} step={10}
+                    value={targetWords}
+                    onChange={(e) => { dirtyRef.current = true; setTargetWords(Number(e.target.value)); }}
+                    className="w-52 accent-zinc-700"
+                  />
                   <span className="text-[12px] text-zinc-700">{targetWords} words</span>
                 </div>
               </div>
@@ -351,7 +356,7 @@ export default function WritingTaskPage() {
             </div>
           </div>
 
-          {/* 右側：AI 評分（更小、sticky、可收合） */}
+          {/* 右側：AI 評分（sticky / 可收合） */}
           <aside className="lg:sticky lg:top-6 self-start">
             <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between">
@@ -365,17 +370,11 @@ export default function WritingTaskPage() {
                 </button>
               </div>
 
-              {!showRight && (
-                <div className="mt-2 text-[12px] text-zinc-500">已收合（點「展開」查看詳情）</div>
-              )}
+              {!showRight && <div className="mt-2 text-[12px] text-zinc-500">已收合（點「展開」查看詳情）</div>}
 
               {showRight && (
                 <>
-                  {!result && (
-                    <div className="mt-3 text-[12px] text-zinc-500">
-                      送出後將顯示整體 Band 與分項評分、建議。
-                    </div>
-                  )}
+                  {!result && <div className="mt-3 text-[12px] text-zinc-500">送出後將顯示整體 Band 與分項評分、建議。</div>}
 
                   {result?.band && (
                     <div className="mt-3 space-y-2">
@@ -389,9 +388,7 @@ export default function WritingTaskPage() {
 
                   {!!result?.improvements?.length && (
                     <details className="mt-3">
-                      <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-700">
-                        改善建議（{result.improvements.length}）
-                      </summary>
+                      <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-700">改善建議（{result.improvements.length}）</summary>
                       <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] leading-relaxed text-zinc-700">
                         {result.improvements.map((s, i) => <li key={i}>{s}</li>)}
                       </ul>
@@ -400,16 +397,11 @@ export default function WritingTaskPage() {
 
                   {!!result?.paragraphFeedback?.length && (
                     <details className="mt-3">
-                      <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-700">
-                        逐段建議（{result.paragraphFeedback.length}）
-                      </summary>
+                      <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-700">逐段建議（{result.paragraphFeedback.length}）</summary>
                       <div className="mt-2 space-y-1">
                         {result.paragraphFeedback.map((p) => (
-                          <div key={p.index}
-                            className="rounded-lg border border-zinc-200 bg-white/70 px-2 py-1.5 text-[12px] leading-relaxed text-zinc-700">
-                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-300 text-[11px] text-zinc-700">
-                              {p.index + 1}
-                            </span>
+                          <div key={p.index} className="rounded-lg border border-zinc-200 bg-white/70 px-2 py-1.5 text-[12px] leading-relaxed text-zinc-700">
+                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-300 text-[11px] text-zinc-700">{p.index + 1}</span>
                             {p.comment}
                           </div>
                         ))}
@@ -418,9 +410,7 @@ export default function WritingTaskPage() {
                   )}
 
                   {!!result?.tokensUsed && (
-                    <div className="mt-3 text-right text-[11px] text-zinc-500">
-                      tokens {result.tokensUsed}
-                    </div>
+                    <div className="mt-3 text-right text-[11px] text-zinc-500">tokens {result.tokensUsed}</div>
                   )}
                 </>
               )}
@@ -441,10 +431,8 @@ function countWords(text: string) {
   return trimmed.replace(/\n/g, ' ').split(' ').map((s) => s.trim()).filter(Boolean).length;
 }
 
-/** 安全複製：有 Clipboard API（HTTPS/localhost）就用；否則 fallback 到 execCommand */
 async function copySafe(text: string): Promise<boolean> {
   if (!text) return false;
-
   try {
     if (typeof navigator !== "undefined" &&
         navigator.clipboard &&
@@ -455,7 +443,6 @@ async function copySafe(text: string): Promise<boolean> {
       return true;
     }
   } catch {}
-
   try {
     const ta = document.createElement("textarea");
     ta.value = text;

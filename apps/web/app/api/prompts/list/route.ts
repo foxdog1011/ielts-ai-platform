@@ -5,7 +5,7 @@ import {
   type WritingPart,
   type SpeakingPart,
   type PromptFlags,
-} from "../../../lib/promptStore";
+} from "../../../../lib/promptStore";
 
 const WRITING_PARTS = ["task1-ac", "task1-gt", "task2"] as const;
 const SPEAKING_PARTS = ["part1", "part2", "part3"] as const;

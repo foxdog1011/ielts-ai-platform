@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { OpenAI } from "openai";
-import { savePromptsUniq, type PromptItem, type PromptType, type WritingPart, type SpeakingPart } from "@/app/lib/promptStore";
-
+import { savePromptsUniq, type PromptItem, type PromptType, type WritingPart, type SpeakingPart } from  "../../../../lib/promptStore";
 const BodySchema = z.object({
   type: z.enum(["writing","speaking"]),
   part: z.string(), // 由下方校驗

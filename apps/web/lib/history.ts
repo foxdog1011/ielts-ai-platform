@@ -1,10 +1,10 @@
-// apps/web/app/lib/history.ts
-import { kvListLen, kvListRangeJSON, kvListPushJSON } from "./kv";
+// apps/web/lib/history.ts
+// 紀錄練習歷史：list / latest / save（走檔案型 KV）
+// 重要：不再使用 kvListLen，統一用 kvListRangeJSON 後端做分頁。
 
-const NS = process.env.HISTORY_NAMESPACE || "ielts";
-const USER = "anon"; // 之後接入登入時改成 userId
+import { kvListPushJSON, kvListRangeJSON } from "./kv";
 
-export type BandScores = {
+type WritingBand = {
   overall?: number;
   taskResponse?: number;
   coherence?: number;
@@ -12,68 +12,111 @@ export type BandScores = {
   grammar?: number;
 };
 
-export type SpeakingScores = {
-  overall?: number;       // 你也可以只計算 content/speech，overall 可選
-  content?: number;       // 內容
-  speech?: number;        // 語音（發音/流暢）
+type SpeakingBand = {
+  overall?: number;
+  content?: number;
+  speech?: number;
 };
 
-export type WritingHistory = {
-  id: string;
-  ts: number;
+export type WritingHistoryInput = {
   type: "writing";
   taskId: string;
   prompt: string;
-  words: number;
   durationSec: number;
-  band?: BandScores | null;
+  words?: number;
+  band?: WritingBand | null;
+  ts?: number; // 可覆寫時間戳（預設 Date.now()）
 };
 
-export type SpeakingHistory = {
-  id: string;
-  ts: number;
+export type SpeakingHistoryInput = {
   type: "speaking";
   taskId: string;
   prompt: string;
   durationSec: number;
-  band?: SpeakingScores | null;
+  band?: SpeakingBand | null;
+  ts?: number; // 可覆寫時間戳（預設 Date.now()）
 };
 
-export type AnyHistory = WritingHistory | SpeakingHistory;
+export type HistoryInput = WritingHistoryInput | SpeakingHistoryInput;
+
+export type HistoryRowBase = {
+  id: string;
+  ts: number;
+  type: "writing" | "speaking";
+  taskId: string;
+  prompt: string;
+  durationSec: number;
+};
+
+export type WritingHistoryRow = HistoryRowBase & {
+  type: "writing";
+  words?: number;
+  band?: WritingBand | null;
+};
+
+export type SpeakingHistoryRow = HistoryRowBase & {
+  type: "speaking";
+  band?: SpeakingBand | null;
+};
+
+export type HistoryRow = WritingHistoryRow | SpeakingHistoryRow;
 
 function listKey() {
-  return `${NS}:history:${USER}`;
-}
-function rid() {
-  return Math.random().toString(36).slice(2, 10);
+  return "history:list:v1";
 }
 
-/** 寫入一筆歷史（尾端 append） */
-export async function saveHistory(row: Omit<AnyHistory, "id" | "ts"> & Partial<Pick<AnyHistory, "ts">>) {
-  const rec: AnyHistory = {
-    id: rid(),
-    ts: row.ts ?? Date.now(),
-    ...(row as any),
-  };
-  await kvListPushJSON(listKey(), rec);
-  return rec;
+function makeId() {
+  return `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
-/** 分頁查詢（新→舊） */
-export async function listHistory(opts: { type?: "writing" | "speaking"; limit?: number; offset?: number } = {}) {
+export async function saveHistory(input: HistoryInput): Promise<HistoryRow> {
+  const now = typeof input.ts === "number" ? input.ts : Date.now();
+  const id = makeId();
+
+  const row: HistoryRow = {
+    id,
+    ts: now,
+    type: input.type,
+    taskId: input.taskId,
+    prompt: input.prompt,
+    durationSec: input.durationSec,
+    ...(input.type === "writing"
+      ? {
+          words: input.words,
+          band: input.band ?? null,
+        }
+      : {
+          band: input.band ?? null,
+        }),
+  } as HistoryRow;
+
+  await kvListPushJSON(listKey(), row);
+  return row;
+}
+
+export async function listHistory(opts: {
+  type?: "writing" | "speaking";
+  limit?: number;
+  offset?: number;
+} = {}): Promise<HistoryRow[]> {
   const { type, limit = 50, offset = 0 } = opts;
-  const len = await kvListLen(listKey());
-  if (!len || len <= 0) return [];
-  const end = len - 1 - offset;
-  const start = Math.max(0, end - (limit - 1));
-  const rows = await kvListRangeJSON<AnyHistory>(listKey(), start, end);
-  return rows
-    .filter((r) => (type ? r.type === type : true))
-    .sort((a, b) => b.ts - a.ts);
+
+  // 取完整清單（DEV 數量很小，OK；正式可換成後端分頁）
+  const all = (await kvListRangeJSON(listKey())) as HistoryRow[];
+
+  // 依時間倒序（新→舊）
+  const sorted = [...all].sort((a: HistoryRow, b: HistoryRow) => (b.ts || 0) - (a.ts || 0));
+
+  const filtered = type ? sorted.filter((r) => r.type === type) : sorted;
+
+  const start = Math.max(0, offset);
+  const end = Math.max(start, start + (limit || 0));
+  return filtered.slice(start, end);
 }
 
-/** 取各類型最近一筆（無則回 null） */
-export async function latestHistory(type: "writing" | "speaking") {
-  const got = await listHistory({ type, limit: 1, offset: 0 });
-  return got[0] ?? null;
+export async function latestHistory(
+  type?: "writing" | "speaking"
+): Promise<HistoryRow | undefined> {
+  const rows = await listHistory({ type, limit: 1, offset: 0 });
+  return rows[0];
 }
