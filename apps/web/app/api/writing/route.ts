@@ -18,13 +18,16 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n));
 }
 function toHalfBand(n: number) {
-  // 四捨五入到 0.5
-  return Math.round(n * 2) / 2;
+  return Math.round(n * 2) / 2; // 四捨五入到 0.5
 }
 function countWords(text: string) {
   const t = text.trim();
   if (!t) return 0;
-  return t.replace(/\n/g, " ").split(" ").map(s => s.trim()).filter(Boolean).length;
+  return t
+    .replace(/\n/g, " ")
+    .split(" ")
+    .map((s) => s.trim())
+    .filter(Boolean).length;
 }
 
 type Band = {
@@ -36,27 +39,18 @@ type Band = {
 };
 
 function normalizeBand(b: Partial<Band> | null | undefined): Required<Band> {
-  const o = (b?.overall ?? null);
-  const tr = (b?.taskResponse ?? null);
-  const cc = (b?.coherence ?? null);
-  const lr = (b?.lexical ?? null);
-  const gr = (b?.grammar ?? null);
-
-  // clamp & half-steps 如果非 null
-  const fix = (x: number | null) =>
+  const fix = (x: number | null | undefined) =>
     x == null || Number.isNaN(x) ? null : toHalfBand(clamp(Number(x), 0, 9));
-
   return {
-    overall: fix(o),
-    taskResponse: fix(tr),
-    coherence: fix(cc),
-    lexical: fix(lr),
-    grammar: fix(gr),
+    overall: fix(b?.overall ?? null),
+    taskResponse: fix(b?.taskResponse ?? null),
+    coherence: fix(b?.coherence ?? null),
+    lexical: fix(b?.lexical ?? null),
+    grammar: fix(b?.grammar ?? null),
   };
 }
 
 function deriveOverall(b: Required<Band>): number {
-  // 如果 overall 缺，就用四構面平均
   const parts = [b.taskResponse, b.coherence, b.lexical, b.grammar].filter(
     (x): x is number => typeof x === "number"
   );
@@ -66,60 +60,56 @@ function deriveOverall(b: Required<Band>): number {
   return toHalfBand(clamp(avg, 0, 9));
 }
 
-// ---------- LLM prompt ----------
-function buildSystem() {
-  return `You are an IELTS Writing Task 2 rater. Score strictly on four criteria:
-- Task Response (TR)
-- Coherence and Cohesion (CC)
-- Lexical Resource (LR)
-- Grammatical Range and Accuracy (GRA)
-
-Return concise, actionable comments. Scores are 0.0–9.0 and can use half steps (e.g., 5.5, 6.0, 6.5).`;
+function fillMissingWithOverall(b: Required<Band>): Required<Band> {
+  const ov = typeof b.overall === "number" ? b.overall : deriveOverall(b) ?? 5.5;
+  return {
+    overall: ov,
+    taskResponse: typeof b.taskResponse === "number" ? b.taskResponse : ov,
+    coherence: typeof b.coherence === "number" ? b.coherence : ov,
+    lexical: typeof b.lexical === "number" ? b.lexical : ov,
+    grammar: typeof b.grammar === "number" ? b.grammar : ov,
+  };
 }
 
-function buildUser(prompt: string, essay: string) {
-  return `PROMPT:
+// ---------- LLM prompts ----------
+function buildSystem() {
+  return `
+You are an IELTS Writing Task 2 examiner.
+
+Return ONE JSON object only, no markdown, no extra text, with the EXACT shape:
+{
+  "band": {
+    "taskResponse": number,
+    "coherence": number,
+    "lexical": number,
+    "grammar": number,
+    "overall": number
+  },
+  "paragraphFeedback": [
+    { "index": number, "comment": string }
+  ],
+  "improvements": [ string ],
+  "rewritten": string
+}
+
+Scoring strictly follows IELTS bands (0.0–9.0, half-step increments).
+"paragraphFeedback": up to 6 short, actionable comments (index 0-based).
+"improvements": up to 10 bullet-like actionable tips.
+"rewritten": provide a concise, improved version of the entire essay (preserve meaning, better TR/CC/LR/GRA). No markdown.
+Output JSON ONLY.
+`.trim();
+}
+
+function buildUser(prompt: string, essay: string, targetWords?: number) {
+  const tw = targetWords ? `TARGET WORDS: ~${targetWords}\n` : "";
+  return `
+PROMPT:
 ${prompt}
 
-ESSAY:
+${tw}ESSAY:
 ${essay}
-`;
+`.trim();
 }
-
-// ---------- JSON schema for model ----------
-const responseSchema = {
-  type: "object",
-  properties: {
-    band: {
-      type: "object",
-      properties: {
-        taskResponse: { type: "number" },
-        coherence: { type: "number" },
-        lexical: { type: "number" },
-        grammar: { type: "number" },
-        overall: { type: "number" },
-      },
-      required: ["taskResponse", "coherence", "lexical", "grammar"],
-    },
-    paragraphFeedback: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          index: { type: "number" },
-          comment: { type: "string" },
-        },
-        required: ["index", "comment"],
-      },
-    },
-    improvements: {
-      type: "array",
-      items: { type: "string" },
-    },
-    rewritten: { type: "string" },
-  },
-  required: ["band"],
-} as const;
 
 // ---------- handler ----------
 export async function POST(req: NextRequest) {
@@ -127,56 +117,52 @@ export async function POST(req: NextRequest) {
     const body = Body.parse(await req.json());
     const { taskId, prompt, essay, targetWords, seconds } = body;
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+    const start = Date.now();
+    const chat = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      temperature: Number(process.env.TEMPERATURE ?? 0.2),
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: buildSystem() },
+        { role: "user", content: buildUser(prompt, essay, targetWords) },
+      ],
+      max_tokens: 1200,
     });
 
-    // 使用 JSON 模式要用 Responses API（OpenAI SDK v5）
-    const start = Date.now();
-    const resp = await openai.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      input: [
-        { role: "system", content: buildSystem() },
-        { role: "user", content: buildUser(prompt, essay) },
-      ],
-      // JSON schema（function-like）
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "ielts_writing_result",
-          schema: responseSchema,
-          strict: true,
-        },
-      },
-      temperature: Number(process.env.TEMPERATURE ?? 0.2),
-    } as any);
-
-    // 解析 JSON
-    const outText = resp.output_text || "{}";
+    const text = chat.choices?.[0]?.message?.content || "{}";
     let parsed: any = {};
     try {
-      parsed = JSON.parse(outText);
+      parsed = JSON.parse(text);
     } catch {
       parsed = {};
     }
 
-    // 固定補齊 & clamp + half step
-    const bandRaw: Partial<Band> = parsed?.band || {};
-    let band = normalizeBand(bandRaw);
+    // 整理分數
+    let band = normalizeBand(parsed?.band || {});
     band.overall = deriveOverall(band);
+    band = fillMissingWithOverall(band);
 
     // 其他欄位
-    const paragraphFeedback: { index: number; comment: string }[] = Array.isArray(parsed?.paragraphFeedback)
-      ? parsed.paragraphFeedback
-          .map((x: any) => ({
-            index: Number(x?.index ?? 0),
-            comment: String(x?.comment ?? "").slice(0, 800),
-          }))
-          .filter((x: any) => x.comment)
-      : [];
+    const paragraphFeedback: { index: number; comment: string }[] =
+      Array.isArray(parsed?.paragraphFeedback)
+        ? parsed.paragraphFeedback
+            .map((x: any) => ({
+              index: Number(x?.index ?? 0),
+              comment: String(x?.comment ?? "").slice(0, 800),
+            }))
+            .filter(
+              (x: { index: number; comment: string }) => !!x.comment
+            )
+            .slice(0, 6)
+        : [];
 
     const improvements: string[] = Array.isArray(parsed?.improvements)
-      ? parsed.improvements.map((s: any) => String(s ?? "")).filter(Boolean).slice(0, 10)
+      ? parsed.improvements
+          .map((s: any) => String(s ?? ""))
+          .filter((s: string) => !!s)
+          .slice(0, 10)
       : [];
 
     const rewritten: string =
@@ -185,11 +171,11 @@ export async function POST(req: NextRequest) {
         : "";
 
     const tokensUsed =
-      (resp?.usage?.total_tokens as number | undefined) ??
-      (resp?.usage as any)?.total_tokens ??
+      (chat?.usage?.total_tokens as number | undefined) ??
+      (chat?.usage as any)?.total_tokens ??
       undefined;
 
-    // ---------- 寫入歷史（自動） ----------
+    // 寫入歷史（不影響主流程）
     try {
       const words = countWords(essay);
       await saveScore("writing", {
@@ -200,26 +186,25 @@ export async function POST(req: NextRequest) {
         band,
       });
     } catch (e) {
-      // 保持靜默，不阻斷主流程
       console.warn("[history] saveScore failed:", (e as Error)?.message);
     }
 
-    // ---------- 回傳 ----------
-    const data = {
-      band,
-      paragraphFeedback,
-      improvements,
-      rewritten,
-      tokensUsed,
-      debug: {
-        used_llm: true,
-        used_local: false,
-        calibration_mode: "none",
-        latency_ms: Date.now() - start,
+    return NextResponse.json({
+      ok: true,
+      data: {
+        band,
+        paragraphFeedback,
+        improvements,
+        rewritten,
+        tokensUsed,
+        debug: {
+          used_llm: true,
+          used_local: false,
+          calibration_mode: "none",
+          latency_ms: Date.now() - start,
+        },
       },
-    };
-
-    return NextResponse.json({ ok: true, data });
+    });
   } catch (e: any) {
     return NextResponse.json(
       {

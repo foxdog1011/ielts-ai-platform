@@ -1,7 +1,7 @@
 // apps/web/app/api/prompts/generate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 import {
   savePromptsUniq,
   type PromptItem,
@@ -12,77 +12,14 @@ import {
 
 const BodySchema = z.object({
   type: z.enum(["writing", "speaking"]),
-  part: z.string(), // 由下方做白名單檢查
+  part: z.string(), // 由下方校驗
   count: z.number().int().min(1).max(50).default(10),
   topics: z.array(z.string()).max(10).default([]),
   level: z.enum(["5.0-6.0", "6.0-7.0", "7.0-8.0"]).optional(),
 });
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-
-export async function POST(req: NextRequest) {
-  try {
-    const body = BodySchema.parse(await req.json());
-
-    // 驗 part 合法
-    const writingParts: WritingPart[] = ["task1-ac", "task1-gt", "task2"];
-    const speakingParts: SpeakingPart[] = ["part1", "part2", "part3"];
-    if (body.type === "writing" && !writingParts.includes(body.part as WritingPart)) {
-      return bad("Invalid writing part");
-    }
-    if (body.type === "speaking" && !speakingParts.includes(body.part as SpeakingPart)) {
-      return bad("Invalid speaking part");
-    }
-
-    const sys = makeSystem(body.type as PromptType, body.part as any);
-    const user = makeUser(body);
-
-    // ✅ 改用 Responses API
-    const res = await client.responses.create({
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      instructions: sys,     // 原本 system prompt
-      input: user,           // 原本 user prompt
-      text: { format: "json" }, // 取代舊的 response_format
-      temperature: 0.6,
-      max_output_tokens: 1800,
-    });
-
-    // 輸出抽取（兼容不同 SDK 小版本）
-    const text =
-      (res as any).output_text ??
-      (res as any)?.output?.[0]?.content?.[0]?.text ??
-      (res as any)?.content?.[0]?.text ??
-      "";
-
-    let data: any = {};
-    try {
-      data = JSON.parse(text);
-    } catch {
-      // 假如模型意外回了包一層字串的 JSON
-      const maybe = String(text || "").trim();
-      const unwrapped = maybe.startsWith('"') && maybe.endsWith('"') ? JSON.parse(JSON.parse(maybe)) : null;
-      data = unwrapped || {};
-    }
-
-    const rows: Omit<PromptItem, "id" | "ts" | "hash">[] = normalize(
-      body.type as PromptType,
-      body.part as any,
-      data,
-      body.level
-    );
-
-    const saved = await savePromptsUniq(rows);
-    return NextResponse.json({ ok: true, data: { created: saved.length, items: saved } });
-  } catch (err: any) {
-    return bad(err?.issues?.[0]?.message || err?.message || "Failed to generate");
-  }
-}
-
-function bad(message: string, status = 400) {
-  return NextResponse.json({ ok: false, error: { message } }, { status });
-}
-
-/* ---------- prompt templates ---------- */
+const WRITING_PARTS: WritingPart[] = ["task1-ac", "task1-gt", "task2"];
+const SPEAKING_PARTS: SpeakingPart[] = ["part1", "part2", "part3"];
 
 function makeSystem(type: PromptType, part: WritingPart | SpeakingPart) {
   if (type === "writing") {
@@ -112,7 +49,9 @@ function makeSystem(type: PromptType, part: WritingPart | SpeakingPart) {
 
 function makeUser(body: z.infer<typeof BodySchema>) {
   const { type, part, count, topics, level } = body;
-  const topicStr = topics.length ? `Focus on topics: ${topics.join(", ")}.` : "Use varied common IELTS topics.";
+  const topicStr = topics.length
+    ? `Focus on topics: ${topics.join(", ")}.`
+    : "Use varied common IELTS topics.";
   const levelStr = level ? `Target level: ${level}.` : "Target level: 6.0-7.0.";
   return [
     `Generate ${count} ${type.toUpperCase()} prompts for ${part}.`,
@@ -140,9 +79,78 @@ function normalize(
         .filter(Boolean)
         .slice(0, 4),
       followup: Array.isArray(raw?.followup)
-        ? raw.followup.map((q: any) => String(q || "").trim()).filter(Boolean).slice(0, 6)
+        ? raw.followup
+            .map((q: any) => String(q || "").trim())
+            .filter(Boolean)
+            .slice(0, 6)
         : undefined,
       source: "ai-gen" as const,
     }))
     .filter((x: any) => x.prompt?.length > 10);
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = BodySchema.parse(await req.json());
+    // 驗 part 合法
+    if (body.type === "writing" && !WRITING_PARTS.includes(body.part as WritingPart)) {
+      return NextResponse.json(
+        { ok: false, error: { message: "Invalid writing part" } },
+        { status: 400 }
+      );
+    }
+    if (body.type === "speaking" && !SPEAKING_PARTS.includes(body.part as SpeakingPart)) {
+      return NextResponse.json(
+        { ok: false, error: { message: "Invalid speaking part" } },
+        { status: 400 }
+      );
+    }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+    // ✅ 用 Chat Completions + JSON 物件格式，避免 Responses API 型別錯誤
+    const chat = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      temperature: 0.6,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: makeSystem(body.type as PromptType, body.part as any) },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: makeUser(body),
+            },
+          ],
+        },
+      ],
+      max_tokens: 1800,
+    });
+
+    const text = chat.choices?.[0]?.message?.content || "{}";
+    let data: any = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = {};
+    }
+
+    const rows = normalize(
+      body.type as PromptType,
+      body.part as any,
+      data,
+      body.level
+    );
+
+    // 這裡 savePromptsUniq 允許去重/補 id/hash/ts；你的型別若嚴格，直接 as any
+    const saved = await savePromptsUniq(rows as any);
+
+    return NextResponse.json({ ok: true, data: { created: saved.length, items: saved } });
+  } catch (err: any) {
+    return NextResponse.json(
+      { ok: false, error: { message: err?.message || "Failed to generate" } },
+      { status: 400 }
+    );
+  }
 }
