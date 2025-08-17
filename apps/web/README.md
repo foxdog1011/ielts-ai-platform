@@ -17,10 +17,11 @@ apps/web
 ├── public/            # 靜態檔案
 ├── styles/            # 樣式
 └── README.md          # 本文件
-🚀 開發啟動
-bash
-複製
-編輯
+```
+
+## 🚀 開發啟動
+
+```bash
 # 進入 web app 資料夾
 cd apps/web
 
@@ -29,16 +30,17 @@ npm install
 
 # 啟動開發伺服器
 npm run dev
+```
+
 啟動後，預設伺服器會運行在：
 
 👉 http://localhost:3001
 
-🔑 環境變數
-請在 apps/web/.env.local 建立並設定：
+## 🔑 環境變數
 
-bash
-複製
-編輯
+請在 `apps/web/.env.local` 建立並設定：
+
+```bash
 # OpenAI API
 OPENAI_API_KEY=sk-xxxx
 OPENAI_MODEL=gpt-4o-mini
@@ -46,48 +48,48 @@ OPENAI_MODEL=gpt-4o-mini
 # KV 資料庫 (可選，本地測試可忽略)
 KV_REST_API_URL=your-kv-url
 KV_REST_API_TOKEN=your-kv-token
-📝 功能
-✍️ Writing
-隨機抽題 / 題庫生成
+```
 
-自動評分：
+## 📝 功能
 
-Task Response (TR)
+### ✍️ Writing
 
-Coherence & Cohesion (CC)
+- 隨機抽題 / 題庫生成
+- 自動評分：
+  - Task Response (TR)
+  - Coherence & Cohesion (CC)
+  - Lexical Resource (LR)
+  - Grammar (GRA)
+- 分段反饋、改進建議、優化版本
 
-Lexical Resource (LR)
+### 🎤 Speaking
 
-Grammar (GRA)
+- 支援 Part 1 / Part 2 / Part 3 題目
+- Cue Card + 後續追問
+- 隨機抽題
 
-分段反饋、改進建議、優化版本
+### 📜 歷史紀錄
 
-🎤 Speaking
-支援 Part 1 / Part 2 / Part 3 題目
+- 自動儲存 Writing / Speaking 答案與分數
+- 首頁顯示最近紀錄卡片
 
-Cue Card + 後續追問
+## 📦 部署
 
-隨機抽題
-
-📜 歷史紀錄
-自動儲存 Writing / Speaking 答案與分數
-
-首頁顯示最近紀錄卡片
-
-📦 部署
 建議使用 Vercel 部署：
 
-bash
-複製
-編輯
+```bash
 # 推送至 GitHub
 git add .
 git commit -m "Deploy IELTS AI Web"
 git push origin main
-在 Vercel 建立專案，並指定 root 為 apps/web。
+```
 
-🤝 貢獻
+在 Vercel 建立專案，並指定 root 為 `apps/web`。
+
+## 🤝 貢獻
+
 歡迎提交 Issue / PR，一起打造更好的 IELTS AI 練習平台 🚀
 
-📜 授權
+## 📜 授權
+
 本專案採用 MIT License。
