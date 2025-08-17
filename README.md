@@ -1,108 +1,283 @@
-# 📘 IELTS AI Platform
+# IELTS AI Platform
 
-一個整合 **OpenAI API** 的全方位 IELTS 練習平台。  
-提供 **Writing** 與 **Speaking** 模擬題目、即時評分與歷史記錄功能。  
-
-本專案採用 **Turborepo Monorepo 架構**，包含多個子專案，方便擴充與維護。
+> Next.js monorepo for IELTS Writing & Speaking AI feedback
 
 ---
 
-## 📂 專案結構
+## Table of Contents
+
+* [Overview](#overview)
+* [Features](#features)
+* [Project Structure](#project-structure)
+* [Quick Start](#quick-start)
+* [Environment Variables](#environment-variables)
+* [Development Workflow](#development-workflow)
+* [API Contract](#api-contract)
+
+  * [/api/submit (Writing Task)](#apisubmit-writing-task)
+  * [/api/speaking (Speaking Task, optional)](#apispeaking-speaking-task-optional)
+* [Types & Validation](#types--validation)
+* [Docker Setup (Optional)](#docker-setup-optional)
+* [CI / GitHub Actions (Optional)](#ci--github-actions-optional)
+* [Roadmap](#roadmap)
+* [Contribution Guidelines](#contribution-guidelines)
+* [License](#license)
+
+---
+
+## Overview
+
+This project is the **IELTS AI Feedback Platform**, designed to simulate a real IELTS exam environment while providing actionable AI feedback.
+
+* **Writing Task 2**: Real-time word/character counting, validation before submission, AI feedback (Band scores, paragraph comments, improvements, rewritten version).
+* **Speaking**: 2-minute timer, recording controls (start/stop/re-record), prompt display, and optional audio upload with AI feedback.
+
+**Tech stack**: `Next.js (App Router) + TypeScript + TailwindCSS` with Monorepo structure (`apps/`, `packages/`). The AI backend integrates with OpenAI but can be swapped out.
+
+---
+
+## Features
+
+### Writing
+
+* Real-time word/character count (default 250 words target)
+* Pre-submission validation (no empty/too short essays)
+* Visual feedback for Loading / Error / Success
+* AI feedback: Band scores, paragraph comments, rewritten version
+* Structured placeholders to guide essay format
+
+### Speaking
+
+* 2-minute countdown timer (MM\:SS)
+* Recording controls: Start / Stop / Record again
+* Visual states (emoji / style changes)
+* Optional: Audio upload & playback, AI feedback
+
+### Home Page
+
+* Card-based navigation (Writing / Speaking)
+* Displays task requirements (word/time limits)
+* Gradient backgrounds, icons, highlights section
+
+---
+
+## Project Structure
+
+```
+.
+├─ apps/
+│  └─ web/                # Next.js frontend (App Router, API Routes, UI)
+├─ packages/
+│  ├─ ai/                 # AI service logic (prompts, model config, retry/timeout, parsing)
+│  └─ types/              # Shared TypeScript types
+├─ .gitignore
+├─ package.json           # Monorepo workspace config
+├─ tsconfig.base.json
+└─ yarn.lock
+```
+
+**Purpose:**
+
+* `apps/web`: Holds the actual website and API routes.
+* `packages/ai`: Centralizes all AI-related code, keeping API routes thin.
+* `packages/types`: Shared type definitions to ensure consistent typing.
+* `package.json` & `tsconfig.base.json`: Define workspace dependencies and TypeScript settings.
+
+---
+
+## Quick Start
 
 ```bash
-.
-├── apps
-│   ├── web        # Next.js 前端 (主應用程式)
-│   └── api        # API 服務 (如需獨立拆出)
-├── packages
-│   ├── ui         # 共用 UI 元件
-│   ├── config     # 共用設定 (tsconfig, eslint 等)
-│   └── utils      # 共用工具方法
-├── turbo.json     # Turborepo 設定
-├── package.json   # Monorepo 根目錄依賴
-└── README.md
-🚀 功能特色
-✍️ Writing
+# 1. Install dependencies
+yarn # or npm install
 
-隨機抽題
+# 2. Copy environment variables
+cp apps/web/.env.local.example apps/web/.env.local
 
-自動批改與分數回饋 (Task Response / Coherence / Lexical / Grammar)
+# 3. Start development server
+yarn dev
 
-建議改善方向 & 優化版本
+# 4. Build and run in production
+yarn build
+yarn start
+```
 
-🎤 Speaking
+---
 
-抽題系統 (Part 1 / Part 2 / Part 3)
+## Environment Variables
 
-AI 模擬考官提問
+```env
+OPENAI_API_KEY=sk-xxxx
+OPENAI_MODEL=gpt-4o
+OPENAI_BASE_URL=https://api.openai.com/v1
+REQUEST_TIMEOUT_MS=30000
+MAX_TOKENS=1200
+TEMPERATURE=0.2
+```
 
-即時評分與口說建議
+**Purpose:**
 
-📊 歷史紀錄
+* `OPENAI_API_KEY`: Auth key for the AI provider.
+* `OPENAI_MODEL`: Model to use for AI generation.
+* `OPENAI_BASE_URL`: API base endpoint.
+* `REQUEST_TIMEOUT_MS`: Max time allowed for AI calls.
+* `MAX_TOKENS`: Token limit for AI responses.
+* `TEMPERATURE`: Controls creativity of AI output.
 
-保存每次練習結果
+---
 
-可追蹤進步曲線
+## Development Workflow
 
-🧩 AI 題庫
+* Use ESLint + Prettier for formatting.
+* Standardize API responses as `{ ok: boolean, data?: T, error?: { code: string; message: string } }`.
+* Assign a `requestId` in API routes for easier debugging.
+* Keep AI logic in `packages/ai`.
 
-支援自動生成題目
+**Scripts:**
 
-種子題庫 (初始備用題目)
+```json
+{
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  }
+}
+```
 
-⚙️ 環境需求
-Node.js 18+
+---
 
-pnpm 9+ (建議)
+## API Contract
 
-OpenAI API Key
+### `/api/submit` (Writing Task)
 
-Vercel KV (可選，若無則使用 in-memory fallback)
+**Method:** POST
 
-🔑 環境變數
-在 apps/web/.env.local 設定：
+**Request Body:**
 
-bash
-複製
-編輯
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4o-mini
-KV_REST_API_URL=your_vercel_kv_url   # (可選)
-KV_REST_API_TOKEN=your_vercel_kv_token   # (可選)
-🛠️ 安裝與啟動
-bash
-複製
-編輯
-# 1. 安裝依賴
-pnpm install
+```json
+{
+  "taskId": "task-2",
+  "prompt": "IELTS writing prompt...",
+  "essay": "User's essay text...",
+  "targetWords": 250
+}
+```
 
-# 2. 開發模式
-pnpm dev
+**Success Response:**
 
-# 3. 指定子專案啟動 (例如 web)
-pnpm --filter web dev
+```json
+{
+  "ok": true,
+  "data": {
+    "band": {
+      "overall": 6.5,
+      "taskResponse": 6.0,
+      "coherence": 6.5,
+      "lexical": 6.5,
+      "grammar": 6.0
+    },
+    "paragraphFeedback": [
+      { "index": 0, "comment": "Intro is clear; consider a stronger thesis." }
+    ],
+    "improvements": ["Use more varied complex sentences."],
+    "rewritten": "Improved essay text",
+    "tokensUsed": 1234
+  }
+}
+```
 
-# 4. 建構
-pnpm build
+### `/api/speaking` (Speaking Task, optional)
 
-# 5. 測試 (如有設定)
-pnpm test
-📌 常用指令
-bash
-複製
-編輯
-# 種子題目
-curl -X POST http://localhost:3001/api/prompts/seed
+**Method:** POST
 
-# 抽一題 Writing
-curl "http://localhost:3001/api/prompts/random?type=writing&part=task2"
+**Request Body (example):**
 
-# 抽一題 Speaking
-curl "http://localhost:3001/api/prompts/random?type=speaking&part=part2"
+```json
+{
+  "taskId": "speaking-part-2",
+  "audioBase64": "data:audio/webm;base64,...",
+  "prompt": "Describe a time when..."
+}
+```
 
-# 自動生成題庫
-curl -X POST http://localhost:3001/api/prompts/generate \
-  -H "content-type: application/json" \
-  -d '{"type":"writing","part":"task2","count":5}'
-📄 License
-MIT License © 2025 foxdog
+---
+
+## Types & Validation
+
+* Use `packages/types` to store shared interfaces.
+* Validate AI output using Zod to prevent format drift.
+
+---
+
+## Docker Setup (Optional)
+
+**Purpose:** Run the app in a reproducible environment.
+
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN yarn install --frozen-lockfile && yarn build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app .
+EXPOSE 3000
+CMD ["yarn", "start"]
+```
+
+---
+
+## CI / GitHub Actions (Optional)
+
+**Purpose:** Automate linting, testing, and building on PRs.
+
+```yaml
+name: CI
+on:
+  pull_request:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+      - run: yarn test
+      - run: yarn build
+```
+
+---
+
+## Roadmap
+
+* Strengthen README
+* Extract `packages/ai` logic fully
+* Standardize API responses & add validation
+* Implement Speaking feedback
+* Save practice history (localStorage → DB)
+* Dockerize for local/production
+* Add GitHub Actions CI
+
+---
+
+## Contribution Guidelines
+
+1. Branch from `main` for new features.
+2. Write/update relevant unit tests.
+3. Open a PR with details.
+4. Merge after CI passes.
+
+---
+
+## License
+
+MIT
