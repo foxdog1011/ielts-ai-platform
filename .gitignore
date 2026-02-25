@@ -1,5 +1,6 @@
 # Node
 node_modules/
+packages/ui/node_modules/
 apps/web/.next/
 apps/web/.vercel/
 *.log
