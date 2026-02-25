@@ -151,6 +151,17 @@ export type ScorePayload = {
   words?: number;
   band?: any; // { overall?: number, ... }
   speakingFeatures?: Record<string, unknown>;
+  scoreTrace?: Record<string, unknown>;
+  llm_subscores?: Record<string, unknown> | null;
+  local_subscores?: Record<string, unknown> | null;
+  weights?: Record<string, unknown>;
+  final_subscores?: Record<string, unknown>;
+  final_overall_pre_calibration?: number;
+  final_overall_post_calibration?: number;
+  final_band?: number;
+  debug_flags?: Record<string, unknown>;
+  timings?: Record<string, number>;
+  models?: Record<string, unknown>;
   ts?: number;           // 可選：外部提供（epoch ms）
   createdAt?: string;    // 寫入時自動補
 };

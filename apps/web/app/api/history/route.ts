@@ -39,6 +39,7 @@ const Body = z.discriminatedUnion("type", [
       })
       .nullable()
       .optional(),
+    scoreTrace: z.record(z.string(), z.unknown()).optional(),
     ts: z.number().optional(),
   }),
   z.object({
@@ -57,6 +58,7 @@ const Body = z.discriminatedUnion("type", [
       })
       .nullable()
       .optional(),
+    scoreTrace: z.record(z.string(), z.unknown()).optional(),
     ts: z.number().optional(),
   }),
 ]);
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
         durationSec: parsed.durationSec,
         words: parsed.words,
         band: parsed.band ?? null,
+        scoreTrace: parsed.scoreTrace,
         ts: parsed.ts,
       };
       rec = w;
@@ -86,6 +89,7 @@ export async function POST(req: NextRequest) {
         prompt: parsed.prompt,
         durationSec: parsed.durationSec,
         band: parsed.band ?? null,
+        scoreTrace: parsed.scoreTrace,
         ts: parsed.ts,
       };
       rec = s;
