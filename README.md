@@ -1,84 +1,51 @@
 # IELTS AI Platform
 
-> Next.js monorepo for IELTS Writing & Speaking AI feedback
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Quick Start](#quick-start)
-- [Environment Variables](#environment-variables)
-- [ML Baseline (Python) & Training](#ml-baseline-python--training)
-  - [Directory & Artifacts](#directory--artifacts)
-  - [Create venv & Install](#create-venv--install)
-  - [Train Writing Baseline](#train-writing-baseline)
-  - [Run Local Scoring CLI](#run-local-scoring-cli)
-  - [Calibration (quantile_map.json)](#calibration-quantile_mapjson)
-- [Development Workflow](#development-workflow)
-- [API Contract](#api-contract)
-  - [/api/writing (Writing Task)](#apiwriting-writing-task)
-  - [/api/speaking (Speaking Task)](#apispeaking-speaking-task)
-  - [/api/prompts/* (Question Bank)](#apiprompts-question-bank)
-- [Types & Validation](#types--validation)
-- [Roadmap](#roadmap)
-- [License](#license)
-
----
-
-## Overview
-
-This project is the **IELTS AI Feedback Platform**, designed to simulate IELTS exam practice with **AI scoring, feedback, and question generation**.
-
-- **Writing Task 2**: Real-time validation, AI band score evaluation, per-paragraph feedback, improvements, and an optimized rewritten essay.
-- **Speaking**: Randomized questions (Part 1/2/3), AI scoring, feedback, and follow-up prompts.
-- **History Tracking**: All attempts are saved in **Vercel KV** (or memory fallback), displayed on the homepage.
-- **Question Bank**: Supports **seeded questions** + **AI-generated prompts**, and random draw.
-
-**Tech stack**:  
-`Next.js (App Router) + TypeScript + TailwindCSS + Vercel KV + OpenAI SDK v5 + Python (XGBoost / sentence-transformers)`
+An AI-powered IELTS practice platform with real-time Writing and Speaking feedback, dual-engine scoring, and a full question bank — built as a Next.js monorepo.
 
 ---
 
 ## Features
 
-### Writing
-- Word counting and duration tracking
+### Writing Task 2
+- Word count & duration tracking
 - Pre-submission validation
-- AI Band feedback:
-  - Task Response
-  - Coherence & Cohesion
-  - Lexical Resource
-  - Grammar
-- Extra features:
-  - Per-paragraph comments
-  - Suggested improvements
-  - Optimized rewritten essay
-- Scores saved into history and displayed on the homepage
+- AI band scoring across all four IELTS criteria:
+  - Task Response · Coherence & Cohesion · Lexical Resource · Grammatical Range & Accuracy
+- Per-paragraph comments, improvement suggestions, and a rewritten essay
 
-### Speaking
-- Random draw from **seeded** or **AI-generated** question bank
-- Part 1 / Part 2 / Part 3 support
-- Follow-up questions
-- AI feedback with scoring
-- History tracking
+### Speaking (Part 1 / 2 / 3)
+- Randomised question draw from seeded or AI-generated question bank
+- Audio upload + automatic transcription (via OpenAI ASR)
+- AI feedback with band scoring and follow-up prompts
+
+### Dual-Engine Fused Scoring
+- **LLM engine** — GPT-4o-based qualitative assessment
+- **ML baseline engine** — local XGBoost + sentence-transformers producing 0–1 subscores
+- Scores are fused and calibrated to the IELTS 4.0–9.0 band scale via `quantile_map.json`
+- Trace persistence: every scoring run is stored for audit/review
 
 ### History
-- Writing / Speaking results saved automatically
-- Displayed on homepage in recent cards
-- Includes:
-  - Band scores
-  - Task ID & prompt
-  - Word count / duration
-  - Timestamp
+- All Writing & Speaking attempts auto-saved to Vercel KV (in-memory fallback in dev)
+- Homepage displays recent cards with band scores, word count, duration, and timestamp
 
-### Prompts / Question Bank
-- `POST /api/prompts/seed` → Seed initial prompts
-- `POST /api/prompts/generate` → Generate prompts using AI
-- `GET /api/prompts/random` → Randomly draw prompts (writing/speaking)
-- Supports `type` and `part` parameters for filtering
+### Question Bank
+- `POST /api/prompts/seed` — seed initial prompt set
+- `POST /api/prompts/generate` — AI-generate new prompts (type + part filtering)
+- `GET /api/prompts/random` — draw a random prompt
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend / API | Next.js 14 (App Router) + TypeScript |
+| Styling | TailwindCSS v4 |
+| AI | OpenAI SDK v5 (GPT-4o / GPT-4o-mini) |
+| Persistence | Vercel KV (Upstash Redis) |
+| ML Baseline | Python · XGBoost · sentence-transformers · librosa |
+| Monorepo | Yarn Workspaces + Turborepo |
+| Validation | Zod |
 
 ---
 
@@ -86,20 +53,24 @@ This project is the **IELTS AI Feedback Platform**, designed to simulate IELTS e
 
 ```
 .
-├─ apps/
-│  └─ web/                # Next.js frontend (App Router + API routes)
-├─ ml/                    # Python baseline: content/fluency/pronunciation & CLI
-│  ├─ artifacts/          # Trained models (e.g. writing_baseline/xgb.json)
-│  ├─ data/               # Local datasets / raw samples
-│  └─ src/
-│     ├─ score_cli.py     # Main CLI: text + audio → subscores + band
-│     └─ speech_features.py # Extracts WPM, pauses, F0, energy → fluency & pronunciation
-├─ packages/
-│  └─ types/              # Shared TypeScript types
-├─ .gitignore
-├─ package.json           # Monorepo workspace config
-├─ tsconfig.base.json
-└─ yarn.lock / pnpm-lock.yaml
+├── apps/
+│   └── web/                  # Next.js app (App Router + API routes)
+│       ├── app/
+│       │   ├── api/          # writing · speaking · prompts · history · health · upload-audio
+│       │   ├── tasks/        # Writing & Speaking task pages
+│       │   ├── history/      # History browser
+│       │   └── result/       # Score result display
+│       └── lib/              # kv.ts · promptStore.ts · scoring utilities
+├── ml/                       # Python ML baseline
+│   ├── src/
+│   │   ├── score_cli.py      # CLI: text + audio → subscores + band estimate
+│   │   └── speech_features.py# WPM · pause ratio · F0 · energy extraction
+│   ├── artifacts/            # Trained model weights (xgb.json)
+│   └── data/                 # Training datasets
+├── packages/
+│   └── types/                # Shared TypeScript types
+├── package.json              # Workspace root
+└── tsconfig.base.json
 ```
 
 ---
@@ -107,109 +78,79 @@ This project is the **IELTS AI Feedback Platform**, designed to simulate IELTS e
 ## Quick Start
 
 ```bash
-# 1) Install dependencies
-yarn       # or: pnpm install / npm install
+# 1. Install dependencies
+yarn
 
-# 2) Copy envs
+# 2. Set up environment variables
 cp apps/web/.env.local.example apps/web/.env.local
-# (Fill in OpenAI key, Vercel KV, and local ML paths if using baseline scoring)
+# Edit the file and fill in your keys (see Environment Variables below)
 
-# 3) Development (web only)
-yarn dev -w apps/web
-
-# 4) Production (web)
-yarn build -w apps/web
-yarn start -w apps/web
+# 3. Start dev server
+yarn dev
 ```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+---
 
 ## Environment Variables
 
-Set in `apps/web/.env.local` (dev) or Vercel project env (prod):
+Create `apps/web/.env.local`:
 
 ```env
-# OpenAI (Responses API via openai@^5)
-OPENAI_API_KEY=sk-xxx
+# OpenAI
+OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
 TEMPERATURE=0.2
 REQUEST_TIMEOUT_MS=30000
 
-# Vercel KV (optional; fallback = in-memory)
-KV_REST_API_URL=https://.....upstash.io
-KV_REST_API_TOKEN=xxxxxxxxxxxxxxxx
+# Vercel KV — omit to use in-memory fallback
+KV_REST_API_URL=https://...upstash.io
+KV_REST_API_TOKEN=...
 
-# —— Local ML baseline (optional but recommended in dev) ——
-ML_CWD=/home/<you>/ielts-ai-monorepo/ml
-PYTHON_BIN=/home/<you>/ielts-ai-monorepo/ml/.venv/bin/python
+# Local ML baseline — omit to use LLM-only scoring
+ML_CWD=/absolute/path/to/ml
+PYTHON_BIN=/absolute/path/to/ml/.venv/bin/python
 
-# Restrict accepted audio paths (security)
-ALLOWED_AUDIO_ROOTS=/home/<you>/ielts-ai-monorepo/ml
+# Security: restrict accepted audio upload paths
+ALLOWED_AUDIO_ROOTS=/absolute/path/to/ml
 
-# (Optional) ASR model if transcript is missing
+# ASR model (used when transcript is missing)
 ASR_MODEL=gpt-4o-mini-transcribe
 ```
 
-## ML Baseline (Python) & Training
+---
 
-This project includes a local Python baseline that maps quantifiable Writing/Speaking features to 0–1 subscores, then calibrates them to IELTS band range (4.0–9.0). The Next.js API auto-detects baseline availability; otherwise it falls back to LLM-only.
+## ML Baseline Setup
 
-### Directory & Artifacts
-
-- Model artifact: `ml/artifacts/writing_baseline/xgb.json` (XGBoost regressor)
-- Embedding: `sentence-transformers/all-MiniLM-L6-v2`
-- Speech features: `ml/src/speech_features.py` (WPM, pause ratio, F0, energy, etc.)
-
-### Create venv & Install
+The Python baseline provides quantifiable subscores for writing content, speaking fluency, and pronunciation. The Next.js API detects baseline availability automatically and falls back to LLM-only if unavailable.
 
 ```bash
 cd ml
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+
 pip install -U pip
-
-# If requirements.txt exists
 pip install -r requirements.txt
-
-# Otherwise install main deps manually
-pip install xgboost sentence-transformers numpy scikit-learn librosa soundfile
+# or manually: xgboost sentence-transformers numpy scikit-learn librosa soundfile
 ```
 
-### Train Writing Baseline
-
-`score_cli.py` extracts:
-
-- Text features: n_words, n_chars, avg_wlen, uniq_ratio, n_sents, avg_sent_len, stop_ratio
-- Sentence embeddings: all-MiniLM-L6-v2
-- Model: XGBRegressor → content_score ∈ [0,1]
-
-Artifacts expected at:
-
-```bash
-ml/artifacts/writing_baseline/xgb.json
-```
-
-If missing, run:
+Train the writing model (if `artifacts/writing_baseline/xgb.json` is missing):
 
 ```bash
 make train_writing
 ```
 
-### Run Local Scoring CLI
+Run the scoring CLI directly:
 
 ```bash
-# Text-only (writing)
-ml/.venv/bin/python ml/src/score_cli.py \
-  --text "Your essay or transcript here..."
+# Writing
+python ml/src/score_cli.py --text "Your essay..."
 
-# Audio-only (speaking)
-ml/.venv/bin/python ml/src/score_cli.py \
-  --audio /abs/path/to/audio.wav \
-  --transcript "Transcript text..."
-
-# Combined (text + audio)
-ml/.venv/bin/python ml/src/score_cli.py \
-  --text "..." \
-  --audio /abs/path/to/audio.wav \
-  --transcript "..." \
+# Speaking (with audio)
+python ml/src/score_cli.py \
+  --audio /path/to/audio.wav \
+  --transcript "Transcript..." \
   --out /tmp/result.json
 ```
 
@@ -217,85 +158,40 @@ Sample output:
 
 ```json
 {
-  "subscores_01": {
-    "content": 0.30,
-    "fluency": 0.81,
-    "pronunciation": 0.37
-  },
-  "speaking_features": {
-    "wpm": 150,
-    "pause_ratio": 0.01,
-    "f0_std_hz": 63.7,
-    "energy_std": 0.10
-  },
+  "subscores_01": { "content": 0.30, "fluency": 0.81, "pronunciation": 0.37 },
+  "speaking_features": { "wpm": 150, "pause_ratio": 0.01, "f0_std_hz": 63.7 },
   "overall_01": 0.50,
   "band_estimate": 6.5
 }
 ```
 
-### Calibration (quantile_map.json)
+### Score Calibration
 
-Frontend reads calibration mapping from `apps/web/public/calibration/quantile_map.json`.
+Band calibration is read from `apps/web/public/calibration/quantile_map.json`. To update:
 
-Steps to update:
+1. Run the baseline over a large unlabelled corpus to collect `overall_01` values.
+2. Compute percentiles (p10–p90) and map them to band 4.0–9.0.
+3. Replace `quantile_map.json` with the new mapping.
 
-1. Run baseline on large unlabelled data to collect `overall_01` distribution.
-2. Compute percentiles (e.g., p10–p90) → map to band 4.0–9.0.
-3. Generate a new `quantile_map.json`.
+`GET /api/health` reports whether calibration loaded successfully.
 
-`/api/health` shows whether calibration was loaded successfully.
+---
 
-## Development Workflow
+## API Reference
 
-- Linting & formatting: ESLint + Prettier
-- API response format:
-
-```json
-{ "ok": true, "data": { ... } }
-```
-
-or
+### `POST /api/writing`
 
 ```json
-{ "ok": false, "error": { "code": "BAD_REQUEST", "message": "..." } }
-```
-
-- History storage: `lib/kv.ts` → `saveScore()` (KV or in-memory)
-- Prompt management: `lib/promptStore.ts` → seed / savePromptsUniq / listPrompts
-
-Root scripts:
-
-```json
-{
-  "scripts": {
-    "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
-    "lint": "turbo run lint"
-  }
-}
-```
-
-## API Contract
-
-### `/api/writing` (Writing Task)
-
-**Method:** POST
-
-**Body:**
-
-```json
+// Request
 {
   "taskId": "task-2",
-  "prompt": "IELTS writing prompt...",
-  "essay": "User's essay text...",
-  "seconds": 120,
+  "prompt": "IELTS prompt text",
+  "essay": "User essay",
+  "seconds": 2400,
   "targetWords": 250
 }
-```
 
-**Response:**
-
-```json
+// Response
 {
   "ok": true,
   "data": {
@@ -306,76 +202,58 @@ Root scripts:
       "lexical": 6.5,
       "grammar": 6.0
     },
-    "paragraphFeedback": [
-      { "index": 0, "comment": "Intro is clear; consider a stronger thesis." }
-    ],
-    "improvements": ["Use more varied complex sentences."],
-    "rewritten": "Improved essay text...",
-    "tokensUsed": 1234
+    "paragraphFeedback": [{ "index": 0, "comment": "..." }],
+    "improvements": ["..."],
+    "rewritten": "Improved essay text"
   }
 }
 ```
 
-### `/api/speaking` (Speaking Task)
-
-**Method:** POST
-
-**Body:**
+### `POST /api/speaking`
 
 ```json
+// Request
 {
   "taskId": "speaking-part-2",
-  "audioPath": "/abs/path/in/ALLOWED_AUDIO_ROOTS.wav",
-  "transcript": "Transcript text..."
+  "audioPath": "/allowed/path/audio.wav",
+  "transcript": "Transcript text"
 }
-```
 
-**Response:**
-
-```json
+// Response
 {
   "ok": true,
   "data": {
-    "band": {
-      "overall": 6.0,
-      "content": 0.2,
-      "grammar": 0.3,
-      "vocab": 0.4,
-      "fluency": 0.81,
-      "pronunciation": 0.37
-    },
-    "speakingFeatures": {
-      "wpm": 150,
-      "pause_ratio": 0.01,
-      "f0_std_hz": 63.78
-    },
-    "feedback": "Concise feedback...",
-    "tokensUsed": 300
+    "band": { "overall": 6.0, "fluency": 0.81, "pronunciation": 0.37, ... },
+    "speakingFeatures": { "wpm": 150, "pause_ratio": 0.01 },
+    "feedback": "..."
   }
 }
 ```
 
-### `/api/prompts/*` (Question Bank)
+### `GET /api/history`
 
-- **POST /api/prompts/seed** → Initialize seed prompts
-- **POST /api/prompts/generate** → Generate new prompts with AI (writing/speaking, part-specific)
-- **GET /api/prompts/random?type=writing&part=task2** → Random draw (falls back to seed if empty)
+Returns the last N saved Writing and Speaking results.
 
-## Types & Validation
+### `GET /api/health`
 
-- Requests: validated with zod
-- LLM output: validated with JSON Schema + clamping to prevent format drift
+Returns system status: OpenAI connectivity, KV availability, ML baseline presence, calibration load status.
+
+---
 
 ## Roadmap
 
-- ✅ Writing feedback: scores, improvements, rewritten essay
-- ✅ Speaking tasks: seed/AI question bank, scoring
-- ✅ History tracking (Writing & Speaking)
-- ✅ Prompts API: seed / generate / random
-- ✅ Local ML baseline + calibration
-- ⏳ Progress visualization & charts
-- ⏳ Improved ASR alignment for Speaking
+- [x] Writing Task 2 feedback (scores, improvements, rewritten essay)
+- [x] Speaking tasks — question bank, audio upload, ASR, scoring
+- [x] History tracking (Writing & Speaking)
+- [x] Prompts API — seed / generate / random draw
+- [x] Local ML baseline + band calibration
+- [x] Dual-engine fused scoring with trace persistence
+- [ ] Progress charts & band trend visualization
+- [ ] Improved ASR alignment for Speaking accuracy
+- [ ] User accounts & authentication
+
+---
 
 ## License
 
-MIT License © 2025 foxdog
+MIT © 2025 foxdog

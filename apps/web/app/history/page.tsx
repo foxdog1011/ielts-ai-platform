@@ -3,10 +3,10 @@ import Link from "next/link";
 import { listHistory, type HistoryRecord, type WritingRecord, type SpeakingRecord } from "@/lib/history";
 
 type PageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     type?: "writing" | "speaking";
     page?: string; // 1-based
-  };
+  }>;
 };
 
 const PAGE_SIZE = 20;
@@ -14,8 +14,9 @@ const PAGE_SIZE = 20;
 export const dynamic = "force-dynamic"; // 確保每次請求都打到 KV
 
 export default async function HistoryPage({ searchParams }: PageProps) {
-  const type = (searchParams?.type === "writing" || searchParams?.type === "speaking") ? searchParams!.type : undefined;
-  const page = Math.max(1, Number(searchParams?.page ?? "1") || 1);
+  const params = await searchParams;
+  const type = (params?.type === "writing" || params?.type === "speaking") ? params.type : undefined;
+  const page = Math.max(1, Number(params?.page ?? "1") || 1);
   const offset = (page - 1) * PAGE_SIZE;
 
   // 取 PAGE_SIZE+1 來決定是否有下一頁

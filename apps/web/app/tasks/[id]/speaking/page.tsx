@@ -201,7 +201,12 @@ export default function SpeakingPage() {
         const blob = await (await fetch(audioUrl)).blob();
         mime = blob.type || 'audio/webm';
         const buf = await blob.arrayBuffer();
-        audioBase64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+        const bytes = new Uint8Array(buf);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        audioBase64 = btoa(binary);
       }
 
       const res = await fetch('/api/speaking', {

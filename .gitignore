@@ -32,3 +32,6 @@ data/
 Thumbs.db
 .vscode/
 EOF
+
+# Claude Code
+.claude/

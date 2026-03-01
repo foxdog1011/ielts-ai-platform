@@ -1,9 +1,11 @@
 // apps/web/lib/promptStore.ts
 import { unstable_noStore as noStore } from "next/cache";
 import {
+  kvGetJSON,
   kvListPushJSON,
   kvListTailJSON,
   kvSetAdd,
+  kvSetJSON,
   kvSetHas,
 } from "@/lib/kv";
 import fs from "node:fs/promises";
@@ -31,11 +33,17 @@ export type PromptItem = {
 
 /** API/生成 給的是「半成品」 */
 export type PromptDraft = Omit<PromptItem, "id" | "hash" | "ts">;
+export type PromptFlags = {
+  fav?: boolean;
+  skip?: boolean;
+};
+export type PromptItemWithFlags = PromptItem & { flags?: PromptFlags };
 
 /* -------------------- Keys -------------------- */
 const LIST_KEY = (type: PromptType, part: WritingPart | SpeakingPart) =>
   `prompts:v1:${type}:${part}`;
 const HASH_SET_KEY = `prompts:v1:hashes`;
+const FLAG_KEY = (id: string) => `prompts:v1:flags:${id}`;
 
 /* -------------------- Utils -------------------- */
 function makeId(): string {
@@ -145,6 +153,37 @@ export async function pickRandomPrompt(opts: {
   const cands = await listPrompts({ ...opts, limit: 200, offset: 0 });
   if (!cands.length) return null;
   return cands[Math.floor(Math.random() * cands.length)];
+}
+
+export async function getPromptFlags(id: string): Promise<PromptFlags> {
+  noStore();
+  const flags = await kvGetJSON<PromptFlags>(FLAG_KEY(id));
+  return flags ?? {};
+}
+
+export async function setPromptFlags(
+  id: string,
+  patch: Partial<PromptFlags>
+): Promise<PromptFlags> {
+  noStore();
+  const cur = await getPromptFlags(id);
+  const next: PromptFlags = {
+    fav: patch.fav ?? cur.fav ?? false,
+    skip: patch.skip ?? cur.skip ?? false,
+  };
+  await kvSetJSON(FLAG_KEY(id), next);
+  return next;
+}
+
+export async function enrichWithFlags(rows: PromptItem[]): Promise<PromptItemWithFlags[]> {
+  noStore();
+  const out = await Promise.all(
+    rows.map(async (row) => {
+      const flags = await getPromptFlags(row.id);
+      return { ...row, flags };
+    })
+  );
+  return out;
 }
 
 /* -------------------- Seeds -------------------- */
