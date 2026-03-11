@@ -4,7 +4,7 @@ import { transcribeAudio } from "@/lib/scoring/asr";
 import { scoreSpeakingWithLlm } from "@/lib/scoring/llmSpeakingRubric";
 import { runLocalSpeakingScore } from "@/lib/scoring/localAdapters";
 import { fuseSpeakingScores } from "@/lib/scoring/speakingFusion";
-import type { SpeakingScoreTrace, SpeakingSubscores01 } from "@/lib/scoring/types";
+import type { ScoreDebugTrace, SpeakingScoreTrace, SpeakingSubscores01 } from "@/lib/scoring/types";
 import { startTimer, toHalfBandFrom01, wordCount } from "@/lib/scoring/utils";
 
 export type SpeakingPipelineInput = {
@@ -163,6 +163,6 @@ export async function runSpeakingPipeline(
         band: calibration.band,
         calibration_missing_map: calibration.calibration_missing_map,
       },
-    },
+    } satisfies ScoreDebugTrace,
   };
 }

@@ -70,3 +70,9 @@ export type SpeakingScoreTrace = {
     local_model?: string;
   };
 };
+
+// Discriminated union — enables type-safe narrowing on scoreTrace at the history layer.
+// kv.ts intentionally stays Record<string,unknown>; the cast happens once in history.ts.
+export type WritingScoreTraceTagged = WritingScoreTrace & { exam_type: "writing" };
+export type SpeakingScoreTraceTagged = SpeakingScoreTrace & { exam_type: "speaking" };
+export type ScoreTrace = WritingScoreTraceTagged | SpeakingScoreTraceTagged;

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { saveScore } from "@/lib/kv";
+import { listHistory } from "@/lib/history";
+import type { HistoryRecord } from "@/lib/history";
+import { buildStudyPlan } from "@/lib/planner";
 import { runWritingPipeline } from "@/lib/scoring/writingPipeline";
 
 const Body = z.object({
   taskId: z.string().min(1),
+  taskType: z.enum(["task1", "task2"]).optional(),
   prompt: z.string().min(1),
   essay: z.string().min(1),
   targetWords: z.number().int().positive().optional(),
@@ -14,13 +18,20 @@ const Body = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = Body.parse(await req.json());
-    const result = await runWritingPipeline({
-      taskId: body.taskId,
-      prompt: body.prompt,
-      essay: body.essay,
-      targetWords: body.targetWords,
-      seconds: body.seconds,
-    });
+
+    // Fetch history concurrently with pipeline — hidden behind pipeline latency.
+    // History failure degrades gracefully: empty array → planner runs without trend data.
+    const [result, recentHistory] = await Promise.all([
+      runWritingPipeline({
+        taskId: body.taskId,
+        taskType: body.taskType,
+        prompt: body.prompt,
+        essay: body.essay,
+        targetWords: body.targetWords,
+        seconds: body.seconds,
+      }),
+      listHistory({ type: "writing", limit: 5 }).catch((): HistoryRecord[] => []),
+    ]);
 
     await saveScore("writing", {
       taskId: body.taskId,
@@ -30,27 +41,28 @@ export async function POST(req: NextRequest) {
       band: result.band,
       ts: Date.now(),
       scoreTrace: result.trace,
-      llm_subscores: result.trace.llm_subscores,
-      local_subscores: result.trace.local_subscores,
-      weights: result.trace.weights,
-      final_subscores: result.trace.final_subscores,
-      final_overall_pre_calibration: result.trace.final_overall_pre_calibration,
-      final_overall_post_calibration: result.trace.final_overall_post_calibration,
-      final_band: result.trace.final_band,
-      debug_flags: result.trace.debug_flags,
-      timings: result.trace.timings,
-      models: result.trace.models,
     });
+
+    // Planner runs after saveScore so recentHistory contains only prior sessions.
+    // .catch ensures planner failure never affects band/feedback fields.
+    const studyPlan = await buildStudyPlan({
+      examType: "writing",
+      currentBand: result.band,
+      llmFeedback: result.improvements ?? [],
+      recentHistory,
+      diagnosisResult: result.diagnosisResult,
+    }).catch(() => undefined);
 
     return NextResponse.json({
       ok: true,
       data: {
-        band: result.band,
-        paragraphFeedback: result.paragraphFeedback,
-        improvements: result.improvements,
-        rewritten: result.rewritten,
-        tokensUsed: result.tokensUsed,
-        debug: result.debug,
+        band: result.band,                          // unchanged
+        paragraphFeedback: result.paragraphFeedback, // unchanged
+        improvements: result.improvements,           // unchanged
+        rewritten: result.rewritten,                 // unchanged
+        tokensUsed: result.tokensUsed,               // unchanged
+        debug: result.debug,                         // unchanged
+        studyPlan,                                   // additive, optional — omitted from JSON when undefined
       },
     });
   } catch (e: any) {

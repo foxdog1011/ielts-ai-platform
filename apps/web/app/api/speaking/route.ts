@@ -35,16 +35,6 @@ export async function POST(req: NextRequest) {
       speakingFeatures: result.speakingFeatures,
       ts: Date.now(),
       scoreTrace: result.trace,
-      llm_subscores: result.trace.llm_subscores,
-      local_subscores: result.trace.local_subscores,
-      weights: result.trace.weights,
-      final_subscores: result.trace.final_subscores,
-      final_overall_pre_calibration: result.trace.final_overall_pre_calibration,
-      final_overall_post_calibration: result.trace.final_overall_post_calibration,
-      final_band: result.trace.final_band,
-      debug_flags: result.trace.debug_flags,
-      timings: result.trace.timings,
-      models: result.trace.models,
     });
 
     const speakingFeatures = (result.speakingFeatures ?? {}) as Record<string, unknown>;
@@ -62,7 +52,6 @@ export async function POST(req: NextRequest) {
           band: {
             overall: result.band.overall,
             taskResponse: result.band.content,
-            coherence: result.band.content,
             vocabulary: result.band.vocab,
             grammar: result.band.grammar,
           },

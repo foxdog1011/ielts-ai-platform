@@ -386,7 +386,7 @@ export default function SpeakingPage() {
 
               {!resp && (
                 <div className="mt-3 text-[12px] text-zinc-500">
-                  送出後將顯示內容面（TR/CC/LR/GRA）與語音面（Pronunciation/Fluency）的分數與建議。
+                  送出後將顯示內容面（Content / Vocabulary / Grammar）與語音面（Pronunciation / Fluency）的分數與建議。
                 </div>
               )}
 
@@ -396,7 +396,6 @@ export default function SpeakingPage() {
                   <div className="mt-1 grid gap-1 text-[12px] text-zinc-700">
                     <Score label="Overall" v={resp.content.band.overall} />
                     <Score label="Task Resp." v={resp.content.band.taskResponse} />
-                    <Score label="Coherence" v={resp.content.band.coherence} />
                     <Score label="Vocabulary" v={resp.content.band.vocabulary} />
                     <Score label="Grammar" v={resp.content.band.grammar} />
                   </div>

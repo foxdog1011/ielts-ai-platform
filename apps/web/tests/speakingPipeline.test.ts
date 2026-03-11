@@ -22,7 +22,7 @@ test("speaking pipeline has no placeholder constants and computes deterministic 
       modelUsed: "stub-llm",
     }),
     localFn: async () => ({
-      ok: true,
+      ok: true as const,
       err: null,
       fluency_01: 0.42,
       pronunciation_01: 0.58,
@@ -64,7 +64,7 @@ test("speaking short transcript down-weights llm and flags are set", async () =>
         modelUsed: "stub-llm",
       }),
       localFn: async () => ({
-        ok: true,
+        ok: true as const,
         err: null,
         fluency_01: null,
         pronunciation_01: null,
