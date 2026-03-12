@@ -4,6 +4,7 @@ import { saveScore } from "@/lib/kv";
 import { listHistory } from "@/lib/history";
 import type { HistoryRecord } from "@/lib/history";
 import { buildStudyPlan } from "@/lib/planner";
+import { buildCoachSnapshot } from "@/lib/coach";
 import { runWritingPipeline } from "@/lib/scoring/writingPipeline";
 
 const Body = z.object({
@@ -33,17 +34,7 @@ export async function POST(req: NextRequest) {
       listHistory({ type: "writing", limit: 5 }).catch((): HistoryRecord[] => []),
     ]);
 
-    await saveScore("writing", {
-      taskId: body.taskId,
-      prompt: body.prompt,
-      durationSec: body.seconds,
-      words: result.words,
-      band: result.band,
-      ts: Date.now(),
-      scoreTrace: result.trace,
-    });
-
-    // Planner runs after saveScore so recentHistory contains only prior sessions.
+    // Planner runs before saveScore so we can persist diagSummary + planSnapshot together.
     // .catch ensures planner failure never affects band/feedback fields.
     const studyPlan = await buildStudyPlan({
       examType: "writing",
@@ -53,25 +44,66 @@ export async function POST(req: NextRequest) {
       diagnosisResult: result.diagnosisResult,
     }).catch(() => undefined);
 
+    // Storage failure must not surface as a scoring error — absorb silently.
+    await saveScore("writing", {
+      taskId: body.taskId,
+      prompt: body.prompt,
+      durationSec: body.seconds,
+      words: result.words,
+      band: result.band,
+      ts: Date.now(),
+      scoreTrace: result.trace,
+      diagSummary: result.diagnosisResult
+        ? {
+            severity: result.diagnosisResult.severity,
+            anomalies: result.diagnosisResult.anomalies.map((a) => ({
+              code: a.code,
+              dimension: a.dimension,
+              severity: a.severity,
+            })),
+            engineConflict: result.diagnosisResult.engineConflict,
+            lowConfidence: result.diagnosisResult.lowConfidence,
+          }
+        : undefined,
+      planSnapshot: studyPlan
+        ? {
+            currentFocus: studyPlan.currentFocus,
+            nextTaskRecommendation: studyPlan.nextTaskRecommendation,
+            milestoneBand: studyPlan.milestoneBand,
+          }
+        : undefined,
+    }).catch(() => undefined);
+
+    const coachSnapshot = studyPlan
+      ? buildCoachSnapshot({
+          examType: "writing",
+          currentBand: result.band as Record<string, number | null | undefined>,
+          diagnosisResult: result.diagnosisResult,
+          studyPlan,
+          recentHistory,
+        })
+      : undefined;
+
     return NextResponse.json({
       ok: true,
       data: {
-        band: result.band,                          // unchanged
-        paragraphFeedback: result.paragraphFeedback, // unchanged
-        improvements: result.improvements,           // unchanged
-        rewritten: result.rewritten,                 // unchanged
-        tokensUsed: result.tokensUsed,               // unchanged
-        debug: result.debug,                         // unchanged
-        studyPlan,                                   // additive, optional — omitted from JSON when undefined
+        band: result.band,
+        paragraphFeedback: result.paragraphFeedback,
+        improvements: result.improvements,
+        rewritten: result.rewritten,
+        tokensUsed: result.tokensUsed,
+        debug: result.debug,
+        studyPlan,
+        coachSnapshot,                               // additive, optional
       },
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
       {
         ok: false,
         error: {
           code: "WRITING_SCORING_FAILED",
-          message: e?.message || "writing scoring failed",
+          message: e instanceof Error ? e.message : "writing scoring failed",
         },
       },
       { status: 400 }

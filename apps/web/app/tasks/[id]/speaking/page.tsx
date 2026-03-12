@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/Toast';
+import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
+import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
+import { getPromptText } from '@/lib/promptUtils';
 
 type EvalResp = {
   ok: boolean;
@@ -31,17 +34,11 @@ type EvalResp = {
       suggestions?: string[];
     };
     tokensUsed?: number;
+    studyPlan?: StudyPlan;
+    coachSnapshot?: CoachSnapshotData;
   };
   error?: { message: string };
 };
-
-function getPromptText(d: any): string {
-  if (!d) return '';
-  if (typeof d === 'string') return d;
-  if (typeof d === 'object' && typeof d.prompt === 'string') return d.prompt;
-  if (Array.isArray(d) && d.length) return getPromptText(d[0]);
-  return '';
-}
 
 export default function SpeakingPage() {
   const toast = useToast();
@@ -225,26 +222,6 @@ export default function SpeakingPage() {
       if (!json.ok) throw new Error(json?.error?.message || '分析失敗');
       setResp(json.data);
       toast.push('已取得評分');
-
-      // 寫入歷史（用你的 /api/history）
-      try {
-        await fetch('/api/history', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'speaking',
-            taskId,
-            prompt,
-            durationSec: durationSec,
-            band: {
-              overall: json.data?.content?.band?.overall ?? json.data?.speech?.band?.overall ?? undefined,
-              content: json.data?.content?.band?.overall ?? undefined,
-              speech: json.data?.speech?.band?.overall ?? undefined,
-            },
-            ts: Date.now(),
-          }),
-        });
-      } catch {}
     } catch (e: any) {
       toast.push(e?.message || '送出失敗');
     } finally {
@@ -382,71 +359,115 @@ export default function SpeakingPage() {
           {/* 右側：結果 */}
           <aside className="lg:sticky lg:top-6 self-start">
             <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur">
-              <h3 className="text-[13px] font-medium tracking-tight">AI 評分</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13px] font-medium tracking-tight">AI 評分</h3>
+                {resp?.content?.band?.overall != null && (
+                  <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                    Band {resp.content.band.overall}
+                  </span>
+                )}
+              </div>
 
-              {!resp && (
-                <div className="mt-3 text-[12px] text-zinc-500">
-                  送出後將顯示內容面（Content / Vocabulary / Grammar）與語音面（Pronunciation / Fluency）的分數與建議。
+              {/* Empty state */}
+              {!resp && !submitting && (
+                <div className="mt-4 rounded-lg border border-dashed border-zinc-200 p-4 text-center text-[12px] text-zinc-400">
+                  送出後顯示評分與語音分析
                 </div>
               )}
 
+              {/* Loading skeleton */}
+              {submitting && (
+                <div className="mt-3 space-y-2">
+                  <div className="h-8 animate-pulse rounded-lg bg-zinc-100" />
+                  <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                  <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                  <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                </div>
+              )}
+
+              {/* Content scores */}
               {resp?.content?.band && (
-                <div className="mt-3 rounded-lg border border-zinc-200 bg-white/70 p-3">
-                  <div className="text-[12px] font-medium">Content</div>
-                  <div className="mt-1 grid gap-1 text-[12px] text-zinc-700">
+                <div className="mt-3">
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Content</div>
+                  <div className="space-y-1">
                     <Score label="Overall" v={resp.content.band.overall} />
-                    <Score label="Task Resp." v={resp.content.band.taskResponse} />
+                    <Score label="Task Response" v={resp.content.band.taskResponse} />
                     <Score label="Vocabulary" v={resp.content.band.vocabulary} />
                     <Score label="Grammar" v={resp.content.band.grammar} />
                   </div>
                   {!!resp.content.suggestions?.length && (
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-zinc-700">
-                      {resp.content.suggestions.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
+                    <details className="mt-2">
+                      <summary className="flex cursor-pointer list-none items-center justify-between pt-2">
+                        <span className="text-[12px] font-medium text-zinc-700">建議</span>
+                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{resp.content.suggestions.length}</span>
+                      </summary>
+                      <ul className="mt-1.5 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
+                        {resp.content.suggestions.map((s, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
                   )}
                 </div>
               )}
 
+              {/* Speech scores */}
               {resp?.speech?.band && (
-                <div className="mt-3 rounded-lg border border-zinc-200 bg-white/70 p-3">
-                  <div className="text-[12px] font-medium">Speech</div>
-                  <div className="mt-1 grid gap-1 text-[12px] text-zinc-700">
+                <div className="mt-4 border-t border-zinc-100 pt-3">
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Speech</div>
+                  <div className="space-y-1">
                     <Score label="Overall" v={resp.speech.band.overall} />
                     <Score label="Pronunciation" v={resp.speech.band.pronunciation} />
                     <Score label="Fluency" v={resp.speech.band.fluency} />
                   </div>
                   {!!resp.speech.metrics && (
-                    <div className="mt-2 grid grid-cols-2 gap-1 text-[11px] text-zinc-600">
+                    <div className="mt-2 grid grid-cols-2 gap-1">
                       <Metric label="Duration" v={`${resp.speech.metrics.durationSec ?? 0}s`} />
                       <Metric label="WPM" v={`${resp.speech.metrics.wpm ?? '-'}`} />
                       <Metric
-                        label="PauseRate"
-                        v={
-                          resp.speech.metrics.pauseRate != null
-                            ? `${Math.round((resp.speech.metrics.pauseRate || 0) * 100)}%`
-                            : 'n/a'
-                        }
+                        label="Pause Rate"
+                        v={resp.speech.metrics.pauseRate != null ? `${Math.round((resp.speech.metrics.pauseRate || 0) * 100)}%` : 'n/a'}
                       />
                       <Metric
-                        label="AvgPause"
+                        label="Avg Pause"
                         v={resp.speech.metrics.avgPauseSec != null ? `${resp.speech.metrics.avgPauseSec}s` : 'n/a'}
                       />
-                  </div>
+                    </div>
                   )}
                   {!!resp.speech.suggestions?.length && (
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] text-zinc-700">
-                      {resp.speech.suggestions.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
+                    <details className="mt-2">
+                      <summary className="flex cursor-pointer list-none items-center justify-between pt-2">
+                        <span className="text-[12px] font-medium text-zinc-700">建議</span>
+                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{resp.speech.suggestions.length}</span>
+                      </summary>
+                      <ul className="mt-1.5 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
+                        {resp.speech.suggestions.map((s, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
                   )}
                 </div>
               )}
 
+              {/* Study plan */}
+              {!!resp?.studyPlan && (
+                <StudyPlanBlock plan={resp.studyPlan} dimLabel={SPK_DIM_LABEL} taskLabel={SPK_TASK_LABEL} accent="amber" />
+              )}
+
+              {/* Coach snapshot */}
+              {!!resp?.coachSnapshot && (
+                <CoachBlock snapshot={resp.coachSnapshot} />
+              )}
+
               {!!resp?.tokensUsed && (
-                <div className="mt-3 text-right text-[11px] text-zinc-500">tokens {resp.tokensUsed}</div>
+                <div className="mt-3 text-right text-[11px] text-zinc-400">tokens {resp.tokensUsed}</div>
               )}
             </div>
           </aside>
@@ -456,20 +477,43 @@ export default function SpeakingPage() {
   );
 }
 
+const SPK_DIM_LABEL: Record<string, string> = {
+  content: 'Content',
+  vocab: 'Vocabulary',
+  grammar: 'Grammar',
+  fluency: 'Fluency',
+  pronunciation: 'Pronunciation',
+};
+
+const SPK_TASK_LABEL: Record<string, string> = {
+  speaking_part2_long_turn: 'Part 2 — Long Turn',
+  speaking_pronunciation_drill: 'Pronunciation Drill',
+  speaking_part3_discussion: 'Part 3 — Discussion',
+  speaking_vocabulary_practice: 'Vocabulary Practice',
+  speaking_grammar_accuracy: 'Grammar Accuracy',
+};
+
 function Score({ label, v }: { label: string; v?: number }) {
   if (v == null) return null;
+  const pct = Math.max(0, Math.min(100, (Number(v) / 9) * 100));
   return (
-    <div className="flex items-center justify-between">
-      <span>{label}</span>
-      <span className="font-medium text-zinc-900">{Number(v).toFixed(1).replace(/\.0$/, '')}</span>
+    <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white/60 px-2 py-1.5">
+      <span className="text-[11px] text-zinc-600">{label}</span>
+      <div className="flex items-center gap-2">
+        <div className="h-1 w-20 overflow-hidden rounded-full bg-zinc-200">
+          <div className="h-full bg-amber-500/80" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="text-[11px] font-medium text-zinc-800">{Number(v).toFixed(1).replace(/\.0$/, '')}</span>
+      </div>
     </div>
   );
 }
+
 function Metric({ label, v }: { label: string; v: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span>{label}</span>
-      <span className="text-zinc-800">{v}</span>
+    <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white/60 px-2 py-1">
+      <span className="text-[10px] text-zinc-500">{label}</span>
+      <span className="text-[10px] font-medium text-zinc-700">{v}</span>
     </div>
   );
 }

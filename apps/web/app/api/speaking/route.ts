@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { saveScore } from "@/lib/kv";
+import { listHistory } from "@/lib/history";
+import type { HistoryRecord } from "@/lib/history";
+import { buildStudyPlan } from "@/lib/planner";
+import { buildCoachSnapshot } from "@/lib/coach";
 import { runSpeakingPipeline } from "@/lib/scoring/speakingPipeline";
 
 const Body = z.object({
@@ -17,15 +21,27 @@ export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
   try {
     const body = Body.parse(await req.json());
-    const result = await runSpeakingPipeline({
-      taskId: body.taskId,
-      prompt: body.prompt,
-      audioBase64: body.audioBase64,
-      audioPath: body.audioPath,
-      mime: body.mime,
-      manualTranscript: body.manualTranscript,
-      durationSec: body.durationSec,
-    });
+
+    const [result, recentHistory] = await Promise.all([
+      runSpeakingPipeline({
+        taskId: body.taskId,
+        prompt: body.prompt,
+        audioBase64: body.audioBase64,
+        audioPath: body.audioPath,
+        mime: body.mime,
+        manualTranscript: body.manualTranscript,
+        durationSec: body.durationSec,
+      }),
+      listHistory({ type: "speaking", limit: 5 }).catch((): HistoryRecord[] => []),
+    ]);
+
+    const studyPlan = await buildStudyPlan({
+      examType: "speaking",
+      currentBand: result.band,
+      llmFeedback: [...(result.feedback ? [result.feedback] : []), ...(result.suggestions ?? [])],
+      recentHistory,
+      diagnosisResult: result.diagnosisResult,
+    }).catch(() => undefined);
 
     await saveScore("speaking", {
       taskId: body.taskId,
@@ -35,7 +51,36 @@ export async function POST(req: NextRequest) {
       speakingFeatures: result.speakingFeatures,
       ts: Date.now(),
       scoreTrace: result.trace,
-    });
+      diagSummary: result.diagnosisResult
+        ? {
+            severity: result.diagnosisResult.severity,
+            anomalies: result.diagnosisResult.anomalies.map((a) => ({
+              code: a.code,
+              dimension: a.dimension,
+              severity: a.severity,
+            })),
+            engineConflict: result.diagnosisResult.engineConflict,
+            lowConfidence: result.diagnosisResult.lowConfidence,
+          }
+        : undefined,
+      planSnapshot: studyPlan
+        ? {
+            currentFocus: studyPlan.currentFocus,
+            nextTaskRecommendation: studyPlan.nextTaskRecommendation,
+            milestoneBand: studyPlan.milestoneBand,
+          }
+        : undefined,
+    }).catch(() => undefined);
+
+    const coachSnapshot = studyPlan
+      ? buildCoachSnapshot({
+          examType: "speaking",
+          currentBand: result.band as Record<string, number | null | undefined>,
+          diagnosisResult: result.diagnosisResult,
+          studyPlan,
+          recentHistory,
+        })
+      : undefined;
 
     const speakingFeatures = (result.speakingFeatures ?? {}) as Record<string, unknown>;
 
@@ -79,16 +124,18 @@ export async function POST(req: NextRequest) {
         },
         tokensUsed: result.tokensUsed,
         debug: result.debug,
+        studyPlan,
+        coachSnapshot,                               // additive, optional
       },
       requestId,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
       {
         ok: false,
         error: {
           code: "SPEAKING_SCORING_FAILED",
-          message: e?.message || "speaking scoring failed",
+          message: e instanceof Error ? e.message : "speaking scoring failed",
         },
         requestId,
       },

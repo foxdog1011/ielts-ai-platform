@@ -4,23 +4,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
+import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
+import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
+import { getPromptText } from '@/lib/promptUtils';
 
 type BandScores = { overall?: number; taskResponse?: number; coherence?: number; lexical?: number; grammar?: number; };
 type ParagraphFeedback = { index: number; comment: string };
 type SubmitResponse = {
   ok: boolean;
-  data?: { band?: BandScores | null; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; };
+  data?: { band?: BandScores | null; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; studyPlan?: StudyPlan; coachSnapshot?: CoachSnapshotData };
   error?: { code: string; message: string };
   requestId?: string;
 };
-
-function getPromptText(d: any): string {
-  if (!d) return '';
-  if (typeof d === 'string') return d;
-  if (typeof d === 'object' && typeof d.prompt === 'string') return d.prompt;
-  if (Array.isArray(d) && d.length) return getPromptText(d[0]);
-  return '';
-}
 
 export default function WritingTaskPage() {
   const toast = useToast();
@@ -175,23 +170,6 @@ export default function WritingTaskPage() {
       if (!json.ok) throw new Error(json.error?.message || '分析失敗，稍後再試');
       setResult(json.data);
       dirtyRef.current = false;
-
-      // 寫入歷史
-      try {
-        await fetch('/api/history', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'writing',
-            taskId,
-            prompt,
-            durationSec: seconds,
-            words,
-            band: json.data?.band ?? null,
-            ts: Date.now(),
-          }),
-        });
-      } catch {}
       toast.push('已取得評分');
     } catch (e: any) {
       setError(e?.message || '發生未預期錯誤');
@@ -388,7 +366,14 @@ export default function WritingTaskPage() {
           <aside className="lg:sticky lg:top-6 self-start">
             <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between">
-                <h3 className="text-[13px] font-medium tracking-tight">AI 評分</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[13px] font-medium tracking-tight">AI 評分</h3>
+                  {result?.band?.overall != null && (
+                    <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700">
+                      Band {result.band.overall}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={() => setShowRight((v) => !v)}
                   className="rounded-md border border-zinc-300 bg-white px-2 py-0.5 text-[11px] hover:bg-zinc-50"
@@ -404,14 +389,26 @@ export default function WritingTaskPage() {
 
               {showRight && (
                 <>
-                  {!result && (
-                    <div className="mt-3 text-[12px] text-zinc-500">
-                      送出後將顯示整體 Band 與分項評分、建議。
+                  {/* Empty state */}
+                  {!result && !submitting && (
+                    <div className="mt-4 rounded-lg border border-dashed border-zinc-200 p-4 text-center text-[12px] text-zinc-400">
+                      送出後顯示評分與學習建議
                     </div>
                   )}
 
-                  {result?.band && (
+                  {/* Loading skeleton */}
+                  {submitting && (
                     <div className="mt-3 space-y-2">
+                      <div className="h-8 animate-pulse rounded-lg bg-zinc-100" />
+                      <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                      <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                      <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                    </div>
+                  )}
+
+                  {/* Scores */}
+                  {result?.band && (
+                    <div className="mt-3 space-y-1.5">
                       <BandBadge overall={result.band.overall} />
                       <ScoreRow compact label="Task Response" value={result.band.taskResponse} />
                       <ScoreRow compact label="Coherence & Cohesion" value={result.band.coherence} />
@@ -420,21 +417,30 @@ export default function WritingTaskPage() {
                     </div>
                   )}
 
+                  {/* Improvements */}
                   {!!result?.improvements?.length && (
-                    <details className="mt-3">
-                      <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-700">
-                        改善建議（{result.improvements.length}）
+                    <details className="mt-4 border-t border-zinc-100 pt-3">
+                      <summary className="flex cursor-pointer list-none items-center justify-between">
+                        <span className="text-[12px] font-medium text-zinc-700">改善建議</span>
+                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{result.improvements.length}</span>
                       </summary>
-                      <ul className="mt-2 list-disc space-y-1 pl-5 text-[12px] leading-relaxed text-zinc-700">
-                        {result.improvements.map((s, i) => <li key={i}>{s}</li>)}
+                      <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
+                        {result.improvements.map((s, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
                       </ul>
                     </details>
                   )}
 
+                  {/* Paragraph feedback */}
                   {!!result?.paragraphFeedback?.length && (
-                    <details className="mt-3">
-                      <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-700">
-                        逐段建議（{result.paragraphFeedback.length}）
+                    <details className="mt-3 border-t border-zinc-100 pt-3">
+                      <summary className="flex cursor-pointer list-none items-center justify-between">
+                        <span className="text-[12px] font-medium text-zinc-700">逐段建議</span>
+                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{result.paragraphFeedback.length}</span>
                       </summary>
                       <div className="mt-2 space-y-1">
                         {result.paragraphFeedback.map((p) => (
@@ -450,8 +456,18 @@ export default function WritingTaskPage() {
                     </details>
                   )}
 
+                  {/* Study plan */}
+                  {!!result?.studyPlan && (
+                    <StudyPlanBlock plan={result.studyPlan} dimLabel={DIM_LABEL} taskLabel={TASK_LABEL} accent="blue" />
+                  )}
+
+                  {/* Coach snapshot */}
+                  {!!result?.coachSnapshot && (
+                    <CoachBlock snapshot={result.coachSnapshot} />
+                  )}
+
                   {!!result?.tokensUsed && (
-                    <div className="mt-3 text-right text-[11px] text-zinc-500">
+                    <div className="mt-3 text-right text-[11px] text-zinc-400">
                       tokens {result.tokensUsed}
                     </div>
                   )}
@@ -466,6 +482,24 @@ export default function WritingTaskPage() {
 }
 
 /* ---------------- helpers ---------------- */
+
+const DIM_LABEL: Record<string, string> = {
+  taskResponse: 'Task Response',
+  coherence: 'Coherence & Cohesion',
+  lexical: 'Lexical Resource',
+  grammar: 'Grammar',
+};
+
+const TASK_LABEL: Record<string, string> = {
+  task1_paraphrase: 'Task 1 — Paraphrase Practice',
+  task1_data: 'Task 1 — Data Description',
+  task1_process: 'Task 1 — Process Description',
+  task2_argument: 'Task 2 — Argument Essay',
+  task2_discuss: 'Task 2 — Discussion Essay',
+  task2_problem: 'Task 2 — Problem–Solution',
+  task2_mixed: 'Task 2 — Mixed Essay',
+  task2_structure: 'Task 2 — Structure Practice',
+};
 
 function draftKey(taskId: string) { return `draft:writing:${taskId}`; }
 function countWords(text: string) {

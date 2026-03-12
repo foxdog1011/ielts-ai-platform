@@ -2,7 +2,7 @@
 // 只依賴 lib/kv.ts 的 listScores / saveScore / ScorePayload
 
 import { unstable_noStore as noStore } from "next/cache";
-import { listScores, saveScore, type ScorePayload } from "@/lib/kv";
+import { listScores, saveScore, type ScorePayload, type DiagSummary, type PlanSnapshot } from "@/lib/kv";
 
 export type WritingBand = {
   overall?: number;
@@ -28,6 +28,8 @@ export type BaseRecord = {
   scoreTrace?: Record<string, unknown>;
   ts?: number;
   createdAt?: string;
+  diagSummary?: DiagSummary;
+  planSnapshot?: PlanSnapshot;
 };
 
 export type WritingRecord = BaseRecord & {

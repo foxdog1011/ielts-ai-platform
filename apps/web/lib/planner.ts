@@ -92,9 +92,36 @@ export type DimensionPriority = {
   diagnosisFlag?: AnomalySeverity;
 };
 
+/**
+ * The single most important dimension for the learner to focus on.
+ * Priority order: diagnosis_flagged > repeated_weakness > current_weakest.
+ */
+export type CurrentFocus = {
+  dimension: string;
+  reason: "diagnosis_flagged" | "repeated_weakness" | "current_weakest";
+};
+
+export type ProgressStatus = "first_session" | "improving" | "stable" | "declining";
+
 export type StudyPlan = {
   /** Dimensions ordered from weakest to strongest */
   priorityDimensions: DimensionPriority[];
+  /**
+   * The single dimension the learner should focus on most.
+   * Absent only when all dimension bands equal or exceed the overall.
+   */
+  currentFocus?: CurrentFocus;
+  /**
+   * Dimensions that appeared below the session overall in ≥ 2 of the last 5
+   * same-type sessions. Empty array for first-time users.
+   * Omitted when the plannerFn is custom and does not compute history.
+   */
+  repeatedWeaknesses?: string[];
+  /**
+   * Overall progress direction compared to recent session history.
+   * Omitted when the plannerFn is custom and does not compute history.
+   */
+  progressStatus?: ProgressStatus;
   /** E.g. "task2_argument", "speaking_part2_long_turn" */
   nextTaskRecommendation: string;
   /** Next achievable half-band step above current overall */
@@ -111,6 +138,12 @@ export type StudyPlan = {
   reliabilityNote?: string;
   /** Lets consumers know how the plan was generated */
   planSource: "rule-based" | "llm";
+  /**
+   * Number of prior same-type sessions in recentHistory at plan-build time.
+   * 0 = this is the user's first session of this exam type.
+   * Omitted when the plannerFn is custom (LLM-backed) and does not compute it.
+   */
+  sessionCount?: number;
 };
 
 // ── Runner ────────────────────────────────────────────────────────────────────
@@ -344,12 +377,111 @@ export function buildReliabilityNote(diagnosisResult: DiagnosisResult | undefine
   return undefined;
 }
 
+/**
+ * Returns dimension names that were below the session overall in at least
+ * `minSessions` of the provided history records (same examType only).
+ * Uses the `band` field stored on each record; keys matching the planner's
+ * dimension naming convention (e.g. "taskResponse", "coherence").
+ */
+export function computeRepeatedWeaknesses(
+  recentHistory: HistoryRecord[],
+  examType: "writing" | "speaking",
+  minSessions = 2,
+): string[] {
+  const records = recentHistory
+    .filter((r) => r.type === examType)
+    .slice(0, 5);
+
+  if (records.length < minSessions) return [];
+
+  const weakCount: Record<string, number> = {};
+  for (const rec of records) {
+    const band = rec.band as Record<string, number | null | undefined> | null | undefined;
+    if (!band) continue;
+    const overall = band.overall;
+    if (overall == null || !Number.isFinite(overall)) continue;
+    for (const [dim, val] of Object.entries(band)) {
+      if (dim === "overall") continue;
+      if (typeof val !== "number" || !Number.isFinite(val)) continue;
+      if (val < overall) {
+        weakCount[dim] = (weakCount[dim] ?? 0) + 1;
+      }
+    }
+  }
+
+  return Object.entries(weakCount)
+    .filter(([, count]) => count >= minSessions)
+    .sort((a, b) => b[1] - a[1])
+    .map(([dim]) => dim);
+}
+
+/**
+ * Returns a progress status by comparing currentOverall to the average of
+ * up to 3 most recent same-type sessions.
+ * "first_session" when no prior same-type records exist.
+ */
+export function computeProgressStatus(
+  currentOverall: number,
+  recentHistory: HistoryRecord[],
+  examType: "writing" | "speaking",
+): ProgressStatus {
+  const overalls = recentHistory
+    .filter((r) => r.type === examType)
+    .map((r) => (r.band as { overall?: number } | null | undefined)?.overall)
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
+    .slice(0, 3);
+
+  if (overalls.length === 0) return "first_session";
+
+  const avg = overalls.reduce((s, v) => s + v, 0) / overalls.length;
+  const delta = currentOverall - avg;
+  if (delta >= 0.25) return "improving";
+  if (delta <= -0.25) return "declining";
+  return "stable";
+}
+
+/**
+ * Picks the single most important dimension to focus on.
+ *
+ * Priority:
+ *   1. Dimension flagged with diagnosis severity "high" (system anomaly warning)
+ *   2. Repeated weakness that is also currently below overall (cross-session + current)
+ *   3. Repeated weakness only (cross-session memory, even if not worst this session)
+ *   4. Current session's weakest dimension (gapToOverall > 0)
+ *   Returns undefined when all dimensions are at or above overall.
+ */
+export function buildCurrentFocus(
+  priorityDimensions: DimensionPriority[],
+  repeatedWeaknesses: string[],
+): CurrentFocus | undefined {
+  // 1. Diagnosis-flagged high severity
+  const highFlagged = priorityDimensions.find((d) => d.diagnosisFlag === "high");
+  if (highFlagged) return { dimension: highFlagged.dimension, reason: "diagnosis_flagged" };
+
+  // 2. Repeated weakness that is also currently below overall
+  const currentlyWeak = new Set(
+    priorityDimensions.filter((d) => d.gapToOverall > 0).map((d) => d.dimension),
+  );
+  const crossSessionAndCurrent = repeatedWeaknesses.find((rw) => currentlyWeak.has(rw));
+  if (crossSessionAndCurrent) return { dimension: crossSessionAndCurrent, reason: "repeated_weakness" };
+
+  // 3. Repeated weakness (cross-session only)
+  if (repeatedWeaknesses.length > 0) return { dimension: repeatedWeaknesses[0], reason: "repeated_weakness" };
+
+  // 4. Current weakest
+  const weakest = priorityDimensions.find((d) => d.gapToOverall > 0);
+  if (weakest) return { dimension: weakest.dimension, reason: "current_weakest" };
+
+  return undefined;
+}
+
 // ── Rule-based implementation ─────────────────────────────────────────────────
 
 async function ruleBasedPlan(input: PlannerInput): Promise<StudyPlan> {
   const { examType, currentBand, llmFeedback, recentHistory } = input;
   const diagnosisResult = input.diagnosisResult;
   const overall = currentBand.overall;
+  const sessionCount = recentHistory.filter((r) => r.type === examType).length;
 
   const taskMap = examType === "writing" ? WRITING_TASK_MAP : SPEAKING_TASK_MAP;
   const tipMap = examType === "writing" ? WRITING_TIPS : SPEAKING_TIPS;
@@ -362,7 +494,11 @@ async function ruleBasedPlan(input: PlannerInput): Promise<StudyPlan> {
     ? annotateWithDiagnosis(rawDims, diagnosisResult)
     : rawDims;
 
-  const weakestDim = priorityDimensions[0]?.dimension;
+  const repeatedWeaknesses = computeRepeatedWeaknesses(recentHistory, examType);
+  const progressStatus = computeProgressStatus(overall, recentHistory, examType);
+  const currentFocus = buildCurrentFocus(priorityDimensions, repeatedWeaknesses);
+
+  const weakestDim = currentFocus?.dimension ?? priorityDimensions[0]?.dimension;
   const fallbackTask =
     examType === "writing" ? "task2_argument" : "speaking_part2_long_turn";
   const nextTaskRecommendation =
@@ -375,11 +511,15 @@ async function ruleBasedPlan(input: PlannerInput): Promise<StudyPlan> {
 
   return {
     priorityDimensions,
+    currentFocus,
+    repeatedWeaknesses,
+    progressStatus,
     nextTaskRecommendation,
     milestoneBand,
     practiceItems,
     trendNote,
     reliabilityNote,
     planSource: "rule-based",
+    sessionCount,
   };
 }

@@ -63,7 +63,9 @@ export async function runWritingPipeline(
   if (localResult.ok && localResult.content_01 == null) flags.local_content_missing = true;
 
   const essayWords = wordCount(input.essay);
-  let llmConfidence = llmResult.rubric.confidence_01;
+  // Clamp to minimum 0.1 so fusion always has at least one valid subscore when
+  // the LLM returned a complete rubric (prevents fuseWritingScores from throwing).
+  let llmConfidence = Math.max(0.1, llmResult.rubric.confidence_01);
   if (essayWords < 80) {
     llmConfidence = Math.max(0.2, llmConfidence * 0.6);
     flags.short_essay = true;

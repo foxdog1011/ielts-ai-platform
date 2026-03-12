@@ -7,6 +7,9 @@ import {
   computeTrendNote,
   buildPracticeItems,
   buildReliabilityNote,
+  computeRepeatedWeaknesses,
+  computeProgressStatus,
+  buildCurrentFocus,
 } from "@/lib/planner";
 import type { PlannerInput, DimensionPriority } from "@/lib/planner";
 import type { HistoryRecord } from "@/lib/history";
@@ -506,4 +509,212 @@ test("10C: buildStudyPlan reliabilityNote is undefined when diagnosis has no rel
   };
   const plan = await buildStudyPlan(input);
   assert.equal(plan.reliabilityNote, undefined);
+});
+
+// ── sessionCount ──────────────────────────────────────────────────────────────
+
+test("sessionCount: 0 when recentHistory is empty (first session)", async () => {
+  const plan = await buildStudyPlan(BASE_WRITING_INPUT); // recentHistory: []
+  assert.equal(plan.sessionCount, 0);
+});
+
+test("sessionCount: counts only same-type records from recentHistory", async () => {
+  const input: PlannerInput = {
+    ...BASE_WRITING_INPUT,
+    recentHistory: [
+      makeWritingRecord(5.5),
+      makeWritingRecord(6.0),
+      makeSpeakingRecord(5.0), // different type — must not count
+    ],
+  };
+  const plan = await buildStudyPlan(input);
+  assert.equal(plan.sessionCount, 2);
+});
+
+// ── computeRepeatedWeaknesses ─────────────────────────────────────────────────
+
+test("computeRepeatedWeaknesses: empty when fewer than minSessions same-type records", () => {
+  assert.deepEqual(
+    computeRepeatedWeaknesses([makeWritingRecord(6.0)], "writing"),
+    [],
+  );
+  assert.deepEqual(computeRepeatedWeaknesses([], "writing"), []);
+});
+
+test("computeRepeatedWeaknesses: returns dim weak in 2+ sessions", () => {
+  const records: HistoryRecord[] = [
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0, grammar: 5.5 } },
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.5, grammar: 6.5 } },
+  ];
+  const result = computeRepeatedWeaknesses(records, "writing");
+  assert.ok(result.includes("taskResponse"), "taskResponse weak in both sessions");
+  assert.ok(!result.includes("grammar"), "grammar only weak in 1 session");
+});
+
+test("computeRepeatedWeaknesses: filters by examType — speaking records ignored for writing", () => {
+  const records: HistoryRecord[] = [
+    { type: "writing", taskId: "t", band: { overall: 6.0, grammar: 5.0 } },
+    { type: "speaking", taskId: "t", band: { overall: 6.0, grammar: 5.0 } }, // different type
+  ];
+  assert.deepEqual(computeRepeatedWeaknesses(records, "writing"), []);
+});
+
+test("computeRepeatedWeaknesses: never returns 'overall' as a weakness", () => {
+  const records: HistoryRecord[] = [
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0 } },
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0 } },
+  ];
+  const result = computeRepeatedWeaknesses(records, "writing");
+  assert.ok(!result.includes("overall"));
+});
+
+test("computeRepeatedWeaknesses: orders by frequency descending", () => {
+  const records: HistoryRecord[] = [
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0, grammar: 5.0 } },
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0, grammar: 5.0 } },
+    { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0, grammar: 6.5 } }, // grammar NOT weak
+  ];
+  const result = computeRepeatedWeaknesses(records, "writing");
+  // taskResponse weak 3×, grammar weak 2× → taskResponse first
+  assert.equal(result[0], "taskResponse");
+});
+
+// ── computeProgressStatus ─────────────────────────────────────────────────────
+
+test("computeProgressStatus: first_session when no same-type history", () => {
+  assert.equal(computeProgressStatus(6.0, [], "writing"), "first_session");
+  assert.equal(computeProgressStatus(6.0, [makeSpeakingRecord(5.0)], "writing"), "first_session");
+});
+
+test("computeProgressStatus: improving when delta >= 0.25", () => {
+  assert.equal(
+    computeProgressStatus(6.5, [makeWritingRecord(6.0)], "writing"),
+    "improving",
+  );
+});
+
+test("computeProgressStatus: declining when delta <= -0.25", () => {
+  assert.equal(
+    computeProgressStatus(5.5, [makeWritingRecord(6.0)], "writing"),
+    "declining",
+  );
+});
+
+test("computeProgressStatus: stable when delta < 0.25 in magnitude", () => {
+  assert.equal(
+    computeProgressStatus(6.1, [makeWritingRecord(6.0)], "writing"),
+    "stable",
+  );
+});
+
+test("computeProgressStatus: uses up to 3 records for average", () => {
+  const history = [
+    makeWritingRecord(5.0),
+    makeWritingRecord(5.0),
+    makeWritingRecord(5.0),
+    makeWritingRecord(3.0), // 4th — outside the 3-record window
+  ];
+  // avg of [5.0, 5.0, 5.0] = 5.0; current 6.0 → delta 1.0 → improving
+  assert.equal(computeProgressStatus(6.0, history, "writing"), "improving");
+});
+
+// ── buildCurrentFocus ─────────────────────────────────────────────────────────
+
+const DIMS_WITH_GAP: DimensionPriority[] = [
+  { dimension: "taskResponse", currentBand: 5.0, gapToOverall: 1.0 },
+  { dimension: "grammar", currentBand: 5.5, gapToOverall: 0.5 },
+];
+
+test("buildCurrentFocus: returns undefined when all gaps are zero or negative", () => {
+  const dims: DimensionPriority[] = [
+    { dimension: "taskResponse", currentBand: 6.0, gapToOverall: 0 },
+  ];
+  assert.equal(buildCurrentFocus(dims, []), undefined);
+});
+
+test("buildCurrentFocus: current_weakest when no repeated weaknesses or diagnosis", () => {
+  const focus = buildCurrentFocus(DIMS_WITH_GAP, []);
+  assert.ok(focus !== undefined);
+  assert.equal(focus.dimension, "taskResponse");
+  assert.equal(focus.reason, "current_weakest");
+});
+
+test("buildCurrentFocus: repeated_weakness takes priority over current_weakest", () => {
+  const focus = buildCurrentFocus(DIMS_WITH_GAP, ["grammar"]);
+  assert.ok(focus !== undefined);
+  assert.equal(focus.dimension, "grammar");
+  assert.equal(focus.reason, "repeated_weakness");
+});
+
+test("buildCurrentFocus: diagnosis_flagged takes top priority", () => {
+  const dims: DimensionPriority[] = [
+    { dimension: "taskResponse", currentBand: 5.0, gapToOverall: 1.0, diagnosisFlag: "high" },
+    { dimension: "grammar", currentBand: 5.5, gapToOverall: 0.5 },
+  ];
+  const focus = buildCurrentFocus(dims, ["grammar"]);
+  assert.ok(focus !== undefined);
+  assert.equal(focus.dimension, "taskResponse");
+  assert.equal(focus.reason, "diagnosis_flagged");
+});
+
+// ── Integration: new fields in buildStudyPlan ─────────────────────────────────
+
+test("integration: progressStatus is first_session with no history", async () => {
+  const plan = await buildStudyPlan(BASE_WRITING_INPUT);
+  assert.equal(plan.progressStatus, "first_session");
+});
+
+test("integration: progressStatus is improving with higher current vs history", async () => {
+  const input: PlannerInput = {
+    ...BASE_WRITING_INPUT,
+    currentBand: { ...BASE_WRITING_INPUT.currentBand, overall: 7.0 },
+    recentHistory: [makeWritingRecord(6.0), makeWritingRecord(6.0)],
+  };
+  const plan = await buildStudyPlan(input);
+  assert.equal(plan.progressStatus, "improving");
+});
+
+test("integration: repeatedWeaknesses populated from history", async () => {
+  const input: PlannerInput = {
+    ...BASE_WRITING_INPUT,
+    recentHistory: [
+      { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0 } },
+      { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0 } },
+    ],
+  };
+  const plan = await buildStudyPlan(input);
+  assert.ok((plan.repeatedWeaknesses ?? []).includes("taskResponse"));
+});
+
+test("integration: currentFocus has reason=repeated_weakness when history supports it", async () => {
+  const input: PlannerInput = {
+    ...BASE_WRITING_INPUT,
+    recentHistory: [
+      { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0 } },
+      { type: "writing", taskId: "t", band: { overall: 6.0, taskResponse: 5.0 } },
+    ],
+  };
+  const plan = await buildStudyPlan(input);
+  assert.ok(plan.currentFocus !== undefined);
+  assert.equal(plan.currentFocus!.reason, "repeated_weakness");
+  assert.equal(plan.currentFocus!.dimension, "taskResponse");
+});
+
+test("integration: currentFocus has reason=current_weakest on first session", async () => {
+  const plan = await buildStudyPlan(BASE_WRITING_INPUT);
+  assert.ok(plan.currentFocus !== undefined);
+  assert.equal(plan.currentFocus!.reason, "current_weakest");
+  assert.equal(plan.currentFocus!.dimension, "taskResponse"); // weakest in BASE_WRITING_INPUT
+});
+
+test("sessionCount: not present when custom plannerFn omits it", async () => {
+  const customFn = async (): Promise<import("@/lib/planner").StudyPlan> => ({
+    priorityDimensions: [],
+    nextTaskRecommendation: "task2_argument",
+    milestoneBand: 7.0,
+    practiceItems: [],
+    planSource: "llm",
+  });
+  const plan = await buildStudyPlan(BASE_WRITING_INPUT, customFn);
+  assert.equal(plan.sessionCount, undefined);
 });

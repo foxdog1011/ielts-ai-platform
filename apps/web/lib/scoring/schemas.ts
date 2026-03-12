@@ -36,27 +36,27 @@ export const WritingLlmRubricSchema = z
   })
   .strict();
 
-export const SpeakingLlmRubricSchema = z
-  .object({
-    subscores: z
-      .object({
-        content_01: score01,
-        grammar_01: score01,
-        vocab_01: score01,
-      })
-      .strict(),
-    rationale: z
-      .object({
-        content: z.string().min(1).max(1200),
-        grammar: z.string().min(1).max(1200),
-        vocab: z.string().min(1).max(1200),
-      })
-      .strict(),
-    feedback: z.string().min(1).max(3000),
-    suggestions: z.array(z.string().min(1).max(300)).max(12),
-    confidence_01: score01,
-  })
-  .strict();
+// Speaking schema uses .strip() (Zod default) on all objects so that extra
+// keys the LLM occasionally adds are silently discarded rather than throwing.
+// Required fields and value ranges are still fully enforced.
+export const SpeakingLlmRubricSchema = z.object({
+  subscores: z.object({
+    content_01: score01,
+    grammar_01: score01,
+    vocab_01: score01,
+    // Optional transcript-based estimates; used as fallback when local ML is unavailable.
+    fluency_01: score01.optional(),
+    pronunciation_01: score01.optional(),
+  }),
+  rationale: z.object({
+    content: z.string().min(1).max(1200),
+    grammar: z.string().min(1).max(1200),
+    vocab: z.string().min(1).max(1200),
+  }),
+  feedback: z.string().min(1).max(3000),
+  suggestions: z.array(z.string().min(1).max(300)).max(12),
+  confidence_01: score01,
+});
 
 export type WritingLlmRubric = z.infer<typeof WritingLlmRubricSchema>;
 export type SpeakingLlmRubric = z.infer<typeof SpeakingLlmRubricSchema>;

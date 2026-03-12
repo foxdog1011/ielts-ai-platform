@@ -144,6 +144,21 @@ export async function kvSetHas(key: string, member: string): Promise<boolean> {
 /* 分數歷史（供 /api/writing, /api/speaking, lib/history.ts 使用）     */
 /* ------------------------------------------------------------------ */
 
+/** Slim diagnosis summary persisted alongside a score — avoids re-importing from scoring layers. */
+export type DiagSummary = {
+  severity: "none" | "low" | "medium" | "high";
+  anomalies: Array<{ code: string; dimension?: string; severity: "low" | "medium" | "high" }>;
+  engineConflict: boolean;
+  lowConfidence: boolean;
+};
+
+/** Slim study-plan snapshot persisted for cross-session trend analysis. */
+export type PlanSnapshot = {
+  currentFocus?: { dimension: string; reason: string };
+  nextTaskRecommendation: string;
+  milestoneBand: number;
+};
+
 export type ScorePayload = {
   taskId: string;
   prompt?: string;
@@ -154,6 +169,8 @@ export type ScorePayload = {
   scoreTrace?: Record<string, unknown>;
   ts?: number;        // 可選：外部提供（epoch ms）
   createdAt?: string; // 寫入時自動補
+  diagSummary?: DiagSummary;
+  planSnapshot?: PlanSnapshot;
 };
 
 function scoreListKey(kind: "writing" | "speaking") {
