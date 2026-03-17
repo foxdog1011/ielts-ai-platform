@@ -9,9 +9,12 @@ export type StudyPlanDim = {
   diagnosisFlag?: string;
 };
 
+/** Mirrors CurrentFocus.reason from lib/planner.ts — kept in sync manually. */
+export type FocusReason = 'diagnosis_flagged' | 'repeated_weakness' | 'current_weakest';
+
 export type StudyPlan = {
   priorityDimensions: StudyPlanDim[];
-  currentFocus?: { dimension: string; reason: string };
+  currentFocus?: { dimension: string; reason: FocusReason | string };
   repeatedWeaknesses?: string[];
   progressStatus?: 'first_session' | 'improving' | 'stable' | 'declining';
   nextTaskRecommendation: string;
@@ -31,7 +34,7 @@ const PROGRESS_STATUS_SHARED = {
   declining: { label: '需加強 ↓', cls: 'border-orange-200 bg-orange-50 text-orange-700' },
 } as const;
 
-const FOCUS_REASON_LABEL: Record<string, string> = {
+const FOCUS_REASON_LABEL: Record<FocusReason, string> & Record<string, string> = {
   diagnosis_flagged: '系統重點提示',
   repeated_weakness: '連續多次偏弱',
   current_weakest:   '本次最弱項',
@@ -92,8 +95,13 @@ export function StudyPlanBlock({ plan, dimLabel, taskLabel, accent }: StudyPlanB
       {plan.currentFocus && (
         <div className={`rounded-r-lg border-l-2 bg-zinc-50 px-3 py-2 ${accentBorder}`}>
           <div className="text-[10px] text-zinc-400 mb-0.5">當前重點</div>
-          <div className={`text-[13px] font-semibold ${accentDimText}`}>
+          <div className={`flex items-center gap-1.5 text-[13px] font-semibold ${accentDimText}`}>
             {dimLabel[plan.currentFocus.dimension] ?? plan.currentFocus.dimension}
+            {plan.currentFocus.reason === 'repeated_weakness' && (
+              <span className="rounded-md border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[10px] font-medium text-orange-700">
+                持續弱點
+              </span>
+            )}
           </div>
           <div className={`text-[10px] mt-0.5 ${accentSub}`}>
             {FOCUS_REASON_LABEL[plan.currentFocus.reason] ?? plan.currentFocus.reason}

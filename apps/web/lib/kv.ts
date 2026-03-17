@@ -20,9 +20,26 @@ async function getKV() {
 /* In-memory fallback（本機或沒設 KV 時）                              */
 /* ------------------------------------------------------------------ */
 
-const mem = new Map<string, string>();          // 一律存 JSON 字串
-const memLists = new Map<string, string[]>();   // list 存 JSON 字串
-const memSets = new Map<string, Set<string>>(); // set 存 string
+/**
+ * Attach the in-memory store to globalThis so it survives Next.js HMR
+ * module re-evaluations during development.  In production this is
+ * irrelevant (Vercel KV is used) but causes no harm.
+ *
+ * Pattern recommended by Next.js docs for dev-mode singletons:
+ * https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
+ */
+const _g = globalThis as typeof globalThis & {
+  __kv_mem__?: Map<string, string>;
+  __kv_mem_lists__?: Map<string, string[]>;
+  __kv_mem_sets__?: Map<string, Set<string>>;
+};
+if (!_g.__kv_mem__)       _g.__kv_mem__       = new Map<string, string>();
+if (!_g.__kv_mem_lists__) _g.__kv_mem_lists__  = new Map<string, string[]>();
+if (!_g.__kv_mem_sets__)  _g.__kv_mem_sets__   = new Map<string, Set<string>>();
+
+const mem      = _g.__kv_mem__;       // 一律存 JSON 字串
+const memLists = _g.__kv_mem_lists__; // list 存 JSON 字串
+const memSets  = _g.__kv_mem_sets__;  // set 存 string
 
 function memGet(key: string): string | null {
   return mem.has(key) ? (mem.get(key) as string) : null;

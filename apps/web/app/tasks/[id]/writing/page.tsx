@@ -10,9 +10,10 @@ import { getPromptText } from '@/lib/promptUtils';
 
 type BandScores = { overall?: number; taskResponse?: number; coherence?: number; lexical?: number; grammar?: number; };
 type ParagraphFeedback = { index: number; comment: string };
+type AgentMeta = { durationMs: number; agentsRan: string[] };
 type SubmitResponse = {
   ok: boolean;
-  data?: { band?: BandScores | null; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; studyPlan?: StudyPlan; coachSnapshot?: CoachSnapshotData };
+  data?: { band?: BandScores | null; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; studyPlan?: StudyPlan; coachSnapshot?: CoachSnapshotData; agentMeta?: AgentMeta };
   error?: { code: string; message: string };
   requestId?: string;
 };
@@ -469,6 +470,11 @@ export default function WritingTaskPage() {
                   {!!result?.tokensUsed && (
                     <div className="mt-3 text-right text-[11px] text-zinc-400">
                       tokens {result.tokensUsed}
+                    </div>
+                  )}
+                  {result?.agentMeta != null && (
+                    <div className="mt-1 text-right text-[10px] text-zinc-300">
+                      {result.agentMeta.agentsRan.length} agents · {result.agentMeta.durationMs}ms
                     </div>
                   )}
                 </>

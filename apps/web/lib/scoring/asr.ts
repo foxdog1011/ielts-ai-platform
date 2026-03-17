@@ -1,5 +1,6 @@
 import OpenAI, { toFile } from "openai";
 import { promises as fs } from "node:fs";
+import { getOpenAIClient } from "@/lib/openai";
 
 export type AsrSegment = {
   startSec: number;
@@ -28,7 +29,7 @@ export async function transcribeAudio(input: {
     return { transcript, segments: [], usedAsr: false, modelUsed };
   }
 
-  const client = input.client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  const client = input.client ?? getOpenAIClient();
   let file: Awaited<ReturnType<typeof toFile>> | null = null;
   if (input.audioBase64) {
     const mime = input.mime ?? "audio/webm";

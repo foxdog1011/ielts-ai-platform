@@ -8,6 +8,7 @@ import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
 import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
 import { getPromptText } from '@/lib/promptUtils';
 
+type AgentMeta = { durationMs: number; agentsRan: string[] };
 type EvalResp = {
   ok: boolean;
   requestId?: string;
@@ -36,6 +37,7 @@ type EvalResp = {
     tokensUsed?: number;
     studyPlan?: StudyPlan;
     coachSnapshot?: CoachSnapshotData;
+    agentMeta?: AgentMeta;
   };
   error?: { message: string };
 };
@@ -468,6 +470,11 @@ export default function SpeakingPage() {
 
               {!!resp?.tokensUsed && (
                 <div className="mt-3 text-right text-[11px] text-zinc-400">tokens {resp.tokensUsed}</div>
+              )}
+              {resp?.agentMeta != null && (
+                <div className="mt-1 text-right text-[10px] text-zinc-300">
+                  {resp.agentMeta.agentsRan.length} agents · {resp.agentMeta.durationMs}ms
+                </div>
               )}
             </div>
           </aside>

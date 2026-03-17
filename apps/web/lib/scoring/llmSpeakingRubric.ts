@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { ZodError } from "zod";
 import { SpeakingLlmRubricSchema, type SpeakingLlmRubric } from "@/lib/scoring/schemas";
 import { LlmRubricValidationError } from "@/lib/scoring/llmWritingRubric";
+import { getOpenAIClient } from "@/lib/openai";
 
 function systemPrompt() {
   return `You are an IELTS speaking examiner. Return exactly this JSON structure and nothing else — no markdown, no extra keys:
@@ -41,7 +42,7 @@ export async function scoreSpeakingWithLlm(input: {
   model?: string;
   temperature?: number;
 }): Promise<{ rubric: SpeakingLlmRubric; tokensUsed?: number; modelUsed: string }> {
-  const client = input.client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  const client = input.client ?? getOpenAIClient();
   const modelUsed = input.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
   const response = await client.chat.completions.create({
     model: modelUsed,

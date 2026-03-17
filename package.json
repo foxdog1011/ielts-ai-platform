@@ -15,5 +15,9 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.11",
     "@upstash/redis": "^1.35.3"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.1.11",
+    "lightningcss-win32-x64-msvc": "^1.30.1"
   }
 }
