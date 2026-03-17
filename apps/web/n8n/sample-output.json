@@ -1,0 +1,193 @@
+{
+  "_generated": "2026-03-12T10:00:00.000Z",
+  "_script": "apps/web/scripts/demo-weekly-summary.ts",
+  "_dataset": "Synthetic: 5 writing sessions (20d), 5 speaking sessions (28d)",
+  "weeklyDigest": {
+    "weeklySummaryPayload": {
+      "scopeId": "default",
+      "generatedAt": "2026-03-12T10:00:00.000Z",
+      "windowDays": 7,
+      "totalSessionsAllTime": 10,
+      "engagementDays": 10,
+      "consistencyRating": "medium",
+      "writing": {
+        "examType": "writing",
+        "sessionCount": 2,
+        "latestBand": 6.5,
+        "avgBand": 6.3,
+        "bandDelta": 0.5,
+        "trend": "improving",
+        "persistentWeaknesses": [
+          "grammar"
+        ],
+        "recurringAnomalies": [
+          "VERY_LOW_SUBSCORE:grammar_01"
+        ],
+        "currentFocus": {
+          "dimension": "grammar",
+          "reason": "repeated_weakness"
+        },
+        "nextTask": "task2_argument",
+        "urgency": "urgent",
+        "lastSessionAt": "2026-03-11T10:00:00.000Z"
+      },
+      "speaking": {
+        "examType": "speaking",
+        "sessionCount": 1,
+        "latestBand": 6,
+        "avgBand": 6,
+        "bandDelta": null,
+        "trend": "improving",
+        "persistentWeaknesses": [
+          "fluency"
+        ],
+        "recurringAnomalies": [],
+        "currentFocus": {
+          "dimension": "fluency",
+          "reason": "current_weakest"
+        },
+        "nextTask": "speaking_part2_long_turn",
+        "urgency": "normal",
+        "lastSessionAt": "2026-03-10T10:00:00.000Z"
+      },
+      "overallStatus": "improving",
+      "recurringAnomaliesAllTypes": [
+        "VERY_LOW_SUBSCORE:grammar_01"
+      ],
+      "primaryFocus": "writing",
+      "urgencyLevel": "urgent",
+      "coachLine": "Recurring Grammar weakness in writing — focused drills this week.",
+      "reminderCandidateCopy": "Your Grammar needs attention — a 15-min writing drill could shift your band."
+    },
+    "reminderPayload": {
+      "scopeId": "default",
+      "generatedAt": "2026-03-12T10:00:00.000Z",
+      "triggerType": "weekly",
+      "daysSinceLastSession": 1,
+      "examTypeFocus": "mixed",
+      "currentFocus": {
+        "dimension": "grammar",
+        "reason": "repeated_weakness"
+      },
+      "nextRecommendedTask": "task2_argument",
+      "urgency": "urgent",
+      "reminderText": "Recurring Grammar weakness detected. A focused IELTS drill today could shift your band.",
+      "ctaLabel": "Practice Grammar",
+      "ctaTaskType": "task2_argument",
+      "isFirstSession": false,
+      "hasRecurringAnomalies": true,
+      "hasPersistentWeakness": true,
+      "isImproving": true
+    },
+    "formattedDiscord": {
+      "content": "🚨 Urgent practice needed!",
+      "embeds": [
+        {
+          "title": "📈 IELTS Weekly — Improving",
+          "description": "Recurring Grammar weakness in writing — focused drills this week.",
+          "color": 15548997,
+          "fields": [
+            {
+              "name": "✍️ Writing",
+              "value": "Band: **6.5** · Sessions: 2 · Trend: improving\nWeak: grammar\n⚠ Anomaly: VERY_LOW_SUBSCORE:grammar_01\nFocus: grammar",
+              "inline": true
+            },
+            {
+              "name": "🎤 Speaking",
+              "value": "Band: **6** · Sessions: 1 · Trend: improving\nWeak: fluency\nFocus: fluency",
+              "inline": true
+            },
+            {
+              "name": "⚠️ Recurring Anomalies",
+              "value": "VERY_LOW_SUBSCORE:grammar_01",
+              "inline": false
+            },
+            {
+              "name": "🎯 Recommended Next Action",
+              "value": "Focus: **grammar**  ·  Task: `task2_argument`  ·  Urgency: **urgent**",
+              "inline": false
+            }
+          ],
+          "footer": {
+            "text": "10 sessions total  ·  10 active days (30d)  ·  2026-03-12"
+          }
+        }
+      ]
+    },
+    "formattedEmail": {
+      "subject": "[IELTS] 📈 Improving — 2026-03-12",
+      "plaintext": "IELTS Weekly Summary — Thu Mar 12 2026\nStatus: Improving 📈\n\nRecurring Grammar weakness in writing — focused drills this week.\n\nWriting  — Band 6.5 | improving | 2 session(s) this week\nSpeaking — Band 6 | improving | 1 session(s) this week\n\n⚠ Recurring anomalies: VERY_LOW_SUBSCORE:grammar_01\n\n→ Practice Grammar\n  Task: task2_argument\n\nRecurring Grammar weakness detected. A focused IELTS drill today could shift your band."
+    },
+    "formattedNotion": {
+      "title": "IELTS Weekly — 2026-03-12",
+      "properties": {
+        "status": "improving",
+        "urgency": "urgent",
+        "writing_band": 6.5,
+        "speaking_band": 6,
+        "sessions_this_week": 3,
+        "engagement_days": 10,
+        "primary_focus": "writing",
+        "recurring_anomalies": "VERY_LOW_SUBSCORE:grammar_01",
+        "generated_at": "2026-03-12T10:00:00.000Z"
+      },
+      "body_markdown": "## 📈 Improving\n\n> Recurring Grammar weakness in writing — focused drills this week.\n\n### ✍️ Writing\n- Band: **6.5**  ·  Sessions: 2  ·  Trend: improving\n- Persistent weak: grammar\n- Focus: **grammar** (repeated_weakness)\n\n### 🎤 Speaking\n- Band: **6**  ·  Sessions: 1  ·  Trend: improving\n- Persistent weak: fluency\n- Focus: **fluency** (current_weakest)\n\n### ⚠️ Recurring Anomalies\n- `VERY_LOW_SUBSCORE:grammar_01`\n\n### 🎯 Next Action\n- Focus: **grammar**  (repeated_weakness)\n- Task: `task2_argument`\n- Urgency: **urgent**\n- CTA: Practice Grammar"
+    }
+  },
+  "inactivityReminder": {
+    "reminderPayload": {
+      "scopeId": "default",
+      "generatedAt": "2026-03-12T10:00:00.000Z",
+      "triggerType": "inactivity_3d",
+      "daysSinceLastSession": 1,
+      "examTypeFocus": "mixed",
+      "currentFocus": {
+        "dimension": "grammar",
+        "reason": "repeated_weakness"
+      },
+      "nextRecommendedTask": "task2_argument",
+      "urgency": "urgent",
+      "reminderText": "Recurring Grammar weakness detected. A focused IELTS drill today could shift your band.",
+      "ctaLabel": "Practice Grammar",
+      "ctaTaskType": "task2_argument",
+      "isFirstSession": false,
+      "hasRecurringAnomalies": true,
+      "hasPersistentWeakness": true,
+      "isImproving": true
+    },
+    "formattedDiscord": {
+      "content": "🚨 Action needed!",
+      "embeds": [
+        {
+          "title": "🚨 IELTS Reminder — Mixed Focus",
+          "description": "Recurring Grammar weakness detected. A focused IELTS drill today could shift your band.",
+          "color": 15548997,
+          "fields": [
+            {
+              "name": "🎯 Recommended Focus",
+              "value": "**grammar** — repeated weakness",
+              "inline": true
+            },
+            {
+              "name": "⏱️ Last Session",
+              "value": "1 day ago",
+              "inline": true
+            },
+            {
+              "name": "➡️ Next Step",
+              "value": "`task2_argument`  ·  Practice Grammar",
+              "inline": false
+            }
+          ],
+          "footer": {
+            "text": "Trigger: inactivity_3d  ·  2026-03-12"
+          }
+        }
+      ]
+    },
+    "formattedEmail": {
+      "subject": "[IELTS] 🚨 Practice Grammar",
+      "plaintext": "Recurring Grammar weakness detected. A focused IELTS drill today could shift your band.\n→ Practice Grammar\n   Task: task2_argument\n   Last session: 1 day(s) ago"
+    }
+  }
+}

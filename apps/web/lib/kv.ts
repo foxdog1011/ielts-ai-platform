@@ -20,9 +20,26 @@ async function getKV() {
 /* In-memory fallback（本機或沒設 KV 時）                              */
 /* ------------------------------------------------------------------ */
 
-const mem = new Map<string, string>();          // 一律存 JSON 字串
-const memLists = new Map<string, string[]>();   // list 存 JSON 字串
-const memSets = new Map<string, Set<string>>(); // set 存 string
+/**
+ * Attach the in-memory store to globalThis so it survives Next.js HMR
+ * module re-evaluations during development.  In production this is
+ * irrelevant (Vercel KV is used) but causes no harm.
+ *
+ * Pattern recommended by Next.js docs for dev-mode singletons:
+ * https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
+ */
+const _g = globalThis as typeof globalThis & {
+  __kv_mem__?: Map<string, string>;
+  __kv_mem_lists__?: Map<string, string[]>;
+  __kv_mem_sets__?: Map<string, Set<string>>;
+};
+if (!_g.__kv_mem__)       _g.__kv_mem__       = new Map<string, string>();
+if (!_g.__kv_mem_lists__) _g.__kv_mem_lists__  = new Map<string, string[]>();
+if (!_g.__kv_mem_sets__)  _g.__kv_mem_sets__   = new Map<string, Set<string>>();
+
+const mem      = _g.__kv_mem__;       // 一律存 JSON 字串
+const memLists = _g.__kv_mem_lists__; // list 存 JSON 字串
+const memSets  = _g.__kv_mem_sets__;  // set 存 string
 
 function memGet(key: string): string | null {
   return mem.has(key) ? (mem.get(key) as string) : null;
@@ -144,26 +161,33 @@ export async function kvSetHas(key: string, member: string): Promise<boolean> {
 /* 分數歷史（供 /api/writing, /api/speaking, lib/history.ts 使用）     */
 /* ------------------------------------------------------------------ */
 
+/** Slim diagnosis summary persisted alongside a score — avoids re-importing from scoring layers. */
+export type DiagSummary = {
+  severity: "none" | "low" | "medium" | "high";
+  anomalies: Array<{ code: string; dimension?: string; severity: "low" | "medium" | "high" }>;
+  engineConflict: boolean;
+  lowConfidence: boolean;
+};
+
+/** Slim study-plan snapshot persisted for cross-session trend analysis. */
+export type PlanSnapshot = {
+  currentFocus?: { dimension: string; reason: string };
+  nextTaskRecommendation: string;
+  milestoneBand: number;
+};
+
 export type ScorePayload = {
   taskId: string;
   prompt?: string;
   durationSec?: number;
   words?: number;
-  band?: any; // { overall?: number, ... }
+  band?: Record<string, number | null | undefined>;
   speakingFeatures?: Record<string, unknown>;
   scoreTrace?: Record<string, unknown>;
-  llm_subscores?: Record<string, unknown> | null;
-  local_subscores?: Record<string, unknown> | null;
-  weights?: Record<string, unknown>;
-  final_subscores?: Record<string, unknown>;
-  final_overall_pre_calibration?: number;
-  final_overall_post_calibration?: number;
-  final_band?: number;
-  debug_flags?: Record<string, unknown>;
-  timings?: Record<string, number>;
-  models?: Record<string, unknown>;
-  ts?: number;           // 可選：外部提供（epoch ms）
-  createdAt?: string;    // 寫入時自動補
+  ts?: number;        // 可選：外部提供（epoch ms）
+  createdAt?: string; // 寫入時自動補
+  diagSummary?: DiagSummary;
+  planSnapshot?: PlanSnapshot;
 };
 
 function scoreListKey(kind: "writing" | "speaking") {

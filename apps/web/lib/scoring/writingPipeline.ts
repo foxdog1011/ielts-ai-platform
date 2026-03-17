@@ -1,8 +1,10 @@
 import OpenAI from "openai";
 import { calibrateOverall } from "@/lib/scoring/calibration";
+import { diagnoseScores } from "@/lib/scoring/diagnosis";
+import type { DiagnosisResult } from "@/lib/scoring/diagnosis";
 import { runLocalWritingScore } from "@/lib/scoring/localAdapters";
 import { scoreWritingWithLlm } from "@/lib/scoring/llmWritingRubric";
-import type { WritingScoreTrace, WritingSubscores01 } from "@/lib/scoring/types";
+import type { ScoreDebugTrace, WritingScoreTrace, WritingSubscores01 } from "@/lib/scoring/types";
 import { startTimer, toHalfBandFrom01, wordCount } from "@/lib/scoring/utils";
 import { fuseWritingScores } from "@/lib/scoring/writingFusion";
 
@@ -10,6 +12,7 @@ export type WritingPipelineInput = {
   essay: string;
   prompt: string;
   taskId: string;
+  taskType?: string;
   targetWords?: number;
   seconds?: number;
 };
@@ -21,6 +24,8 @@ export async function runWritingPipeline(
     llmFn?: typeof scoreWritingWithLlm;
     now?: () => number;
     openaiClient?: OpenAI;
+    /** Injected for testing; defaults to diagnoseScores. Must not throw — errors are caught internally. */
+    diagnosisFn?: typeof diagnoseScores;
   }
 ) {
   const localFn = deps?.localFn ?? runLocalWritingScore;
@@ -38,7 +43,7 @@ export async function runWritingPipeline(
   const llmTimer = startTimer();
   const llmResult = await llmFn({
     essay: input.essay,
-    taskType: input.taskId,
+    taskType: input.taskType ?? "task2",
     promptContext: input.prompt,
     client: deps?.openaiClient,
   });
@@ -51,20 +56,21 @@ export async function runWritingPipeline(
     gra_01: llmResult.rubric.subscores.gra_01,
   };
 
+  // TODO: local writing model outputs content_01/overall_01 but WritingSubscores01
+  // needs tr_01/cc_01/lr_01/gra_01. Until the mapping is defined (in coordination
+  // with ml/src/score_cli.py), local scores do not contribute to writing fusion.
   const localSubscores: Partial<WritingSubscores01> = {};
   if (localResult.ok && localResult.content_01 == null) flags.local_content_missing = true;
-  flags.local_missing_tr_01 = true;
-  flags.local_missing_cc_01 = true;
-  flags.local_missing_lr_01 = true;
-  flags.local_missing_gra_01 = true;
 
   const essayWords = wordCount(input.essay);
-  let llmConfidence = llmResult.rubric.confidence_01;
+  // Clamp to minimum 0.1 so fusion always has at least one valid subscore when
+  // the LLM returned a complete rubric (prevents fuseWritingScores from throwing).
+  let llmConfidence = Math.max(0.1, llmResult.rubric.confidence_01);
   if (essayWords < 80) {
     llmConfidence = Math.max(0.2, llmConfidence * 0.6);
     flags.short_essay = true;
   }
-  const localConfidence = localResult.ok ? 0.5 : 0;
+  const localConfidence = 0; // local subscores not yet mapped; see TODO above
 
   const fused = fuseWritingScores({
     llm: llmSubscores,
@@ -79,6 +85,23 @@ export async function runWritingPipeline(
   });
   Object.assign(flags, fused.flags);
   if (calibration.calibration_missing_map) flags.calibration_missing_map = true;
+
+  // Diagnosis runs after flags are complete. Isolated: failure must not affect band/feedback.
+  const diagnosisFn = deps?.diagnosisFn ?? diagnoseScores;
+  let diagnosisResult: DiagnosisResult | undefined;
+  try {
+    diagnosisResult = diagnosisFn({
+      examType: "writing",
+      subscores: fused.finalSubscores,
+      overallPre: fused.overall_01_pre_calibration,
+      weights: fused.weights,
+      flags,
+      llmConfidence01: llmConfidence,
+      localConfidence01: localConfidence,
+    });
+  } catch {
+    // diagnosisResult stays undefined; scoring continues unaffected
+  }
 
   const finalBand = {
     overall: calibration.band,
@@ -113,6 +136,8 @@ export async function runWritingPipeline(
     rewritten: llmResult.rubric.rewritten,
     tokensUsed: llmResult.tokensUsed,
     trace,
+    /** additive, optional — undefined when diagnosisFn threw */
+    diagnosisResult,
     debug: {
       exam_type: "writing" as const,
       used_llm: true,
@@ -128,7 +153,7 @@ export async function runWritingPipeline(
         band: calibration.band,
         calibration_missing_map: calibration.calibration_missing_map,
       },
-    },
+    } satisfies ScoreDebugTrace,
     words: essayWords,
   };
 }

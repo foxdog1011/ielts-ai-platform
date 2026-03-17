@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { ZodError } from "zod";
 import { WritingLlmRubricSchema, type WritingLlmRubric } from "@/lib/scoring/schemas";
+import { getOpenAIClient } from "@/lib/openai";
 
 export class LlmRubricValidationError extends Error {
   constructor(message: string, readonly causeDetail?: unknown) {
@@ -44,7 +45,7 @@ export async function scoreWritingWithLlm(input: {
   model?: string;
   temperature?: number;
 }): Promise<{ rubric: WritingLlmRubric; tokensUsed?: number; modelUsed: string }> {
-  const client = input.client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  const client = input.client ?? getOpenAIClient();
   const modelUsed = input.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
   const response = await client.chat.completions.create({
     model: modelUsed,

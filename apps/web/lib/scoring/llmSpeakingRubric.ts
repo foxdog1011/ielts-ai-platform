@@ -2,15 +2,28 @@ import OpenAI from "openai";
 import { ZodError } from "zod";
 import { SpeakingLlmRubricSchema, type SpeakingLlmRubric } from "@/lib/scoring/schemas";
 import { LlmRubricValidationError } from "@/lib/scoring/llmWritingRubric";
+import { getOpenAIClient } from "@/lib/openai";
 
 function systemPrompt() {
-  return [
-    "You are an IELTS speaking examiner.",
-    "Return one strict JSON object only.",
-    "Use 0..1 scores for content_01, grammar_01, vocab_01.",
-    "Do not score fluency/pronunciation in this rubric.",
-    "No extra keys, no markdown.",
-  ].join("\n");
+  return `You are an IELTS speaking examiner. Return exactly this JSON structure and nothing else — no markdown, no extra keys:
+{
+  "subscores": {
+    "content_01": <float 0-1>,
+    "grammar_01": <float 0-1>,
+    "vocab_01": <float 0-1>,
+    "fluency_01": <float 0-1, transcript-based estimate of spoken fluency>,
+    "pronunciation_01": <float 0-1, transcript-based estimate of likely pronunciation clarity>
+  },
+  "rationale": {
+    "content": "<brief rationale>",
+    "grammar": "<brief rationale>",
+    "vocab": "<brief rationale>"
+  },
+  "feedback": "<overall 1-3 sentence feedback>",
+  "suggestions": ["<suggestion 1>", "<suggestion 2>"],
+  "confidence_01": <float 0-1>
+}
+All scores are 0.0–1.0. fluency_01 and pronunciation_01 are estimates inferred from the transcript text.`;
 }
 
 function userPrompt(input: { prompt?: string; transcript: string }) {
@@ -29,7 +42,7 @@ export async function scoreSpeakingWithLlm(input: {
   model?: string;
   temperature?: number;
 }): Promise<{ rubric: SpeakingLlmRubric; tokensUsed?: number; modelUsed: string }> {
-  const client = input.client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  const client = input.client ?? getOpenAIClient();
   const modelUsed = input.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
   const response = await client.chat.completions.create({
     model: modelUsed,

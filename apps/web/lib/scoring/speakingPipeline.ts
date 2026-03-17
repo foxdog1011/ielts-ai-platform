@@ -1,10 +1,12 @@
 import OpenAI from "openai";
 import { calibrateOverall } from "@/lib/scoring/calibration";
+import { diagnoseScores } from "@/lib/scoring/diagnosis";
+import type { DiagnosisResult } from "@/lib/scoring/diagnosis";
 import { transcribeAudio } from "@/lib/scoring/asr";
 import { scoreSpeakingWithLlm } from "@/lib/scoring/llmSpeakingRubric";
 import { runLocalSpeakingScore } from "@/lib/scoring/localAdapters";
 import { fuseSpeakingScores } from "@/lib/scoring/speakingFusion";
-import type { SpeakingScoreTrace, SpeakingSubscores01 } from "@/lib/scoring/types";
+import type { ScoreDebugTrace, SpeakingScoreTrace, SpeakingSubscores01 } from "@/lib/scoring/types";
 import { startTimer, toHalfBandFrom01, wordCount } from "@/lib/scoring/utils";
 
 export type SpeakingPipelineInput = {
@@ -24,6 +26,8 @@ export async function runSpeakingPipeline(
     localFn?: typeof runLocalSpeakingScore;
     llmFn?: typeof scoreSpeakingWithLlm;
     openaiClient?: OpenAI;
+    /** Injected for testing; defaults to diagnoseScores. Must not throw — errors are caught internally. */
+    diagnosisFn?: typeof diagnoseScores;
   }
 ) {
   const asrFn = deps?.asrFn ?? transcribeAudio;
@@ -74,11 +78,20 @@ export async function runSpeakingPipeline(
     client: deps?.openaiClient,
   });
   timings.llm_ms = llmTimer.elapsedMs();
-  llmConfidence = Math.min(llmConfidence, llm.rubric.confidence_01);
+  // Clamp to minimum 0.1 so fusion always has at least one valid subscore
+  // when the LLM returned a complete rubric (mirrors writingPipeline behaviour).
+  llmConfidence = Math.max(0.1, Math.min(llmConfidence, llm.rubric.confidence_01));
 
   const localConfidence = local.ok && local.fluency_01 != null && local.pronunciation_01 != null ? 1 : 0;
   if (local.ok && local.fluency_01 == null) flags.local_missing_fluency = true;
   if (local.ok && local.pronunciation_01 == null) flags.local_missing_pronunciation = true;
+
+  // When local ML is unavailable, fall back to LLM transcript-based estimates
+  // with reduced confidence (0.4) so the dimensions are non-null but down-weighted.
+  const llmFluency = llm.rubric.subscores.fluency_01 ?? null;
+  const llmPronunciation = llm.rubric.subscores.pronunciation_01 ?? null;
+  const usingLlmFallback = localConfidence === 0 && (llmFluency != null || llmPronunciation != null);
+  if (usingLlmFallback) flags.fluency_pronunciation_llm_fallback = true;
 
   const fused = fuseSpeakingScores({
     llm: {
@@ -87,11 +100,11 @@ export async function runSpeakingPipeline(
       vocab_01: llm.rubric.subscores.vocab_01,
     },
     local: {
-      fluency_01: local.fluency_01,
-      pronunciation_01: local.pronunciation_01,
+      fluency_01: localConfidence > 0 ? local.fluency_01 : llmFluency,
+      pronunciation_01: localConfidence > 0 ? local.pronunciation_01 : llmPronunciation,
     },
     llmConfidence01: llmConfidence,
-    localConfidence01: localConfidence,
+    localConfidence01: usingLlmFallback ? 0.4 : localConfidence,
   });
 
   const calibration = await calibrateOverall({
@@ -101,6 +114,23 @@ export async function runSpeakingPipeline(
   Object.assign(flags, fused.flags);
   if (calibration.calibration_missing_map) flags.calibration_missing_map = true;
   timings.total_ms = timerAll.elapsedMs();
+
+  // Diagnosis runs after flags are complete. Isolated: failure must not affect band/feedback.
+  const diagnosisFn = deps?.diagnosisFn ?? diagnoseScores;
+  let diagnosisResult: DiagnosisResult | undefined;
+  try {
+    diagnosisResult = diagnosisFn({
+      examType: "speaking",
+      subscores: fused.finalSubscores,
+      overallPre: fused.overall_01_pre_calibration,
+      weights: fused.weights,
+      flags,
+      llmConfidence01: llmConfidence,
+      localConfidence01: localConfidence,
+    });
+  } catch {
+    // diagnosisResult stays undefined; scoring continues unaffected
+  }
 
   const trace: SpeakingScoreTrace = {
     llm_subscores: {
@@ -148,6 +178,8 @@ export async function runSpeakingPipeline(
     suggestions: llm.rubric.suggestions,
     tokensUsed: llm.tokensUsed,
     trace,
+    /** additive, optional — undefined when diagnosisFn threw */
+    diagnosisResult,
     debug: {
       exam_type: "speaking" as const,
       used_llm: true,
@@ -163,6 +195,6 @@ export async function runSpeakingPipeline(
         band: calibration.band,
         calibration_missing_map: calibration.calibration_missing_map,
       },
-    },
+    } satisfies ScoreDebugTrace,
   };
 }

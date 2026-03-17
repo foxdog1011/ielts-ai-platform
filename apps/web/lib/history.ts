@@ -2,7 +2,7 @@
 // 只依賴 lib/kv.ts 的 listScores / saveScore / ScorePayload
 
 import { unstable_noStore as noStore } from "next/cache";
-import { listScores, saveScore, type ScorePayload } from "@/lib/kv";
+import { listScores, saveScore, type ScorePayload, type DiagSummary, type PlanSnapshot } from "@/lib/kv";
 
 export type WritingBand = {
   overall?: number;
@@ -26,18 +26,10 @@ export type BaseRecord = {
   prompt?: string;
   durationSec?: number;
   scoreTrace?: Record<string, unknown>;
-  llm_subscores?: Record<string, unknown> | null;
-  local_subscores?: Record<string, unknown> | null;
-  weights?: Record<string, unknown>;
-  final_subscores?: Record<string, unknown>;
-  final_overall_pre_calibration?: number;
-  final_overall_post_calibration?: number;
-  final_band?: number;
-  debug_flags?: Record<string, unknown>;
-  timings?: Record<string, number>;
-  models?: Record<string, unknown>;
   ts?: number;
   createdAt?: string;
+  diagSummary?: DiagSummary;
+  planSnapshot?: PlanSnapshot;
 };
 
 export type WritingRecord = BaseRecord & {

@@ -1,0 +1,283 @@
+{
+  "name": "IELTS — Weekly Digest",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Every Monday 9am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [1],
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Fetch Weekly Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.IELTS_APP_URL }}/api/weekly-summary",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "trigger", "value": "weekly" },
+            { "name": "format",  "value": "all" }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "API OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Has Sessions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 200],
+      "parameters": {
+        "conditions": {
+          "options": {},
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-sessions",
+              "leftValue": "={{ $json.data.weeklySummary.totalSessionsAllTime }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Map Discord Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 120],
+      "parameters": {
+        "mode": "manual",
+        "fields": {
+          "values": [
+            {
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.data.formatted.discord.content }}"
+            },
+            {
+              "name": "embeds",
+              "type": "array",
+              "value": "={{ $json.data.formatted.discord.embeds }}"
+            },
+            {
+              "name": "_meta_status",
+              "type": "string",
+              "value": "={{ $json.data.weeklySummary.overallStatus }}"
+            },
+            {
+              "name": "_meta_urgency",
+              "type": "string",
+              "value": "={{ $json.data.weeklySummary.urgencyLevel }}"
+            }
+          ]
+        },
+        "options": { "includeBinaryData": false }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Post to Discord",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL_IELTS }}",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ content: $json.content, embeds: $json.embeds }) }}",
+        "options": { "timeout": 5000 }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "name": "Create Notion Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1340, 200],
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "={{ $env.NOTION_IELTS_DB_ID }}",
+          "mode": "id"
+        },
+        "title": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.title }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status",
+              "type": "select",
+              "selectValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.status }}"
+            },
+            {
+              "key": "Urgency",
+              "type": "select",
+              "selectValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.urgency }}"
+            },
+            {
+              "key": "Writing Band",
+              "type": "number",
+              "numberValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.writing_band }}"
+            },
+            {
+              "key": "Speaking Band",
+              "type": "number",
+              "numberValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.speaking_band }}"
+            },
+            {
+              "key": "Sessions This Week",
+              "type": "number",
+              "numberValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.sessions_this_week }}"
+            },
+            {
+              "key": "Primary Focus",
+              "type": "select",
+              "selectValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.primary_focus }}"
+            },
+            {
+              "key": "Recurring Anomalies",
+              "type": "richText",
+              "textValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.recurring_anomalies }}"
+            },
+            {
+              "key": "Generated At",
+              "type": "date",
+              "dateValue": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.properties.generated_at }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "paragraph",
+              "textContent": "={{ $('Fetch Weekly Summary').item.json.data.formatted.notion.body_markdown }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "notionApi": { "id": "REPLACE_WITH_CREDENTIAL_ID", "name": "Notion account" }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0008-4000-8000-000000000008",
+      "name": "No Sessions — Skip",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1120, 340],
+      "parameters": {}
+    },
+    {
+      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "name": "API Error — Log",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [900, 420],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Every Monday 9am": {
+      "main": [[{ "node": "Fetch Weekly Summary", "type": "main", "index": 0 }]]
+    },
+    "Fetch Weekly Summary": {
+      "main": [[{ "node": "API OK?", "type": "main", "index": 0 }]]
+    },
+    "API OK?": {
+      "main": [
+        [{ "node": "Has Sessions?",     "type": "main", "index": 0 }],
+        [{ "node": "API Error — Log",   "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Sessions?": {
+      "main": [
+        [{ "node": "Map Discord Payload", "type": "main", "index": 0 }],
+        [{ "node": "No Sessions — Skip",  "type": "main", "index": 0 }]
+      ]
+    },
+    "Map Discord Payload": {
+      "main": [
+        [
+          { "node": "Post to Discord",    "type": "main", "index": 0 },
+          { "node": "Create Notion Page", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "id": "ielts-weekly-digest-v1",
+  "tags": [{ "name": "ielts" }, { "name": "weekly" }],
+  "_comment": {
+    "env_vars_needed": [
+      "IELTS_APP_URL       — e.g. https://your-app.vercel.app",
+      "DISCORD_WEBHOOK_URL_IELTS — Discord channel webhook URL",
+      "NOTION_IELTS_DB_ID  — Notion database ID for weekly log pages"
+    ],
+    "credentials_needed": [
+      "notionApi           — Notion integration token"
+    ],
+    "node_notes": {
+      "Map Discord Payload": "Set node extracts only the fields the Discord POST needs. _meta_* fields are available for downstream routing if you add a switch on urgency.",
+      "Create Notion Page": "Notion node 'create database page'. Set NOTION_IELTS_DB_ID to match your database. Property names must match exactly — rename in Notion or adjust here.",
+      "No Sessions — Skip": "Fires when totalSessionsAllTime === 0 (brand-new install). Add a 'Send setup reminder' branch here if desired.",
+      "API Error — Log": "Fires when ok === false (500 from the route). Extend with a Slack/Discord alert node pointing to a dev channel."
+    }
+  }
+}

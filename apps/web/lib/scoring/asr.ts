@@ -1,5 +1,6 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import { promises as fs } from "node:fs";
+import { getOpenAIClient } from "@/lib/openai";
 
 export type AsrSegment = {
   startSec: number;
@@ -28,34 +29,37 @@ export async function transcribeAudio(input: {
     return { transcript, segments: [], usedAsr: false, modelUsed };
   }
 
-  const client = input.client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-  let file: { name: string; data: Buffer } | null = null;
+  const client = input.client ?? getOpenAIClient();
+  let file: Awaited<ReturnType<typeof toFile>> | null = null;
   if (input.audioBase64) {
     const mime = input.mime ?? "audio/webm";
     const ext = mime.includes("/") ? mime.split("/")[1] : "webm";
-    file = {
-      name: `audio.${ext}`,
-      data: Buffer.from(input.audioBase64, "base64"),
-    };
+    file = await toFile(Buffer.from(input.audioBase64, "base64"), `audio.${ext}`, { type: mime });
   } else if (input.audioPath) {
     const bytes = await fs.readFile(input.audioPath);
     const ext = input.audioPath.split(".").pop() || "wav";
-    file = {
-      name: `audio.${ext}`,
-      data: bytes,
-    };
+    file = await toFile(bytes, `audio.${ext}`);
   }
 
   if (!file) {
     return { transcript: "", segments: [], usedAsr: false, modelUsed };
   }
 
-  const asr = (await client.audio.transcriptions.create({
-    model: modelUsed,
-    file: file as any,
-    response_format: "verbose_json" as any,
-    timestamp_granularities: ["segment"] as any,
-  } as any)) as any;
+  // gpt-4o-*-transcribe models only accept "json" or "text"; verbose_json is
+  // whisper-1 only. Use the richer format when the model supports it.
+  const supportsVerbose = !modelUsed.startsWith("gpt-4o");
+  const asr = supportsVerbose
+    ? ((await client.audio.transcriptions.create({
+        model: modelUsed,
+        file,
+        response_format: "verbose_json" as any,
+        timestamp_granularities: ["segment"] as any,
+      } as any)) as any)
+    : ((await client.audio.transcriptions.create({
+        model: modelUsed,
+        file,
+        response_format: "json",
+      })) as any);
 
   const outText = String(asr?.text ?? "").trim();
   const segments: AsrSegment[] = Array.isArray(asr?.segments)
