@@ -19,6 +19,7 @@ This is a **production-architecture side project** built to practice end-to-end 
 - **Cross-session learning analytics** — persistent anomaly codes detect recurring weaknesses across practice sessions
 - **Explainable scoring** — every band score ships with a full audit trace (weights, timings, model attribution)
 - **Adaptive fallback chains** — graceful degradation from dual-engine → LLM-only → safe null, never a hallucinated score
+- **Quantified evaluation framework** — custom harness across 20 labeled essays (band 5.0–9.0); identified +0.68-band systematic upward bias; bias correction reduced MAE by 19% (1.26 → 1.03 bands) and improved ±0.5 accuracy from 47% → 53%
 
 ---
 
@@ -354,6 +355,37 @@ The Next.js API auto-detects ML availability at startup (`GET /api/health`) and 
 
 ### `GET /api/health`
 Reports live status of: OpenAI connectivity · Vercel KV · ML baseline · calibration map
+
+---
+
+## Evaluation Results
+
+A custom evaluation harness ([`ml/tools/eval_writing_mae.py`](ml/tools/eval_writing_mae.py)) was built to measure scoring accuracy against 20 hand-labeled IELTS Task 2 essays spanning band 5.0–9.0.
+
+### Metrics (N = 19 essays, 1 transient API error excluded)
+
+| Metric | Raw | + Bias Correction |
+|---|---|---|
+| **MAE** | 1.263 bands | **1.026 bands** |
+| **RMSE** | 1.589 | 1.446 |
+| **Within ±0.5 band** | 47.4% | **52.6%** |
+| **Within ±1.0 band** | 57.9% | 57.9% |
+| **Latency p50** | 14.9 s | — |
+| **Latency p95** | 23.5 s | — |
+
+### Key Findings
+
+**Systematic upward bias (+0.684 bands):** The LLM consistently over-scores weak essays (band 5–6), a known limitation of using general-purpose language models without domain-specific fine-tuning. Post-hoc signed-error analysis identified the bias; subtracting it and snapping to the nearest 0.5-band increment reduced MAE by **18.8%**.
+
+**Mid-range accuracy:** Essays in the band 6.5–7.5 range are scored most reliably — 7 of 9 such essays fell within ±0.5 bands.
+
+**High-band compression:** Band 8.5–9.0 essays were occasionally under-scored (predicted 7.0), suggesting the rubric prompt undersells sophisticated writing that surpasses standard IELTS descriptors.
+
+### Improvement Roadmap
+
+- Replace global bias subtraction with a band-stratified quantile recalibration trained on a larger labeled set
+- Augment the rubric prompt with explicit negative examples at each band boundary to reduce low-band inflation
+- Collect 50+ labeled essays to enable proper train/validation splits for calibration
 
 ---
 

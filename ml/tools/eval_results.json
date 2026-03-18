@@ -1,0 +1,249 @@
+{
+  "summary": {
+    "n": 19,
+    "errors": 1,
+    "mae": 1.2632,
+    "rmse": 1.5894,
+    "bias": 0.6842,
+    "within_0_5_pct": 47.4,
+    "within_1_0_pct": 57.9,
+    "latency_p50_ms": 14897.7,
+    "latency_p95_ms": 23480.4
+  },
+  "per_essay": [
+    {
+      "id": "w01",
+      "gold": 5.5,
+      "predicted": 9.0,
+      "abs_error": 3.5,
+      "signed_error": 3.5,
+      "elapsed_ms": 16567.1,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w02",
+      "gold": 6.5,
+      "predicted": 9.0,
+      "abs_error": 2.5,
+      "signed_error": 2.5,
+      "elapsed_ms": 13804.4,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w03",
+      "gold": 7.5,
+      "predicted": 7.0,
+      "abs_error": 0.5,
+      "signed_error": -0.5,
+      "elapsed_ms": 16169.1,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w04",
+      "gold": 8.5,
+      "predicted": 9.0,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 16211.1,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w05",
+      "gold": 5.5,
+      "predicted": 6.0,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 20183.0,
+      "predicted_band": 6,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w06",
+      "gold": 8.0,
+      "predicted": 9.0,
+      "abs_error": 1.0,
+      "signed_error": 1.0,
+      "elapsed_ms": 23480.4,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w07",
+      "gold": 6.5,
+      "predicted": 7.0,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 15518.8,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w08",
+      "gold": 8.0,
+      "predicted": 9.0,
+      "abs_error": 1.0,
+      "signed_error": 1.0,
+      "elapsed_ms": 10606.0,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w09",
+      "gold": 8.5,
+      "predicted": 7.0,
+      "abs_error": 1.5,
+      "signed_error": -1.5,
+      "elapsed_ms": 19152.8,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w10",
+      "gold": 6.0,
+      "predicted": 9.0,
+      "abs_error": 3.0,
+      "signed_error": 3.0,
+      "elapsed_ms": 18202.6,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w11",
+      "gold": 8.5,
+      "predicted": 7.0,
+      "abs_error": 1.5,
+      "signed_error": -1.5,
+      "elapsed_ms": 12340.1,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w12",
+      "gold": 6.0,
+      "predicted": 6.5,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 16689.0,
+      "predicted_band": 6.5,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w13",
+      "gold": 9.0,
+      "predicted": 7.0,
+      "abs_error": 2.0,
+      "signed_error": -2.0,
+      "elapsed_ms": 9430.9,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w14",
+      "gold": 7.0,
+      "predicted": 9.0,
+      "abs_error": 2.0,
+      "signed_error": 2.0,
+      "elapsed_ms": 12559.8,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w15",
+      "gold": 6.0,
+      "predicted": 6.5,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 12191.3,
+      "predicted_band": 6.5,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w16",
+      "gold": 5.0,
+      "predicted": 7.0,
+      "abs_error": 2.0,
+      "signed_error": 2.0,
+      "elapsed_ms": 13674.3,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w18",
+      "gold": 6.5,
+      "predicted": 7.0,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 14897.7,
+      "predicted_band": 7,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w19",
+      "gold": 8.5,
+      "predicted": 9.0,
+      "abs_error": 0.5,
+      "signed_error": 0.5,
+      "elapsed_ms": 13519.4,
+      "predicted_band": 9,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    },
+    {
+      "id": "w20",
+      "gold": 6.5,
+      "predicted": 6.5,
+      "abs_error": 0.0,
+      "signed_error": 0.0,
+      "elapsed_ms": 13977.5,
+      "predicted_band": 6.5,
+      "llm_pre_calibration": null,
+      "score_trace_available": false,
+      "study_plan_reason": null
+    }
+  ],
+  "failed": [
+    {
+      "id": "w17",
+      "error": "400 Client Error: Bad Request for url: http://localhost:3010/api/writing"
+    }
+  ]
+}
