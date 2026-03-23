@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  ci:
+    name: Type Check & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Type check
+        run: yarn workspace web tsc --noEmit
+
+      - name: Run tests
+        run: yarn workspace web test
+        env:
+          OPENAI_API_KEY: sk-test-dummy
+          KV_REST_API_URL: http://localhost
+          KV_REST_API_TOKEN: dummy
