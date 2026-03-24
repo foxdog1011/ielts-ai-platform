@@ -9,13 +9,19 @@ export async function runLocalWritingScore(essay: string, timeoutMs?: number) {
       err: local.err ?? "local score failed",
       overall_01: null,
       content_01: null,
+      tr_01: null,
     };
   }
+  const content_01 = safeScore01(local.json?.subscores_01?.content);
   return {
     ok: true as const,
     err: null,
     overall_01: safeScore01(local.json?.overall_01),
-    content_01: safeScore01(local.json?.subscores_01?.content),
+    content_01,
+    // XGBoost content scorer (sentence embeddings + text stats) correlates most
+    // strongly with Task Response — content relevance and task coverage.
+    // CC / LR / GRA remain LLM-only until dedicated local models exist.
+    tr_01: content_01,
     raw: local.json,
   };
 }

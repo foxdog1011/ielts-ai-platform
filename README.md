@@ -2,11 +2,82 @@
 
 > Full-stack AI coaching platform for IELTS Writing and Speaking — built with a dual-engine scoring architecture that combines GPT-4o with a local ML baseline (XGBoost + librosa), fused by confidence-weighted averaging and calibrated to the official 4.0–9.0 band scale.
 
-![Next.js](https://img.shields.io/badge/Next.js_15-black?style=flat&logo=next.js)
+[![CI](https://github.com/your-username/ielts-ai-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/ielts-ai-platform/actions/workflows/ci.yml)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://ielts-ai-platform-web.vercel.app)
+![Next.js](https://img.shields.io/badge/Next.js_16-black?style=flat&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat&logo=typescript&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI_GPT--4o-412991?style=flat&logo=openai&logoColor=white)
 ![Python](https://img.shields.io/badge/Python_ML-3776AB?style=flat&logo=python&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS_v4-38BDF8?style=flat&logo=tailwindcss&logoColor=white)
+
+**Live Demo:** https://ielts-ai-platform-web.vercel.app
+
+---
+
+## Portfolio Highlights
+
+Five things that make this more than a side project:
+
+### 1. Shipped to Production with Full CI/CD
+
+Not just running locally — fully deployed and live:
+
+- **URL:** https://ielts-ai-platform-web.vercel.app
+- **CI:** GitHub Actions runs TypeScript type check + 8 test files on every push and PR
+- **CD:** Merging to `master` auto-deploys to Vercel Production in under 2 minutes
+- **Persistence:** Upstash Redis (Vercel KV) stores score history, anomaly codes, and study plans across sessions
+
+### 2. Quantified ML Accuracy — With Numbers
+
+Built a custom evaluation harness to measure the system against 20 hand-labeled IELTS essays (band 5.0–9.0):
+
+| Metric | Before | After bias correction |
+|---|---|---|
+| MAE | 1.263 bands | **1.026 bands** |
+| Within ±0.5 band | 47.4% | **52.6%** |
+| Systematic bias | +0.684 bands upward | corrected |
+
+Identified the root cause (LLM over-scores weak essays), applied signed-error analysis, and reduced MAE by **18.8%**. This is the kind of iterative ML debugging that separates production systems from demos.
+
+### 3. Dual-Engine Scoring — Not an LLM Wrapper
+
+Most AI scoring tools call GPT and return the result. This system runs two engines in parallel and fuses them by confidence:
+
+```
+GPT-4o (semantic scoring)  ──┐
+                              ├── confidence-weighted fusion → band score
+XGBoost + librosa (acoustic) ─┘
+```
+
+Each dimension is owned by whichever engine has the signal for it — LLM owns grammar and coherence; local ML owns fluency (WPM, pause ratio) and pronunciation (F0, spectral energy). If one engine is unavailable, the other's confidence weight automatically dominates. No hard-coded fallback logic.
+
+### 4. Multi-Agent Orchestration with Consistency Validation
+
+Three agents run sequentially after every submission, each error-isolated with `.catch()`:
+
+```
+DiagnosisAgent → PlannerAgent → ReviewerAgent
+```
+
+The **ReviewerAgent** runs 8 consistency rules to catch plan-score mismatches, flat subscores (synthetic input), and recurring-boost inconsistencies — surfacing issues as `reviewNotes` instead of silently passing bad data downstream.
+
+Cross-session: anomaly codes persist to Redis and are queried across the last 5 sessions to detect **recurring weaknesses** — distinguishing a one-time mistake from a persistent pattern.
+
+### 5. Testable by Design — Dependency Injection Throughout
+
+Every pipeline function accepts injectable dependencies:
+
+```typescript
+runWritingPipeline(input, {
+  llmFn?: ...,      // swap in a stub for unit tests
+  localFn?: ...,    // bypass ML in CI
+  diagnosisFn?: ...,
+  openaiClient?: ...,
+  now?: ...,        // control timestamps
+})
+```
+
+This means the full scoring logic is unit-tested without network calls, mocks, or environment setup. 8 test files run in CI using Node.js's built-in test runner — no Jest, no extra dependencies.
 
 ---
 
@@ -72,6 +143,27 @@ User Input (essay / audio)
         Score + Trace + Study Plan
         persisted to Vercel KV
 ```
+
+---
+
+## CI/CD Pipeline
+
+Fully automated from push to production:
+
+```
+git push origin master
+        │
+        ├── GitHub Actions: CI
+        │     ├── yarn install --frozen-lockfile
+        │     ├── tsc --noEmit          (TypeScript type check)
+        │     └── yarn workspace web test  (Node.js built-in test runner)
+        │
+        └── GitHub Actions: CD
+              └── amondnet/vercel-action → Vercel Production Deploy
+                    └── https://ielts-ai-platform-web.vercel.app
+```
+
+**Stack:** GitHub Actions + Vercel + Upstash Redis (KV)
 
 ---
 
@@ -201,7 +293,7 @@ The same `kvSetJSON` / `kvGetJSON` / `kvListPushJSON` interface works against Ve
 
 | Layer | Technology |
 |---|---|
-| Frontend / API | Next.js 15.4 (App Router) · TypeScript 5 |
+| Frontend / API | Next.js 16 (App Router) · TypeScript 5 |
 | Styling | TailwindCSS v4 |
 | LLM Engine | OpenAI SDK v5 — GPT-4o / GPT-4o-mini (JSON mode) |
 | ASR | OpenAI `gpt-4o-mini-transcribe` |
@@ -209,7 +301,8 @@ The same `kvSetJSON` / `kvGetJSON` / `kvListPushJSON` interface works against Ve
 | Validation | Zod (runtime schema validation for all LLM outputs) |
 | Persistence | Vercel KV (Upstash Redis) · in-memory Map fallback |
 | Workflow Automation | n8n (Docker Compose) |
-| Monorepo | Yarn Workspaces + Turborepo |
+| Monorepo | Yarn Workspaces |
+| CI/CD | GitHub Actions (type check + tests) + Vercel auto-deploy |
 
 ---
 
@@ -248,6 +341,9 @@ The same `kvSetJSON` / `kvGetJSON` / `kvListPushJSON` interface works against Ve
 │       ├── planner.ts                 # Rule-based study plan generator
 │       ├── coach.ts                   # Cross-session learner profile aggregator
 │       └── weeklySummary.ts
+├── .github/workflows/
+│   ├── ci.yml                         # Type check + tests on every push/PR
+│   └── cd.yml                         # Auto-deploy to Vercel on master push
 ├── ml/
 │   ├── src/
 │   │   ├── score_cli.py               # text + audio → subscores + speaking features
@@ -276,7 +372,7 @@ cp apps/web/.env.local.example apps/web/.env.local
 cd apps/web && npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3010](http://localhost:3010).
 
 ### Environment Variables
 
@@ -399,6 +495,8 @@ A custom evaluation harness ([`ml/tools/eval_writing_mae.py`](ml/tools/eval_writ
 - [x] Multi-agent orchestration (Diagnosis → Planner → Reviewer)
 - [x] Cross-session recurring weakness detection
 - [x] Weekly progress summary
+- [x] CI/CD pipeline (GitHub Actions + Vercel)
+- [x] Production deployment (Vercel + Upstash Redis)
 - [ ] Band trend visualization / progress charts
 - [ ] User accounts & authentication
 

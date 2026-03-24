@@ -56,11 +56,17 @@ export async function runWritingPipeline(
     gra_01: llmResult.rubric.subscores.gra_01,
   };
 
-  // TODO: local writing model outputs content_01/overall_01 but WritingSubscores01
-  // needs tr_01/cc_01/lr_01/gra_01. Until the mapping is defined (in coordination
-  // with ml/src/score_cli.py), local scores do not contribute to writing fusion.
+  // Map local ML output to WritingSubscores01.
+  // XGBoost content_01 (sentence-embedding + text-stat score) proxies Task Response.
+  // CC / LR / GRA remain LLM-only until dedicated local models exist.
   const localSubscores: Partial<WritingSubscores01> = {};
-  if (localResult.ok && localResult.content_01 == null) flags.local_content_missing = true;
+  if (localResult.ok) {
+    if (localResult.tr_01 != null) {
+      localSubscores.tr_01 = localResult.tr_01;
+    } else {
+      flags.local_content_missing = true;
+    }
+  }
 
   const essayWords = wordCount(input.essay);
   // Clamp to minimum 0.1 so fusion always has at least one valid subscore when
@@ -70,7 +76,9 @@ export async function runWritingPipeline(
     llmConfidence = Math.max(0.2, llmConfidence * 0.6);
     flags.short_essay = true;
   }
-  const localConfidence = 0; // local subscores not yet mapped; see TODO above
+  // 0.25 when local TR signal is available → blends 25% local / 75% LLM on Task Response.
+  // 0.0 when local ML is unavailable (server offline, model missing) → pure LLM.
+  const localConfidence = localResult.ok && localSubscores.tr_01 != null ? 0.25 : 0;
 
   const fused = fuseWritingScores({
     llm: llmSubscores,
