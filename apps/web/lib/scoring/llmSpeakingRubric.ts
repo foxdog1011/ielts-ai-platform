@@ -1,8 +1,14 @@
 import OpenAI from "openai";
 import { ZodError } from "zod";
 import { SpeakingLlmRubricSchema, type SpeakingLlmRubric } from "@/lib/scoring/schemas";
-import { LlmRubricValidationError } from "@/lib/scoring/llmWritingRubric";
+import { LlmRubricValidationError, isReasoningModel } from "@/lib/scoring/llmWritingRubric";
 import { getOpenAIClient } from "@/lib/openai";
+
+function buildTokenParam(model: string, tokens: number) {
+  return isReasoningModel(model)
+    ? { max_completion_tokens: tokens, reasoning_effort: "high" as const }
+    : { max_tokens: tokens };
+}
 
 function systemPrompt() {
   return `You are an IELTS speaking examiner. Return exactly this JSON structure and nothing else — no markdown, no extra keys:
@@ -44,16 +50,17 @@ export async function scoreSpeakingWithLlm(input: {
 }): Promise<{ rubric: SpeakingLlmRubric; tokensUsed?: number; modelUsed: string }> {
   const client = input.client ?? getOpenAIClient();
   const modelUsed = input.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+  const reasoning = isReasoningModel(modelUsed);
   const response = await client.chat.completions.create({
     model: modelUsed,
-    temperature: input.temperature ?? Number(process.env.TEMPERATURE ?? 0.1),
+    ...(!reasoning && { temperature: input.temperature ?? Number(process.env.TEMPERATURE ?? 0.1) }),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt() },
       { role: "user", content: userPrompt(input) },
     ],
-    max_tokens: 1200,
-  });
+    ...buildTokenParam(modelUsed, 1200),
+  } as Parameters<typeof client.chat.completions.create>[0]) as OpenAI.Chat.Completions.ChatCompletion;
 
   const text = response.choices?.[0]?.message?.content ?? "{}";
   let parsed: unknown;

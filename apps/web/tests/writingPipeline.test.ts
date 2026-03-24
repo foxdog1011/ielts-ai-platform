@@ -3,11 +3,10 @@ import assert from "node:assert/strict";
 import { runWritingPipeline } from "@/lib/scoring/writingPipeline";
 import type { DiagnosisResult } from "@/lib/scoring/diagnosis";
 
-test("writing pipeline runs local model and returns llm-only subscores when local has no mapped keys", async () => {
-  // local model runs (ok: true) but its content_01/overall_01 do not map to
-  // WritingSubscores01 keys (tr_01/cc_01/lr_01/gra_01), so final subscores
-  // equal the LLM subscores. used_local reflects whether local ran, not
-  // whether it contributed to fusion.
+test("writing pipeline blends local content_01 into TR and LR, CC/GRA remain LLM-only", async () => {
+  // local model runs (ok: true), content_01=0.57 maps to tr_01 and lr_01.
+  // With llmConf=0.84 and localConf=0.25, fused TR/LR are between local(0.57) and LLM values.
+  // CC and GRA have no local signal so they equal LLM subscores exactly.
   const result = await runWritingPipeline(
     {
       taskId: "task2",
@@ -21,6 +20,8 @@ test("writing pipeline runs local model and returns llm-only subscores when loca
         err: null,
         overall_01: 0.51,
         content_01: 0.57,
+        tr_01: 0.57,
+        lr_01: 0.57,
         raw: {},
       }),
       llmFn: async () => ({
@@ -44,9 +45,13 @@ test("writing pipeline runs local model and returns llm-only subscores when loca
   );
 
   assert.equal(result.debug.used_local, true);
-  assert.equal(result.trace.final_subscores.tr_01, 0.71);
+  // TR and LR are blended: fused value is between local(0.57) and LLM values
+  const tr = result.trace.final_subscores.tr_01 ?? 0;
+  const lr = result.trace.final_subscores.lr_01 ?? 0;
+  assert.ok(tr > 0.57 && tr < 0.71, `TR should be blended between 0.57 and 0.71, got ${tr}`);
+  assert.ok(lr > 0.57 && lr < 0.69, `LR should be blended between 0.57 and 0.69, got ${lr}`);
+  // CC and GRA have no local signal — equal LLM values exactly
   assert.equal(result.trace.final_subscores.cc_01, 0.66);
-  assert.equal(result.trace.final_subscores.lr_01, 0.69);
   assert.equal(result.trace.final_subscores.gra_01, 0.63);
   assert.ok(result.trace.final_overall_pre_calibration >= 0 && result.trace.final_overall_pre_calibration <= 1);
 });
@@ -78,6 +83,8 @@ test("writing pipeline passes taskType to llmFn and defaults to task2", async ()
     err: "no local",
     overall_01: null as null,
     content_01: null as null,
+    tr_01: null as null,
+    lr_01: null as null,
   });
 
   // explicit taskType
@@ -102,6 +109,8 @@ test("writing overall_01 is deterministic", async () => {
       err: "no local",
       overall_01: null,
       content_01: null,
+      tr_01: null,
+      lr_01: null,
     }),
     llmFn: async () => ({
       rubric: {
@@ -140,6 +149,8 @@ const STUB_LOCAL_FN = async () => ({
   err: "no local",
   overall_01: null as null,
   content_01: null as null,
+  tr_01: null as null,
+  lr_01: null as null,
 });
 
 const STUB_LLM_FN = async () => ({

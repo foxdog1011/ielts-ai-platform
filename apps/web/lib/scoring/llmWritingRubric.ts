@@ -3,6 +3,23 @@ import { ZodError } from "zod";
 import { WritingLlmRubricSchema, type WritingLlmRubric } from "@/lib/scoring/schemas";
 import { getOpenAIClient } from "@/lib/openai";
 
+/**
+ * o1 / o3 / o4 reasoning models require:
+ *  - max_completion_tokens instead of max_tokens
+ *  - no temperature (fixed at 1; setting it throws an API error)
+ *  - reasoning_effort for quality control
+ * gpt-4o / gpt-4o-mini use the standard params.
+ */
+export function isReasoningModel(model: string): boolean {
+  return /^o[1-9]/.test(model);
+}
+
+function buildTokenParam(model: string, tokens: number) {
+  return isReasoningModel(model)
+    ? { max_completion_tokens: tokens, reasoning_effort: "high" as const }
+    : { max_tokens: tokens };
+}
+
 export class LlmRubricValidationError extends Error {
   constructor(message: string, readonly causeDetail?: unknown) {
     super(message);
@@ -47,16 +64,19 @@ export async function scoreWritingWithLlm(input: {
 }): Promise<{ rubric: WritingLlmRubric; tokensUsed?: number; modelUsed: string }> {
   const client = input.client ?? getOpenAIClient();
   const modelUsed = input.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+  const reasoning = isReasoningModel(modelUsed);
   const response = await client.chat.completions.create({
     model: modelUsed,
-    temperature: input.temperature ?? Number(process.env.TEMPERATURE ?? 0.1),
+    // Reasoning models (o3-mini, o3, o4-mini) fix temperature at 1 — setting it throws.
+    // Standard models default to low temperature for deterministic rubric output.
+    ...(!reasoning && { temperature: input.temperature ?? Number(process.env.TEMPERATURE ?? 0.1) }),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt() },
       { role: "user", content: userPrompt(input) },
     ],
-    max_tokens: 1600,
-  });
+    ...buildTokenParam(modelUsed, 1600),
+  } as Parameters<typeof client.chat.completions.create>[0]) as OpenAI.Chat.Completions.ChatCompletion;
 
   const text = response.choices?.[0]?.message?.content ?? "{}";
   let parsed: unknown;
