@@ -10,6 +10,7 @@ export async function runLocalWritingScore(essay: string, timeoutMs?: number) {
       overall_01: null,
       content_01: null,
       tr_01: null,
+      lr_01: null,
     };
   }
   const content_01 = safeScore01(local.json?.subscores_01?.content);
@@ -18,10 +19,12 @@ export async function runLocalWritingScore(essay: string, timeoutMs?: number) {
     err: null,
     overall_01: safeScore01(local.json?.overall_01),
     content_01,
-    // XGBoost content scorer (sentence embeddings + text stats) correlates most
-    // strongly with Task Response — content relevance and task coverage.
-    // CC / LR / GRA remain LLM-only until dedicated local models exist.
+    // XGBoost features include sentence embeddings (semantic coverage → TR)
+    // and uniq_ratio / avg_wlen (lexical diversity → LR).
+    // Both dimensions benefit from the same content_01 signal.
+    // CC / GRA remain LLM-only — no structural or grammar signal in XGBoost output.
     tr_01: content_01,
+    lr_01: content_01,
     raw: local.json,
   };
 }

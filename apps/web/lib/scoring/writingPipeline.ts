@@ -57,12 +57,14 @@ export async function runWritingPipeline(
   };
 
   // Map local ML output to WritingSubscores01.
-  // XGBoost content_01 (sentence-embedding + text-stat score) proxies Task Response.
-  // CC / LR / GRA remain LLM-only until dedicated local models exist.
+  // XGBoost features: sentence embeddings → TR (content coverage)
+  //                   uniq_ratio + avg_wlen → LR (lexical diversity / word choice)
+  // CC / GRA remain LLM-only — no structural or grammar signal in XGBoost.
   const localSubscores: Partial<WritingSubscores01> = {};
   if (localResult.ok) {
     if (localResult.tr_01 != null) {
       localSubscores.tr_01 = localResult.tr_01;
+      localSubscores.lr_01 = localResult.lr_01 ?? localResult.tr_01;
     } else {
       flags.local_content_missing = true;
     }
