@@ -43,6 +43,9 @@ export default async function HomePage() {
             <Link href="/history" className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 hover:bg-zinc-50">
               歷史紀錄
             </Link>
+            <Link href="/prompts" className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 hover:bg-zinc-50">
+              題庫
+            </Link>
             <Link href="/calibration" className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 hover:bg-zinc-50">
               校準曲線
             </Link>
