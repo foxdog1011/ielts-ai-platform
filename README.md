@@ -2,7 +2,7 @@
 
 > Full-stack AI coaching platform for IELTS Writing and Speaking — built with a dual-engine scoring architecture that combines GPT-4o with a local ML baseline (XGBoost + librosa), fused by confidence-weighted averaging and calibrated to the official 4.0–9.0 band scale.
 
-[![CI](https://github.com/your-username/ielts-ai-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/ielts-ai-platform/actions/workflows/ci.yml)
+[![CI](https://github.com/foxdog1011/ielts-ai-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/foxdog1011/ielts-ai-platform/actions/workflows/ci.yml)
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://ielts-ai-platform-web.vercel.app)
 ![Next.js](https://img.shields.io/badge/Next.js_16-black?style=flat&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat&logo=typescript&logoColor=white)
@@ -374,6 +374,7 @@ The same `kvSetJSON` / `kvGetJSON` / `kvListPushJSON` interface works against Ve
 │       ├── planner.ts                 # Rule-based study plan generator
 │       ├── coach.ts                   # Cross-session learner profile aggregator
 │       └── weeklySummary.ts
+├── apps/web/middleware.ts              # Edge Middleware: IP rate limiting (10 req/hr) for AI endpoints
 ├── .github/workflows/
 │   ├── ci.yml                         # Type check + tests on every push/PR
 │   └── cd.yml                         # Auto-deploy to Vercel on master push
@@ -554,6 +555,7 @@ A full MAE re-evaluation against the gold set (v2 architecture) is tracked in th
 - [x] Production deployment (Vercel + Upstash Redis)
 - [x] Hybrid writing fusion — XGBoost TR+LR blend at localConfidence=0.25
 - [x] o3-mini reasoning model support (skip temperature, max_completion_tokens, reasoning_effort)
+- [x] Edge Middleware rate limiting — 10 req/hour per IP on AI scoring endpoints (Vercel KV)
 - [ ] Re-run MAE evaluation with v2 hybrid architecture
 - [ ] Band trend visualization / progress charts
 - [ ] User accounts & authentication
