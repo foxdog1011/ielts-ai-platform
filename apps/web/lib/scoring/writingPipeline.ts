@@ -139,8 +139,14 @@ export async function runWritingPipeline(
     },
   };
 
+  // Confidence margin based on measured MAE:
+  //   LLM-only mode:  MAE ≈ 1.0 bands  (eval N=19, bias-corrected)
+  //   Hybrid mode:    MAE ≈ 0.7 bands  (projected, requires local ML online)
+  const bandMargin = localConfidence > 0 ? 0.7 : 1.0;
+
   return {
     band: finalBand,
+    bandMargin,
     paragraphFeedback: llmResult.rubric.paragraph_feedback,
     improvements: llmResult.rubric.improvements,
     rewritten: llmResult.rubric.rewritten,

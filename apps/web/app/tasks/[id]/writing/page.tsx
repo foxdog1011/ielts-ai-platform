@@ -6,6 +6,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/Toast';
 import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
 import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
+import { MlStatusBadge } from '@/components/MlStatusBadge';
 import { getPromptText } from '@/lib/promptUtils';
 
 type BandScores = { overall?: number; taskResponse?: number; coherence?: number; lexical?: number; grammar?: number; };
@@ -13,7 +14,7 @@ type ParagraphFeedback = { index: number; comment: string };
 type AgentMeta = { durationMs: number; agentsRan: string[] };
 type SubmitResponse = {
   ok: boolean;
-  data?: { band?: BandScores | null; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; studyPlan?: StudyPlan; coachSnapshot?: CoachSnapshotData; agentMeta?: AgentMeta };
+  data?: { band?: BandScores | null; bandMargin?: number; paragraphFeedback?: ParagraphFeedback[]; improvements?: string[]; rewritten?: string; tokensUsed?: number; studyPlan?: StudyPlan; coachSnapshot?: CoachSnapshotData; agentMeta?: AgentMeta };
   error?: { code: string; message: string };
   requestId?: string;
 };
@@ -197,6 +198,7 @@ export default function WritingTaskPage() {
           <div className="flex items-center gap-3">
             <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">← 回首頁</Link>
             <h1 className="text-[18px] font-medium tracking-tight">Writing Task 2</h1>
+            <MlStatusBadge />
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -410,7 +412,7 @@ export default function WritingTaskPage() {
                   {/* Scores */}
                   {result?.band && (
                     <div className="mt-3 space-y-1.5">
-                      <BandBadge overall={result.band.overall} />
+                      <BandBadge overall={result.band.overall} margin={result.bandMargin} />
                       <ScoreRow compact label="Task Response" value={result.band.taskResponse} />
                       <ScoreRow compact label="Coherence & Cohesion" value={result.band.coherence} />
                       <ScoreRow compact label="Lexical Resource" value={result.band.lexical} />
@@ -546,7 +548,7 @@ async function copySafe(text: string): Promise<boolean> {
   }
 }
 
-function BandBadge({ overall }: { overall?: number }) {
+function BandBadge({ overall, margin }: { overall?: number; margin?: number }) {
   if (overall == null) return null;
   const value = Number(overall);
   const display = isNaN(value) ? '-' : value.toFixed(1).replace(/\.0$/, '');
@@ -558,7 +560,14 @@ function BandBadge({ overall }: { overall?: number }) {
         <div className="h-1.5 w-28 overflow-hidden rounded-full bg-zinc-200">
           <div className="h-full bg-blue-500/80" style={{ width: `${pct}%` }} aria-label={`overall ${display}/9`} />
         </div>
-        <div className="text-[13px] font-semibold text-zinc-900">{display}</div>
+        <div className="flex items-baseline gap-0.5">
+          <div className="text-[13px] font-semibold text-zinc-900">{display}</div>
+          {margin != null && (
+            <div className="text-[10px] text-zinc-400" title={`±${margin} band margin of error (measured MAE)`}>
+              ±{margin}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

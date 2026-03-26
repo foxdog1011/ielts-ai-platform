@@ -126,6 +126,7 @@ export async function _handlePost(req: NextRequest, deps: WritingDeps): Promise<
       ok: true,
       data: {
         band: result.band,
+        bandMargin: result.bandMargin,
         paragraphFeedback: result.paragraphFeedback,
         improvements: result.improvements,
         rewritten: result.rewritten,
