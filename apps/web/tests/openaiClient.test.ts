@@ -7,10 +7,11 @@ import assert from "node:assert/strict";
 test("getOpenAIClient: throws descriptive error when OPENAI_API_KEY is absent", async () => {
   const saved = process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_API_KEY;
+  // Disable .env.local fallback so the test is isolated from local dev files.
+  const { getOpenAIClient, _resetOpenAIClientForTest, _disableEnvFallbackForTest } = await import("@/lib/openai");
+  _disableEnvFallbackForTest(true);
+  _resetOpenAIClientForTest();
   try {
-    // Dynamic import + reset to bypass module-level singleton from prior tests.
-    const { getOpenAIClient, _resetOpenAIClientForTest } = await import("@/lib/openai");
-    _resetOpenAIClientForTest();
     assert.throws(
       () => getOpenAIClient(),
       (err: unknown) => {
@@ -23,9 +24,9 @@ test("getOpenAIClient: throws descriptive error when OPENAI_API_KEY is absent", 
       },
     );
   } finally {
+    _disableEnvFallbackForTest(false);
     process.env.OPENAI_API_KEY = saved ?? "test-key";
     // Reset again so subsequent tests get a fresh client.
-    const { _resetOpenAIClientForTest } = await import("@/lib/openai");
     _resetOpenAIClientForTest();
   }
 });

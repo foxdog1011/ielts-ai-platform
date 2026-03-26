@@ -18,6 +18,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 let _client: OpenAI | undefined;
+let _envFallbackDisabled = false;
 
 /**
  * Fallback: manually load .env.local if Next.js @next/env failed to inject it.
@@ -52,7 +53,7 @@ function loadEnvLocalFallback() {
  */
 export function getOpenAIClient(): OpenAI {
   if (_client) return _client;
-  if (!process.env.OPENAI_API_KEY) loadEnvLocalFallback();
+  if (!process.env.OPENAI_API_KEY && !_envFallbackDisabled) loadEnvLocalFallback();
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -68,4 +69,9 @@ export function getOpenAIClient(): OpenAI {
 /** Reset singleton — test use only. */
 export function _resetOpenAIClientForTest(): void {
   _client = undefined;
+}
+
+/** Disable .env.local fallback — test use only. Call once at start of test, restore after. */
+export function _disableEnvFallbackForTest(disabled: boolean): void {
+  _envFallbackDisabled = disabled;
 }
