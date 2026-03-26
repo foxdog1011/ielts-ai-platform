@@ -196,12 +196,14 @@ git push origin master
         │     ├── tsc --noEmit          (TypeScript type check)
         │     └── yarn workspace web test  (Node.js built-in test runner)
         │
-        └── GitHub Actions: CD
-              └── amondnet/vercel-action → Vercel Production Deploy
+        └── GitHub Actions: CD  (triggered by workflow_run on CI success)
+              ├── vercel pull --environment=production
+              ├── vercel build --prod
+              └── vercel deploy --prebuilt --prod
                     └── https://ielts-ai-platform-web.vercel.app
 ```
 
-**Stack:** GitHub Actions + Vercel + Upstash Redis (KV)
+**Stack:** GitHub Actions + Vercel CLI + Upstash Redis (KV)
 
 ---
 
@@ -343,7 +345,7 @@ The same `kvSetJSON` / `kvGetJSON` / `kvListPushJSON` interface works against Ve
 | Persistence | Vercel KV (Upstash Redis) · in-memory Map fallback |
 | Workflow Automation | n8n (Docker Compose) |
 | Monorepo | Yarn Workspaces |
-| CI/CD | GitHub Actions (type check + tests) + Vercel auto-deploy |
+| CI/CD | GitHub Actions (type check + tests) → Vercel CLI (workflow_run gated deploy) |
 
 ---
 
