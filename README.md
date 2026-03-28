@@ -9,8 +9,18 @@
 ![OpenAI](https://img.shields.io/badge/OpenAI_o3--mini-412991?style=flat&logo=openai&logoColor=white)
 ![Python](https://img.shields.io/badge/Python_ML-3776AB?style=flat&logo=python&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS_v4-38BDF8?style=flat&logo=tailwindcss&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat)
 
 **Live Demo:** https://ielts-ai-platform-web.vercel.app
+
+---
+
+## TL;DR
+
+- **Dual-engine scoring:** GPT-4o + XGBoost run in parallel; confidence-weighted fusion reduced MAE from 1.26 → 1.03 bands (−18.8%) over LLM-only baseline
+- **Multi-agent pipeline:** DiagnosisAgent → PlannerAgent → ReviewerAgent with 8-rule consistency validation and cross-session recurring-weakness detection
+- **Production-grade CI/CD:** GitHub Actions (type check + tests) gates every push; auto-deploys to Vercel in under 2 minutes
+- **Live at:** https://ielts-ai-platform-web.vercel.app
 
 ---
 
