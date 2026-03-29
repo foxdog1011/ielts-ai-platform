@@ -18,8 +18,8 @@ export function RadarChart({
 
   const cx = size / 2;
   const cy = size / 2;
-  const r = size * 0.34;
-  const labelR = size * 0.46;
+  const r = size * 0.32;
+  const labelR = size * 0.47;
   const startAngle = -Math.PI / 2;
 
   function getAngle(i: number) {
@@ -59,14 +59,17 @@ export function RadarChart({
       className="overflow-visible"
       aria-label="Score radar chart"
     >
-      {/* Grid rings at 33%, 66%, 100% */}
+      {/* Background fill */}
+      <path d={polygonPath(r)} fill="#f4f4f5" fillOpacity="0.8" stroke="none" />
+
+      {/* Grid rings */}
       {[0.33, 0.66, 1.0].map((f) => (
         <path
           key={f}
           d={polygonPath(f * r)}
           fill="none"
-          stroke="#e4e4e7"
-          strokeWidth={f === 1.0 ? "1.2" : "0.8"}
+          stroke={f === 1.0 ? "#d4d4d8" : "#e4e4e7"}
+          strokeWidth={f === 1.0 ? "1" : "0.75"}
         />
       ))}
 
@@ -80,8 +83,8 @@ export function RadarChart({
             y1={cy}
             x2={p.x.toFixed(1)}
             y2={p.y.toFixed(1)}
-            stroke="#e4e4e7"
-            strokeWidth="0.8"
+            stroke="#d4d4d8"
+            strokeWidth="0.75"
           />
         );
       })}
@@ -90,9 +93,9 @@ export function RadarChart({
       <path
         d={scorePath}
         fill={color}
-        fillOpacity="0.18"
+        fillOpacity="0.25"
         stroke={color}
-        strokeWidth="1.8"
+        strokeWidth="2"
         strokeLinejoin="round"
       />
 
@@ -101,7 +104,8 @@ export function RadarChart({
         const frac = Math.min(1, Math.max(0, d.value / max));
         const p = getPoint(i, frac * r);
         return (
-          <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3.5" fill={color} />
+          <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3.5"
+            fill="white" stroke={color} strokeWidth="2" />
         );
       })}
 
@@ -116,22 +120,22 @@ export function RadarChart({
           <g key={i}>
             <text
               x={p.x.toFixed(1)}
-              y={(p.y - 6).toFixed(1)}
+              y={(p.y - 5).toFixed(1)}
               textAnchor={anchor}
               dominantBaseline="auto"
-              fontSize="9.5"
-              fill="#71717a"
+              fontSize="11"
+              fill="#52525b"
               fontFamily="system-ui, sans-serif"
             >
               {lbl}
             </text>
             <text
               x={p.x.toFixed(1)}
-              y={(p.y + 6).toFixed(1)}
+              y={(p.y + 7).toFixed(1)}
               textAnchor={anchor}
               dominantBaseline="hanging"
-              fontSize="10"
-              fontWeight="600"
+              fontSize="11.5"
+              fontWeight="700"
               fill="#18181b"
               fontFamily="system-ui, sans-serif"
             >

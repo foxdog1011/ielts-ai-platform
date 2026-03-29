@@ -85,7 +85,7 @@ export default async function HistoryPage({ searchParams }: PageProps) {
             </div>
           </div>
         ) : (
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {data.map((rec, i) => (
               <HistoryCard key={i} rec={rec} index={offset + i + 1} />
             ))}
@@ -168,13 +168,16 @@ function StatCard({
   color: "blue" | "amber";
   suffix?: string;
 }) {
-  const accent = color === "blue" ? "text-blue-700 bg-blue-50 border-blue-200" : "text-amber-700 bg-amber-50 border-amber-200";
+  const accent = color === "blue"
+    ? "text-blue-800 bg-blue-50 border-blue-200"
+    : "text-amber-800 bg-amber-50 border-amber-200";
+  const labelColor = color === "blue" ? "text-blue-600" : "text-amber-600";
   return (
-    <div className={`rounded-xl border px-3 py-3 ${accent}`}>
-      <div className="text-[11px] text-current opacity-70">{label}</div>
-      <div className="mt-0.5 text-[20px] font-bold">
+    <div className={`rounded-xl border px-4 py-3.5 ${accent}`}>
+      <div className={`text-[12px] font-medium ${labelColor}`}>{label}</div>
+      <div className="mt-1 text-[22px] font-bold">
         {value}
-        {suffix && <span className="text-[12px] font-normal opacity-60 ml-0.5">{suffix}</span>}
+        {suffix && <span className="text-[13px] font-normal opacity-70 ml-1">{suffix}</span>}
       </div>
     </div>
   );
@@ -191,41 +194,38 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
     const overall = w.band?.overall;
     const pct = overall ? Math.min(100, (overall / 9) * 100) : 0;
     return (
-      <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm hover:border-zinc-300 transition-colors">
+      <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
         <div className="flex items-start gap-3">
           {/* Number */}
-          <div className="shrink-0 w-6 text-[11px] text-zinc-400 pt-0.5 text-right">#{index}</div>
+          <div className="shrink-0 w-7 text-[11px] text-zinc-400 pt-1 text-right font-mono">#{index}</div>
 
           {/* Type badge */}
-          <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700">W</div>
+          <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-100 px-2.5 py-1.5 text-[12px] font-bold text-blue-700">W</div>
 
           <div className="flex-1 min-w-0">
             {/* Prompt */}
             {w.prompt && (
-              <p className="line-clamp-1 text-[13px] text-zinc-700 font-medium">{w.prompt}</p>
+              <p className="line-clamp-2 text-[13px] text-zinc-800 font-medium leading-snug">{w.prompt}</p>
             )}
 
             {/* Band scores */}
-            <div className="mt-2 flex items-center gap-3 flex-wrap">
-              {/* Overall badge */}
+            <div className="mt-2.5 flex items-center gap-4 flex-wrap">
+              {/* Overall */}
               {overall != null && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[22px] font-bold text-zinc-900">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[26px] font-bold text-zinc-900 leading-none">
                     {overall.toFixed(1).replace(/\.0$/, "")}
                   </span>
-                  <div className="text-[11px] text-zinc-400 leading-tight">
-                    <div>/9</div>
-                    <div>Overall</div>
-                  </div>
+                  <span className="text-[12px] text-zinc-400 font-normal">/9</span>
                 </div>
               )}
 
               {/* Progress bar */}
               {overall != null && (
-                <div className="flex-1 min-w-[80px] max-w-[160px]">
-                  <div className="h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+                <div className="flex-1 min-w-[80px] max-w-[140px]">
+                  <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-blue-500 transition-all"
+                      className="h-full rounded-full bg-blue-400 transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -233,7 +233,7 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
               )}
 
               {/* Sub-scores */}
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 {[
                   { k: "Task", v: w.band?.taskResponse },
                   { k: "Coh.", v: w.band?.coherence },
@@ -243,9 +243,9 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
                   v != null ? (
                     <span
                       key={k}
-                      className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-600"
+                      className="rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1 text-[12px] text-zinc-600"
                     >
-                      {k} <span className="font-semibold text-zinc-900">{v.toFixed(1).replace(/\.0$/, "")}</span>
+                      {k} <span className="font-bold text-zinc-800">{v.toFixed(1).replace(/\.0$/, "")}</span>
                     </span>
                   ) : null,
                 )}
@@ -253,10 +253,10 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
             </div>
 
             {/* Meta row */}
-            <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-400">
+            <div className="mt-2 flex items-center gap-3 text-[12px] text-zinc-500">
               {when && <span>{when}</span>}
-              {w.words && <span>{w.words} words</span>}
-              {w.durationSec && <span>{fmtSec(w.durationSec)}</span>}
+              {w.words && <span className="text-zinc-400">{w.words} words</span>}
+              {w.durationSec && <span className="text-zinc-400">{fmtSec(w.durationSec)}</span>}
             </div>
           </div>
         </div>
@@ -269,41 +269,38 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
   const overall = s.band?.overall ?? s.band?.content;
   const pct = overall ? Math.min(100, (overall / 9) * 100) : 0;
   return (
-    <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm hover:border-zinc-300 transition-colors">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-amber-200 transition-all">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 w-6 text-[11px] text-zinc-400 pt-0.5 text-right">#{index}</div>
-        <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-700">S</div>
+        <div className="shrink-0 w-7 text-[11px] text-zinc-400 pt-1 text-right font-mono">#{index}</div>
+        <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-100 px-2.5 py-1.5 text-[12px] font-bold text-amber-700">S</div>
 
         <div className="flex-1 min-w-0">
           {s.prompt && (
-            <p className="line-clamp-1 text-[13px] text-zinc-700 font-medium">{s.prompt}</p>
+            <p className="line-clamp-2 text-[13px] text-zinc-800 font-medium leading-snug">{s.prompt}</p>
           )}
 
-          <div className="mt-2 flex items-center gap-3 flex-wrap">
+          <div className="mt-2.5 flex items-center gap-4 flex-wrap">
             {overall != null && (
-              <div className="flex items-center gap-2">
-                <span className="text-[22px] font-bold text-zinc-900">
+              <div className="flex items-baseline gap-1">
+                <span className="text-[26px] font-bold text-zinc-900 leading-none">
                   {overall.toFixed(1).replace(/\.0$/, "")}
                 </span>
-                <div className="text-[11px] text-zinc-400 leading-tight">
-                  <div>/9</div>
-                  <div>Overall</div>
-                </div>
+                <span className="text-[12px] text-zinc-400 font-normal">/9</span>
               </div>
             )}
 
             {overall != null && (
-              <div className="flex-1 min-w-[80px] max-w-[160px]">
-                <div className="h-1.5 rounded-full bg-zinc-100 overflow-hidden">
+              <div className="flex-1 min-w-[80px] max-w-[140px]">
+                <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-amber-500 transition-all"
+                    className="h-full rounded-full bg-amber-400 transition-all"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
               </div>
             )}
 
-            <div className="flex gap-1.5 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {[
                 { k: "Content", v: s.band?.content },
                 { k: "Grammar", v: s.band?.grammar },
@@ -314,18 +311,18 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
                 v != null ? (
                   <span
                     key={k}
-                    className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 text-[11px] text-zinc-600"
+                    className="rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1 text-[12px] text-zinc-600"
                   >
-                    {k} <span className="font-semibold text-zinc-900">{v.toFixed(1).replace(/\.0$/, "")}</span>
+                    {k} <span className="font-bold text-zinc-800">{v.toFixed(1).replace(/\.0$/, "")}</span>
                   </span>
                 ) : null,
               )}
             </div>
           </div>
 
-          <div className="mt-1.5 flex items-center gap-3 text-[11px] text-zinc-400">
+          <div className="mt-2 flex items-center gap-3 text-[12px] text-zinc-500">
             {when && <span>{when}</span>}
-            {s.durationSec && <span>{fmtSec(s.durationSec)}</span>}
+            {s.durationSec && <span className="text-zinc-400">{fmtSec(s.durationSec)}</span>}
           </div>
         </div>
       </div>

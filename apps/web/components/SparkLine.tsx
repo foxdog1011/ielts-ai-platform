@@ -46,20 +46,22 @@ export function SparkLine({
       viewBox={`0 0 ${width} ${height}`}
       aria-label={`Score trend: ${values.join(", ")}`}
     >
-      <path d={area} fill={color} fillOpacity="0.08" />
+      <path d={area} fill={color} fillOpacity="0.15" />
       <polyline
         points={polyline}
         fill="none"
         stroke={color}
-        strokeWidth="1.8"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <circle
         cx={last.x.toFixed(1)}
         cy={last.y.toFixed(1)}
-        r="3"
-        fill={color}
+        r="3.5"
+        fill="white"
+        stroke={color}
+        strokeWidth="2"
       />
     </svg>
   );
