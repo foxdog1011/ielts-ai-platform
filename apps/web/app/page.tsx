@@ -10,12 +10,13 @@ import { LearningCalendar } from "@/components/LearningCalendar";
 export default async function HomePage() {
   noStore();
 
-  const [latestW, latestS, recentHistory, writingHistory, speakingHistory] = await Promise.all([
+  const [latestW, latestS, recentHistory, writingHistory, speakingHistory, allHistory] = await Promise.all([
     latestOfType("writing").catch(() => undefined),
     latestOfType("speaking").catch(() => undefined),
     latestHistory(20).catch(() => [] as HistoryRecord[]),
     listHistory({ type: "writing", limit: 50 }).catch(() => [] as HistoryRecord[]),
     listHistory({ type: "speaking", limit: 50 }).catch(() => [] as HistoryRecord[]),
+    listHistory({ limit: 200 }).catch(() => [] as HistoryRecord[]),
   ]);
 
   const weeklySummary = buildWeeklySummaryPayload({ writingHistory, speakingHistory });
@@ -58,7 +59,7 @@ export default async function HomePage() {
       : null;
 
   return (
-    <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
+    <main className="relative min-h-dvh bg-[#f7f6f3] text-zinc-900 font-brand">
       <BackgroundDecor />
 
       {/* Header */}
@@ -94,7 +95,7 @@ export default async function HomePage() {
 
       {/* Hero section */}
       <section className="mx-auto max-w-6xl px-6 sm:px-8">
-        <div className="rounded-3xl border border-zinc-200/80 bg-white/80 p-8 sm:p-12 shadow-sm backdrop-blur">
+        <div className="rounded-3xl border border-zinc-200/60 bg-white/90 p-8 sm:p-12 shadow-sm backdrop-blur">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h2 className="text-[26px] sm:text-[30px] leading-[1.2] font-semibold tracking-tight">
@@ -163,9 +164,9 @@ export default async function HomePage() {
           )}
 
           {/* Learning calendar */}
-          {recentHistory.length > 0 && (
+          {allHistory.length > 0 && (
             <div className="mt-6">
-              <LearningCalendar history={recentHistory} />
+              <LearningCalendar history={allHistory} />
             </div>
           )}
 

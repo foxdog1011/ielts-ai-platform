@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        brand: ["var(--font-plus-jakarta)", "var(--font-noto-serif-tc)", "serif"],
+        brand: ["var(--font-inter)", "var(--font-noto-sans-tc)", "system-ui", "sans-serif"],
       },
     },
   },

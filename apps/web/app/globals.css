@@ -1,6 +1,18 @@
 @import "tailwindcss";
 
-html, body { font-family: var(--font-plus-jakarta), var(--font-noto-serif-tc), serif; }
+html {
+  background-color: #f7f6f3;
+}
+
+html, body {
+  font-family: var(--font-inter), var(--font-noto-sans-tc), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ── Warm cream overrides for main pages ── */
+main.bg-white {
+  background-color: #f7f6f3 !important;
+}
 
 /* ── Dark mode ── */
 [data-theme="dark"] {
@@ -46,7 +58,8 @@ html, body { font-family: var(--font-plus-jakarta), var(--font-noto-serif-tc), s
   background-color: #27272a !important;
 }
 
-[data-theme="dark"] main.bg-white {
+[data-theme="dark"] main.bg-white,
+[data-theme="dark"] main {
   background-color: var(--bg) !important;
 }
 
