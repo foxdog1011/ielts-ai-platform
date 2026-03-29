@@ -19,6 +19,8 @@
 
 - **Dual-engine scoring:** GPT-4o + XGBoost run in parallel; confidence-weighted fusion reduced MAE from 1.26 → 1.03 bands (−18.8%) over LLM-only baseline
 - **Multi-agent pipeline:** DiagnosisAgent → PlannerAgent → ReviewerAgent with 8-rule consistency validation and cross-session recurring-weakness detection
+- **Exam simulation mode:** Writing 40-minute countdown with auto-submit; Speaking 1-minute prep timer — full test-day experience in the browser
+- **Learning analytics:** 7-week activity calendar with streak counter, weekly practice goals, error notebook for saving improvement items
 - **Production-grade CI/CD:** GitHub Actions (type check + tests) gates every push; auto-deploys to Vercel in under 2 minutes
 - **Live at:** https://ielts-ai-platform-web.vercel.app
 
@@ -110,7 +112,19 @@ The **ReviewerAgent** runs 8 consistency rules to catch plan-score mismatches, f
 
 Cross-session: anomaly codes persist to Redis and are queried across the last 5 sessions to detect **recurring weaknesses** — distinguishing a one-time mistake from a persistent pattern.
 
-### 5. Testable by Design — Dependency Injection Throughout
+### 5. User-Facing Learning Features — Not Just an API
+
+Built the full learner experience on top of the scoring engine:
+
+- **Exam simulation** — Writing page has a 40-minute countdown that auto-submits when time runs out; Speaking page has a 1-minute prep timer before recording starts. No setup needed — one click enters test-day conditions.
+- **Inline paragraph feedback** — Essay is split into paragraphs; those with AI feedback get an amber highlight and an expandable comment. Clicking expands just that paragraph's note.
+- **Error notebook** — Any improvement suggestion can be saved with one click (`+` button). Notebook page (`/notebook`) lists all saved items with Writing/Speaking filter and per-entry delete.
+- **Practice goals** — Goals page (`/goals`) lets learners set a target band and weekly session count for Writing and Speaking. Progress bars update from this week's actual history.
+- **Learning calendar** — 7×7 grid on the homepage shows 7 weeks of activity. Blue = Writing, amber = Speaking, purple = both. Streak counter counts consecutive active days from today.
+- **CSV export** — `GET /api/export?type=writing|speaking|all` returns UTF-8 BOM CSV of the full score history, importable to Excel or Google Sheets.
+- **Dark mode** — Theme toggle in the nav persists to `localStorage` and respects `prefers-color-scheme` on first load. Implemented with CSS variables + `data-theme` attribute — zero new dependencies.
+
+### 6. Testable by Design — Dependency Injection Throughout
 
 Every pipeline function accepts injectable dependencies:
 
@@ -369,11 +383,26 @@ The same `kvSetJSON` / `kvGetJSON` / `kvListPushJSON` interface works against Ve
 │   │   │   ├── writing/          # POST — full pipeline + agent orchestration
 │   │   │   ├── speaking/         # POST — audio → ASR → pipeline → agents
 │   │   │   ├── history/          # GET  — paginated score history
+│   │   │   ├── export/           # GET  — CSV export (?type=writing|speaking|all)
+│   │   │   ├── goals/            # GET/POST — weekly practice goals
+│   │   │   ├── notebook/         # GET/POST/DELETE — error notebook entries
 │   │   │   ├── prompts/          # seed / generate / random / list / flag
 │   │   │   ├── weekly-summary/   # aggregated progress report
 │   │   │   ├── health/           # OpenAI · KV · ML · calibration status
 │   │   │   └── upload-audio/     # path-validated audio intake
+│   │   ├── goals/                # Weekly goals page with progress bars
+│   │   ├── history/              # Score history with CSV export + pagination
+│   │   ├── notebook/             # Error notebook (saved improvement items)
 │   │   └── tasks/[id]/           # Writing & Speaking task pages
+│   ├── components/
+│   │   ├── InlineEssay.tsx        # Paragraph-level feedback overlay (amber highlight + expand)
+│   │   ├── LearningCalendar.tsx   # 7-week activity grid with streak counter
+│   │   ├── ThemeToggle.tsx        # Dark/light mode toggle (CSS vars + localStorage)
+│   │   ├── RadarChart.tsx         # SVG radar chart for Writing/Speaking sub-scores
+│   │   ├── SparkLine.tsx          # SVG sparkline + band indicator bar
+│   │   ├── StudyPlanBlock.tsx
+│   │   ├── CoachBlock.tsx
+│   │   └── Toast.tsx
 │   └── lib/
 │       ├── scoring/
 │       │   ├── writingPipeline.ts     # LLM + local + fusion + diagnosis + calibration
@@ -503,6 +532,35 @@ The Next.js API auto-detects ML availability at startup (`GET /api/health`) and 
 }
 ```
 
+### `GET /api/export`
+```
+?type=writing|speaking|all
+```
+Returns a UTF-8 BOM CSV file of the full score history. Writing columns: date, prompt, words, duration, overall, task, coherence, lexical, grammar. Speaking columns: date, prompt, duration, overall, content, grammar, vocab, fluency, pronunciation.
+
+### `GET /api/goals` · `POST /api/goals`
+```jsonc
+// GET Response
+{ "ok": true, "data": { "targetBand": 7.0, "weeklyWriting": 3, "weeklySpeaking": 2,
+    "progress": { "writing": 2, "speaking": 1 } } }
+
+// POST Request
+{ "targetBand": 7.5, "weeklyWriting": 4, "weeklySpeaking": 3 }
+```
+
+### `GET /api/notebook` · `POST /api/notebook` · `DELETE /api/notebook?id=X`
+```jsonc
+// GET Response
+{ "ok": true, "data": [{ "id": "...", "ts": 1234567890, "examType": "writing",
+    "dimension": "lexical", "original": "...", "correction": "...", "explanation": "..." }] }
+
+// POST Request — save an improvement item
+{ "examType": "writing", "text": "Consider using more varied vocabulary..." }
+
+// DELETE — remove by id
+DELETE /api/notebook?id=abc123
+```
+
 ### `GET /api/health`
 Reports live status of: OpenAI connectivity · Vercel KV · ML baseline · calibration map
 
@@ -576,8 +634,15 @@ A full MAE re-evaluation against the gold set (v2 architecture) is tracked in th
 - [x] Hybrid writing fusion — XGBoost TR+LR blend at localConfidence=0.25
 - [x] o3-mini reasoning model support (skip temperature, max_completion_tokens, reasoning_effort)
 - [x] Edge Middleware rate limiting — 10 req/hour per IP on AI scoring endpoints (Vercel KV)
+- [x] Exam simulation mode — Writing 40-min countdown with auto-submit; Speaking 1-min prep timer
+- [x] Inline paragraph feedback — amber-highlighted paragraphs with expandable AI comments
+- [x] Error notebook — save/delete improvement items, filter by Writing/Speaking
+- [x] Practice goals — weekly Writing/Speaking session targets with progress bars
+- [x] Learning calendar — 7-week activity grid with streak counter
+- [x] Band trend visualization — SparkLine charts on homepage weekly summary
+- [x] CSV export — full score history export (`/api/export`)
+- [x] Dark mode — CSS variables + localStorage, respects `prefers-color-scheme`
 - [ ] Re-run MAE evaluation with v2 hybrid architecture
-- [ ] Band trend visualization / progress charts
 - [ ] User accounts & authentication
 
 ---
