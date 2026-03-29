@@ -8,6 +8,7 @@ import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
 import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
 import { MlStatusBadge } from '@/components/MlStatusBadge';
 import { RadarChart } from '@/components/RadarChart';
+import { InlineEssay } from '@/components/InlineEssay';
 import { getPromptText } from '@/lib/promptUtils';
 
 type BandScores = { overall?: number; taskResponse?: number; coherence?: number; lexical?: number; grammar?: number; };
@@ -42,6 +43,47 @@ export default function WritingTaskPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const dirtyRef = useRef(false);
   const [showRight, setShowRight] = useState(true);
+
+  // ── Exam simulation mode ──────────────────────────────────────────────────
+  const EXAM_SECS = 40 * 60; // 40 minutes
+  const [examMode, setExamMode] = useState(false);
+  const [examSecsLeft, setExamSecsLeft] = useState(EXAM_SECS);
+  const examTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  function startExamMode() {
+    setExamMode(true);
+    setExamSecsLeft(EXAM_SECS);
+    setResult(undefined);
+    setError('');
+    if (examTimerRef.current) clearInterval(examTimerRef.current);
+    examTimerRef.current = setInterval(() => {
+      setExamSecsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(examTimerRef.current!);
+          examTimerRef.current = null;
+          // auto-submit when time is up
+          setExamMode(false);
+          onSubmit();
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  }
+
+  function cancelExamMode() {
+    setExamMode(false);
+    if (examTimerRef.current) { clearInterval(examTimerRef.current); examTimerRef.current = null; }
+    setExamSecsLeft(EXAM_SECS);
+  }
+
+  // cleanup on unmount
+  useEffect(() => () => { if (examTimerRef.current) clearInterval(examTimerRef.current); }, []);
+
+  const examMM = Math.floor(examSecsLeft / 60).toString().padStart(2, '0');
+  const examSS = (examSecsLeft % 60).toString().padStart(2, '0');
+  const examUrgent = examSecsLeft <= 300; // last 5 min → red
+  // ─────────────────────────────────────────────────────────────────────────
 
   // ---------- 初始化題目 ----------
   useEffect(() => {
@@ -219,10 +261,44 @@ export default function WritingTaskPage() {
             >
               開始新一輪
             </button>
+            {examMode ? (
+              <button
+                onClick={cancelExamMode}
+                className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700 hover:bg-red-100"
+              >
+                取消模擬考
+              </button>
+            ) : (
+              <button
+                onClick={startExamMode}
+                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[12px] text-purple-800 hover:bg-purple-100"
+                title="40 分鐘限時，時間到自動送出"
+              >
+                ⏱ 模擬考
+              </button>
+            )}
             <div className="text-[11px] text-zinc-500">Task #{taskId}</div>
           </div>
         </div>
       </header>
+
+      {/* Exam mode countdown banner */}
+      {examMode && (
+        <div className={[
+          'sticky top-0 z-20 mx-auto max-w-6xl px-6 sm:px-8 py-2',
+          'flex items-center justify-center gap-3',
+          examUrgent ? 'bg-red-50 border-b border-red-200' : 'bg-purple-50 border-b border-purple-200',
+        ].join(' ')}>
+          <span className="text-[12px] font-medium text-zinc-700">⏱ 模擬考模式</span>
+          <span className={[
+            'text-[20px] font-bold tabular-nums',
+            examUrgent ? 'text-red-600' : 'text-purple-700',
+          ].join(' ')}>
+            {examMM}:{examSS}
+          </span>
+          <span className="text-[11px] text-zinc-500">時間到自動送出</span>
+        </div>
+      )}
 
       <section className="mx-auto max-w-6xl px-6 sm:px-8 pb-12">
         <div className="grid gap-6 lg:grid-cols-[1.6fr_0.4fr]">
@@ -351,10 +427,18 @@ export default function WritingTaskPage() {
               </div>
               <div className="mt-3 grid gap-4 md:grid-cols-2">
                 <div>
-                  <div className="text-[12px] text-zinc-500">你的原文</div>
-                  <div className="mt-1 min-h-[120px] whitespace-pre-wrap rounded-xl border border-zinc-200 bg-white p-3 text-[13px] leading-relaxed text-zinc-800">
-                    {essay || '（尚未輸入）'}
+                  <div className="text-[12px] text-zinc-500 mb-1">
+                    你的原文
+                    {result?.paragraphFeedback?.length ? (
+                      <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">
+                        {result.paragraphFeedback.length} 條批注
+                      </span>
+                    ) : null}
                   </div>
+                  <InlineEssay
+                    text={essay}
+                    feedback={result?.paragraphFeedback}
+                  />
                 </div>
                 <div>
                   <div className="text-[12px] text-zinc-500">AI 優化版本</div>
@@ -438,16 +522,17 @@ export default function WritingTaskPage() {
 
                   {/* Improvements */}
                   {!!result?.improvements?.length && (
-                    <details className="mt-4 border-t border-zinc-100 pt-3">
+                    <details className="mt-4 border-t border-zinc-100 pt-3" open>
                       <summary className="flex cursor-pointer list-none items-center justify-between">
                         <span className="text-[12px] font-medium text-zinc-700">改善建議</span>
                         <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{result.improvements.length}</span>
                       </summary>
                       <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
                         {result.improvements.map((s, i) => (
-                          <li key={i} className="flex gap-2">
+                          <li key={i} className="flex items-start gap-2">
                             <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
-                            <span>{s}</span>
+                            <span className="flex-1">{s}</span>
+                            <SaveToNotebookBtn text={s} examType="writing" />
                           </li>
                         ))}
                       </ul>
@@ -604,6 +689,45 @@ function ScoreRow({ label, value, compact }: { label: string; value?: number; co
         </div>
       </div>
     </div>
+  );
+}
+
+function SaveToNotebookBtn({ text, examType }: { text: string; examType: "writing" | "speaking" }) {
+  const [saved, setSaved] = useState<'idle' | 'saving' | 'done'>('idle');
+  async function save() {
+    if (saved !== 'idle') return;
+    setSaved('saving');
+    try {
+      await fetch('/api/notebook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          examType,
+          dimension: 'grammar',
+          original: text,
+          correction: text,
+          explanation: text,
+        }),
+      });
+      setSaved('done');
+    } catch {
+      setSaved('idle');
+    }
+  }
+  return (
+    <button
+      onClick={save}
+      disabled={saved !== 'idle'}
+      title="加入錯題本"
+      className={[
+        'shrink-0 rounded px-1.5 py-0.5 text-[10px] transition-colors',
+        saved === 'done'
+          ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+          : 'border border-zinc-200 bg-white text-zinc-400 hover:text-zinc-700 hover:border-zinc-300',
+      ].join(' ')}
+    >
+      {saved === 'done' ? '✓' : '+'}
+    </button>
   );
 }
 

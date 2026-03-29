@@ -53,6 +53,23 @@ export async function _handlePost(req: NextRequest, deps: SpeakingDeps): Promise
       deps.history({ type: "speaking", limit: 5 }).catch((): HistoryRecord[] => []),
     ]);
 
+    // Guard: empty transcript produces meaningless scores. Reject early and
+    // ask the user to provide a manual transcript rather than silently scoring.
+    if (!result.transcript) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: {
+            code: "TRANSCRIPT_EMPTY",
+            message:
+              "無法辨識語音內容（Whisper 返回空字串）。請在「逐字稿」欄位手動輸入你說的內容後再送出。",
+          },
+          requestId,
+        },
+        { status: 422 },
+      );
+    }
+
     // Agent pipeline: DiagnosisAgent → PlannerAgent → ReviewerAgent → CoachSnapshot.
     // Route-level catch: if agent throws despite its "never throws" guarantee,
     // scoring data is still returned to the caller.

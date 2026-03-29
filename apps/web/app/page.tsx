@@ -1,17 +1,24 @@
 // apps/web/app/page.tsx
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
-import { latestOfType, latestHistory, type HistoryRecord } from "@/lib/history";
+import { latestOfType, latestHistory, listHistory, type HistoryRecord } from "@/lib/history";
 import { SparkLine } from "@/components/SparkLine";
+import { buildWeeklySummaryPayload, type ExamTypeSummary } from "@/lib/weeklySummary";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LearningCalendar } from "@/components/LearningCalendar";
 
 export default async function HomePage() {
   noStore();
 
-  const [latestW, latestS, recentHistory] = await Promise.all([
+  const [latestW, latestS, recentHistory, writingHistory, speakingHistory] = await Promise.all([
     latestOfType("writing").catch(() => undefined),
     latestOfType("speaking").catch(() => undefined),
     latestHistory(20).catch(() => [] as HistoryRecord[]),
+    listHistory({ type: "writing", limit: 50 }).catch(() => [] as HistoryRecord[]),
+    listHistory({ type: "speaking", limit: 50 }).catch(() => [] as HistoryRecord[]),
   ]);
+
+  const weeklySummary = buildWeeklySummaryPayload({ writingHistory, speakingHistory });
 
   const latestWOverall =
     typeof latestW?.band === "object" && typeof (latestW as any)?.band?.overall === "number"
@@ -68,6 +75,8 @@ export default async function HomePage() {
             {[
               { href: "/history", label: "歷史紀錄" },
               { href: "/prompts", label: "題庫" },
+              { href: "/goals", label: "練習目標" },
+              { href: "/notebook", label: "錯題本" },
               { href: "/calibration", label: "校準曲線" },
             ].map(({ href, label }) => (
               <Link
@@ -78,6 +87,7 @@ export default async function HomePage() {
                 {label}
               </Link>
             ))}
+            <ThemeToggle />
           </nav>
         </div>
       </header>
@@ -148,6 +158,26 @@ export default async function HomePage() {
                 {recentHistory.slice(0, 6).map((rec, i) => (
                   <RecentCard key={i} rec={rec} />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Learning calendar */}
+          {recentHistory.length > 0 && (
+            <div className="mt-6">
+              <LearningCalendar history={recentHistory} />
+            </div>
+          )}
+
+          {/* Weekly summary */}
+          {(weeklySummary.writing != null || weeklySummary.speaking != null) && (
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[13px] font-semibold text-zinc-700">本週進度</h3>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {weeklySummary.writing != null && <WeeklySummaryCard summary={weeklySummary.writing} />}
+                {weeklySummary.speaking != null && <WeeklySummaryCard summary={weeklySummary.speaking} />}
               </div>
             </div>
           )}
@@ -329,6 +359,81 @@ function PrimaryCard(props: {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function WeeklySummaryCard({ summary }: { summary: ExamTypeSummary }) {
+  const isWriting = summary.examType === "writing";
+  const accent = isWriting ? "blue" : "amber";
+  const trendIcon: Record<string, string> = {
+    improving: "↑",
+    stable: "→",
+    declining: "↓",
+    first_session: "★",
+    insufficient_data: "—",
+  };
+  const trendColor: Record<string, string> = {
+    improving: "text-emerald-600",
+    stable: "text-zinc-500",
+    declining: "text-red-500",
+    first_session: "text-blue-500",
+    insufficient_data: "text-zinc-400",
+  };
+  const urgencyBadge: Record<string, string> = {
+    urgent: "bg-red-50 text-red-700 border-red-200",
+    normal: "bg-zinc-50 text-zinc-600 border-zinc-200",
+    maintenance: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  };
+  const urgencyLabel: Record<string, string> = {
+    urgent: "需加強",
+    normal: "穩定",
+    maintenance: "保持",
+  };
+  const borderColor = isWriting ? "border-blue-100" : "border-amber-100";
+  const headerColor = isWriting ? "text-blue-700" : "text-amber-700";
+
+  return (
+    <div className={`rounded-xl border ${borderColor} bg-white/80 p-4`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-[12px] font-semibold ${headerColor}`}>
+          {isWriting ? "Writing" : "Speaking"}
+        </span>
+        <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${urgencyBadge[summary.urgency]}`}>
+          {urgencyLabel[summary.urgency]}
+        </span>
+      </div>
+      <div className="flex items-baseline gap-2">
+        {summary.latestBand != null ? (
+          <>
+            <span className="text-[22px] font-bold text-zinc-900">
+              {summary.latestBand.toFixed(1).replace(/\.0$/, "")}
+            </span>
+            <span className="text-[11px] text-zinc-400">/9</span>
+          </>
+        ) : (
+          <span className="text-[14px] text-zinc-400">尚無紀錄</span>
+        )}
+        {summary.trend !== "insufficient_data" && (
+          <span className={`text-[13px] font-semibold ${trendColor[summary.trend]}`}>
+            {trendIcon[summary.trend]}
+          </span>
+        )}
+      </div>
+      <div className="mt-2 flex items-center gap-3 text-[11px] text-zinc-500">
+        <span>本週 {summary.sessionCount} 次</span>
+        {summary.avgBand != null && <span>均分 {summary.avgBand}</span>}
+        {summary.bandDelta != null && summary.bandDelta !== 0 && (
+          <span className={summary.bandDelta > 0 ? "text-emerald-600" : "text-red-500"}>
+            {summary.bandDelta > 0 ? "+" : ""}{summary.bandDelta}
+          </span>
+        )}
+      </div>
+      {summary.persistentWeaknesses.length > 0 && (
+        <div className="mt-2 text-[11px] text-zinc-500">
+          待加強：{summary.persistentWeaknesses.slice(0, 2).join("、")}
+        </div>
+      )}
     </div>
   );
 }

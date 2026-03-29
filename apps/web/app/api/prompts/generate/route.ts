@@ -1,6 +1,29 @@
 // apps/web/app/api/prompts/generate/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+
+// ── Simple in-memory rate limiter ──────────────────────────────────────────
+// 5 generate calls per IP per hour. Resets on server restart (acceptable for
+// a single-user app — prevents accidental runaway API cost).
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+const _rateBucket = new Map<string, { count: number; windowStart: number }>();
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = _rateBucket.get(ip);
+  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
+    _rateBucket.set(ip, { count: 1, windowStart: now });
+    return { allowed: true, remaining: RATE_LIMIT - 1 };
+  }
+  if (entry.count >= RATE_LIMIT) {
+    return { allowed: false, remaining: 0 };
+  }
+  entry.count += 1;
+  return { allowed: true, remaining: RATE_LIMIT - entry.count };
+}
+// ─────────────────────────────────────────────────────────────────────────
 import OpenAI from "openai";
 import {
   savePromptsUniq,
@@ -91,6 +114,18 @@ function normalize(
 
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      "unknown";
+    const { allowed, remaining } = checkRateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { ok: false, error: { message: "每小時最多生成 5 次，請稍後再試。" } },
+        { status: 429, headers: { "Retry-After": "3600" } },
+      );
+    }
+
     const body = BodySchema.parse(await req.json());
     // 驗 part 合法
     if (body.type === "writing" && !WRITING_PARTS.includes(body.part as WritingPart)) {
@@ -146,7 +181,10 @@ export async function POST(req: NextRequest) {
     // 這裡 savePromptsUniq 允許去重/補 id/hash/ts；你的型別若嚴格，直接 as any
     const saved = await savePromptsUniq(rows as any);
 
-    return NextResponse.json({ ok: true, data: { created: saved.length, items: saved } });
+    return NextResponse.json(
+      { ok: true, data: { created: saved.length, items: saved } },
+      { headers: { "X-RateLimit-Remaining": String(remaining) } },
+    );
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: { message: err?.message || "Failed to generate" } },

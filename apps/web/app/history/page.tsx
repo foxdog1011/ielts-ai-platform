@@ -36,7 +36,16 @@ export default async function HistoryPage({ searchParams }: PageProps) {
             <h1 className="text-[18px] font-semibold tracking-tight">歷史紀錄</h1>
             <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500">{data.length} 筆</span>
           </div>
-          <TypeTabs active={type} />
+          <div className="flex items-center gap-2">
+            <TypeTabs active={type} />
+            <Link
+              href={`/api/export?type=${type ?? "all"}`}
+              className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-[12px] hover:bg-zinc-50 transition-colors"
+              title="匯出 CSV"
+            >
+              ↓ CSV
+            </Link>
+          </div>
         </div>
       </header>
 

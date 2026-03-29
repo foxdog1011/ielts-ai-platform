@@ -55,6 +55,41 @@ export default function SpeakingPage() {
   const [prompt, setPrompt] = useState('');
   const [loadingPrompt, setLoadingPrompt] = useState(false);
 
+  // ── 模擬考：準備倒數 ──────────────────────────────────────────────────────
+  const PREP_SECS = 60;
+  const [prepMode, setPrepMode] = useState(false);
+  const [prepSecsLeft, setPrepSecsLeft] = useState(PREP_SECS);
+  const prepTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  function startPrepMode() {
+    setPrepMode(true);
+    setPrepSecsLeft(PREP_SECS);
+    if (prepTimerRef.current) clearInterval(prepTimerRef.current);
+    prepTimerRef.current = setInterval(() => {
+      setPrepSecsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(prepTimerRef.current!);
+          prepTimerRef.current = null;
+          setPrepMode(false);
+          startRec(); // auto-start recording when prep ends
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  }
+
+  function cancelPrepMode() {
+    setPrepMode(false);
+    if (prepTimerRef.current) { clearInterval(prepTimerRef.current); prepTimerRef.current = null; }
+  }
+
+  useEffect(() => () => { if (prepTimerRef.current) clearInterval(prepTimerRef.current); }, []);
+
+  const prepMM = Math.floor(prepSecsLeft / 60).toString().padStart(2, '0');
+  const prepSS = (prepSecsLeft % 60).toString().padStart(2, '0');
+  // ─────────────────────────────────────────────────────────────────────────
+
   // 錄音
   const [recState, setRecState] = useState<'idle' | 'recording' | 'finished'>('idle');
   const [durationSec, setDurationSec] = useState(0);
@@ -265,10 +300,35 @@ export default function SpeakingPage() {
             >
               開始新一輪
             </button>
+            {prepMode ? (
+              <button
+                onClick={cancelPrepMode}
+                className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700 hover:bg-red-100"
+              >
+                取消
+              </button>
+            ) : recState === 'idle' ? (
+              <button
+                onClick={startPrepMode}
+                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[12px] text-purple-800 hover:bg-purple-100"
+                title="1分鐘準備，時間到自動開始錄音"
+              >
+                ⏱ 模擬考
+              </button>
+            ) : null}
             <div className="text-[11px] text-zinc-500">Task #{taskId}</div>
           </div>
         </div>
       </header>
+
+      {/* Prep countdown banner */}
+      {prepMode && (
+        <div className="sticky top-0 z-20 mx-auto max-w-6xl px-6 sm:px-8 py-2 flex items-center justify-center gap-3 bg-purple-50 border-b border-purple-200">
+          <span className="text-[12px] font-medium text-zinc-700">準備時間</span>
+          <span className="text-[20px] font-bold tabular-nums text-purple-700">{prepMM}:{prepSS}</span>
+          <span className="text-[11px] text-zinc-500">時間到自動開始錄音</span>
+        </div>
+      )}
 
       <section className="mx-auto max-w-6xl px-6 sm:px-8 pb-12">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
