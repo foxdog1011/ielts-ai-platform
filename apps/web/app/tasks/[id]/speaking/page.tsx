@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/Toast';
 import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
 import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
+import { RadarChart } from '@/components/RadarChart';
 import { getPromptText } from '@/lib/promptUtils';
 
 type AgentMeta = { durationMs: number; agentsRan: string[] };
@@ -391,6 +392,22 @@ export default function SpeakingPage() {
               {resp?.content?.band && (
                 <div className="mt-3">
                   <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Content</div>
+                  {/* Radar chart */}
+                  {resp.content.band.taskResponse != null && resp.speech?.band?.fluency != null && (
+                    <div className="flex justify-center py-2">
+                      <RadarChart
+                        size={180}
+                        color="#f59e0b"
+                        dims={[
+                          { label: "Task", value: resp.content.band.taskResponse ?? 0 },
+                          { label: "Vocab", value: resp.content.band.vocabulary ?? 0 },
+                          { label: "Grammar", value: resp.content.band.grammar ?? 0 },
+                          { label: "Fluency", value: resp.speech?.band?.fluency ?? 0 },
+                          { label: "Pronunciation", value: resp.speech?.band?.pronunciation ?? 0 },
+                        ]}
+                      />
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <Score label="Overall" v={resp.content.band.overall} />
                     <Score label="Task Response" v={resp.content.band.taskResponse} />

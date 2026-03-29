@@ -7,6 +7,7 @@ import { useToast } from '@/components/Toast';
 import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
 import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
 import { MlStatusBadge } from '@/components/MlStatusBadge';
+import { RadarChart } from '@/components/RadarChart';
 import { getPromptText } from '@/lib/promptUtils';
 
 type BandScores = { overall?: number; taskResponse?: number; coherence?: number; lexical?: number; grammar?: number; };
@@ -413,6 +414,21 @@ export default function WritingTaskPage() {
                   {result?.band && (
                     <div className="mt-3 space-y-1.5">
                       <BandBadge overall={result.band.overall} margin={result.bandMargin} />
+                      {/* Radar chart */}
+                      {result.band.taskResponse != null && (
+                        <div className="flex justify-center py-2">
+                          <RadarChart
+                            size={180}
+                            color="#3b82f6"
+                            dims={[
+                              { label: "Task", shortLabel: "Task", value: result.band.taskResponse ?? 0 },
+                              { label: "Coherence", shortLabel: "Coh.", value: result.band.coherence ?? 0 },
+                              { label: "Lexical", shortLabel: "Lex.", value: result.band.lexical ?? 0 },
+                              { label: "Grammar", shortLabel: "Gram.", value: result.band.grammar ?? 0 },
+                            ]}
+                          />
+                        </div>
+                      )}
                       <ScoreRow compact label="Task Response" value={result.band.taskResponse} />
                       <ScoreRow compact label="Coherence & Cohesion" value={result.band.coherence} />
                       <ScoreRow compact label="Lexical Resource" value={result.band.lexical} />
