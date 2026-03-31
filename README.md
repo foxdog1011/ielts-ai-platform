@@ -276,11 +276,20 @@ DiagnosisAgent  →  PlannerAgent  →  ReviewerAgent
   evidence summary IELTS weights    synthetic-input flag
 ```
 
-**ReviewerAgent** checks 8 consistency rules including:
-- `HIGH_SEVERITY_NO_FOCUS` — severe anomalies not reflected in study plan
-- `BOOST_INCONSISTENCY` — recurring boost applied without matching anomaly codes
-- `ALL_BANDS_EQUAL` — flat subscores indicating synthetic/test input
-- `DIAGNOSIS_PLANNER_MISMATCH` — top weaknesses absent from priority dimensions
+**ReviewerAgent** checks 8 deterministic consistency rules (no LLM calls — pure logic):
+
+| Rule | Severity | Condition |
+|---|---|---|
+| `TASK_MISSING` | warning | Planner produced no `nextTaskRecommendation` |
+| `PLAN_FOCUS_UNSET` | info | Planner did not set a `currentFocus` dimension |
+| `HIGH_SEVERITY_NO_FOCUS` | warning | Diagnosis severity=high but no `currentFocus` set |
+| `BOOST_INCONSISTENCY` | warning | `recurringBoostApplied=true` but focus not in `boostedDimensions` |
+| `BOOST_REASON_OVERRIDE` | info | Boost changed only the reason, not the actual focus decision |
+| `LOW_CONFIDENCE_NO_RELIABILITY_NOTE` | info | Low confidence or engine conflict but `reliabilityNote` absent |
+| `ALL_BANDS_EQUAL` | info | All sub-band values equal the overall band (suspicious/synthetic input) |
+| `DIAGNOSIS_PLANNER_MISMATCH` | warning | Top weaknesses from Diagnosis absent from Planner's priority dimensions |
+
+Failures surface as `reviewNotes` (severity: info / warning / block) — never crashing the route.
 
 Failures surface as `reviewNotes` (severity: info / warning / block) rather than crashing the route.
 
