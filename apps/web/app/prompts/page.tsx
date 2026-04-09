@@ -141,16 +141,16 @@ export default function PromptBankPage() {
 
   return (
     <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
-      <header className="mx-auto max-w-6xl px-6 sm:px-8 pt-8 pb-4">
-        <div className="flex items-center justify-between">
+      <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-6 sm:pt-8 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">← 回首頁</Link>
-            <h1 className="text-[18px] font-medium tracking-tight">題庫（Prompt Bank）</h1>
+            <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">← 回首頁</Link>
+            <h1 className="text-[18px] font-medium tracking-tight">題庫</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/tasks/1/writing" className="text-[12px] text-zinc-500 hover:text-zinc-800">去練習 →</Link>
+            <Link href="/tasks/1/writing" className="text-[13px] sm:text-[12px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">去練習 →</Link>
             <button
-              className="text-[12px] text-zinc-500 hover:text-zinc-800"
+              className="text-[13px] sm:text-[12px] text-zinc-500 hover:text-zinc-800 min-h-[44px]"
               onClick={() => { setQType(""); setQPart(""); setQTopic(""); setFavOnly(false); setHideSkipped(false); setOffset(0); }}
             >
               清除篩選
@@ -159,12 +159,12 @@ export default function PromptBankPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 sm:px-8 pb-12 space-y-8">
+      <section className="mx-auto max-w-6xl px-4 sm:px-8 pb-12 space-y-8">
         {/* 生成器 */}
-        <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
           <div className="text-[14px] font-medium">批次生成</div>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div className="mt-3 grid gap-3 grid-cols-1 md:grid-cols-3">
             {/* 題型/Part */}
             <div className="rounded-xl border border-zinc-200 bg-white/60 p-3">
               <div className="text-[12px] text-zinc-500">題型</div>
@@ -198,7 +198,7 @@ export default function PromptBankPage() {
             <div className="rounded-xl border border-zinc-200 bg-white/60 p-3">
               <div className="text-[12px] text-zinc-500">主題 & 難度</div>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <input className="w-56 rounded-lg border border-zinc-300 bg-white px-2 py-1 text-[12px]"
+                <input className="w-full sm:w-56 rounded-lg border border-zinc-300 bg-white px-2 py-2 sm:py-1 min-h-[44px] sm:min-h-0 text-[13px] sm:text-[12px]"
                   placeholder="education, technology, environment"
                   value={topics} onChange={(e)=> setTopics(e.target.value)} />
                 <select className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-[12px]" value={level} onChange={(e)=> setLevel(e.target.value)}>
@@ -213,7 +213,7 @@ export default function PromptBankPage() {
             <div className="rounded-xl border border-zinc-200 bg-white/60 p-3">
               <div className="text-[12px] text-zinc-500">數量</div>
               <div className="mt-1 flex items-center gap-2">
-                <input type="range" min={5} max={50} step={5} value={count} onChange={(e)=> setCount(Number(e.target.value))} className="w-48 accent-zinc-700" />
+                <input type="range" min={5} max={50} step={5} value={count} onChange={(e)=> setCount(Number(e.target.value))} className="flex-1 sm:w-48 accent-zinc-700 min-h-[44px]" />
                 <span className="text-[12px] text-zinc-700">{count}</span>
                 <button onClick={generate} disabled={loadingGen}
                   className={["ml-auto rounded-xl border px-3 py-1.5 text-[12px]",
@@ -228,28 +228,28 @@ export default function PromptBankPage() {
 
         {/* 查詢區 */}
         <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
-          <div className="flex items-center justify-between">
+          <div className="space-y-3">
             <div className="text-[14px] font-medium">題庫</div>
-            <div className="flex items-center gap-2 text-[12px]">
-              <select className="rounded-lg border border-zinc-300 bg-white px-2 py-1" value={qType} onChange={(e)=> { setOffset(0); setQType(e.target.value); }}>
+            <div className="flex flex-wrap items-center gap-2 text-[13px] sm:text-[12px]">
+              <select className="rounded-lg border border-zinc-300 bg-white px-2 py-2 sm:py-1 min-h-[44px] sm:min-h-0" value={qType} onChange={(e)=> { setOffset(0); setQType(e.target.value); }}>
                 <option value="">全部類型</option>
                 <option value="writing">Writing</option>
                 <option value="speaking">Speaking</option>
               </select>
-              <input className="w-40 rounded-lg border border-zinc-300 bg-white px-2 py-1" placeholder="part (task2/part2…)" value={qPart} onChange={(e)=> { setOffset(0); setQPart(e.target.value); }} />
-              <input className="w-40 rounded-lg border border-zinc-300 bg-white px-2 py-1" placeholder="topic 關鍵字" value={qTopic} onChange={(e)=> { setOffset(0); setQTopic(e.target.value); }} />
+              <input className="w-full sm:w-40 rounded-lg border border-zinc-300 bg-white px-2 py-2 sm:py-1 min-h-[44px] sm:min-h-0" placeholder="part (task2/part2...)" value={qPart} onChange={(e)=> { setOffset(0); setQPart(e.target.value); }} />
+              <input className="w-full sm:w-40 rounded-lg border border-zinc-300 bg-white px-2 py-2 sm:py-1 min-h-[44px] sm:min-h-0" placeholder="topic 關鍵字" value={qTopic} onChange={(e)=> { setOffset(0); setQTopic(e.target.value); }} />
 
-              {/* flags 篩選 */}
-              <label className="ml-2 inline-flex items-center gap-1">
-                <input type="checkbox" checked={favOnly} onChange={(e)=> { setOffset(0); setFavOnly(e.target.checked); }} />
+              {/* flags */}
+              <label className="inline-flex items-center gap-1.5 min-h-[44px]">
+                <input type="checkbox" className="w-5 h-5 sm:w-4 sm:h-4" checked={favOnly} onChange={(e)=> { setOffset(0); setFavOnly(e.target.checked); }} />
                 <span>只看收藏</span>
               </label>
-              <label className="inline-flex items-center gap-1">
-                <input type="checkbox" checked={hideSkipped} onChange={(e)=> { setOffset(0); setHideSkipped(e.target.checked); }} />
+              <label className="inline-flex items-center gap-1.5 min-h-[44px]">
+                <input type="checkbox" className="w-5 h-5 sm:w-4 sm:h-4" checked={hideSkipped} onChange={(e)=> { setOffset(0); setHideSkipped(e.target.checked); }} />
                 <span>隱藏略過</span>
               </label>
 
-              <button onClick={()=> { setOffset((o)=> o + 50); }} className="rounded-lg border border-zinc-300 bg-white px-2 py-1 disabled:opacity-50" disabled={!canLoadMore || isLoading} title={canLoadMore ? "載入更多" : "已到列表尾端"}>
+              <button onClick={()=> { setOffset((o)=> o + 50); }} className="rounded-lg border border-zinc-300 bg-white px-3 py-2 sm:py-1 min-h-[44px] sm:min-h-0 disabled:opacity-50" disabled={!canLoadMore || isLoading} title={canLoadMore ? "載入更多" : "已到列表尾端"}>
                 載入更多
               </button>
             </div>
@@ -287,24 +287,24 @@ export default function PromptBankPage() {
                     </ul>
                   )}
 
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="mt-3 space-y-2">
                     <div className="flex flex-wrap gap-1">
                       {(r.topicTags || []).map((t) => (
                         <span key={t} className="rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[11px] text-zinc-600">#{t}</span>
                       ))}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={()=> copy(r.prompt)} className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-[12px] hover:bg-zinc-50">複製題目</button>
-                      <button onClick={()=> toggleFlag(r.id, "fav")} className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-[12px] hover:bg-zinc-50">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button onClick={()=> copy(r.prompt)} className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50">複製題目</button>
+                      <button onClick={()=> toggleFlag(r.id, "fav")} className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50">
                         {r.flags?.fav ? "★ 已收藏" : "☆ 收藏"}
                       </button>
-                      <button onClick={()=> toggleFlag(r.id, "skip")} className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-[12px] hover:bg-zinc-50">
+                      <button onClick={()=> toggleFlag(r.id, "skip")} className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50">
                         {r.flags?.skip ? "已略過" : "略過"}
                       </button>
                       {r.type === "writing" ? (
-                        <Link href={`/tasks/1/writing?q=${encodeURIComponent(r.prompt)}`} className="rounded-lg border border-blue-300 bg-blue-50 px-2 py-1 text-[12px] text-blue-900 hover:bg-blue-100">用此練習</Link>
+                        <Link href={`/tasks/1/writing?q=${encodeURIComponent(r.prompt)}`} className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 min-h-[44px] flex items-center text-[13px] sm:text-[12px] text-blue-900 hover:bg-blue-100">用此練習</Link>
                       ) : (
-                        <Link href={`/tasks/1/speaking?q=${encodeURIComponent(r.prompt)}`} className="rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[12px] text-amber-900 hover:bg-amber-100">用此練習</Link>
+                        <Link href={`/tasks/1/speaking?q=${encodeURIComponent(r.prompt)}`} className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 min-h-[44px] flex items-center text-[13px] sm:text-[12px] text-amber-900 hover:bg-amber-100">用此練習</Link>
                       )}
                     </div>
                   </div>

@@ -1,0 +1,262 @@
+[
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "5.0-6.0",
+    "prompt": "Do you enjoy reading? What kind of books do you like to read?",
+    "topicTags": ["culture", "education"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "5.0-6.0",
+    "prompt": "What do you usually do in your free time? Has this changed since you were younger?",
+    "topicTags": ["society", "culture"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "5.0-6.0",
+    "prompt": "Do you prefer cooking at home or eating out? Why?",
+    "topicTags": ["health", "culture"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "6.0-7.0",
+    "prompt": "How often do you use public transport? What do you think could improve it in your city?",
+    "topicTags": ["environment", "government"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "5.0-6.0",
+    "prompt": "Do you like taking photographs? What do you usually photograph?",
+    "topicTags": ["technology", "culture"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "6.0-7.0",
+    "prompt": "What kind of music do you enjoy? Has your taste in music changed over the years?",
+    "topicTags": ["culture", "media"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "5.0-6.0",
+    "prompt": "Do you prefer shopping online or in a store? Why?",
+    "topicTags": ["technology", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "6.0-7.0",
+    "prompt": "Do you think it is important to keep up with the news? How do you usually get your news?",
+    "topicTags": ["media", "technology"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "5.0-6.0",
+    "prompt": "What is your favourite season? Why do you like it?",
+    "topicTags": ["environment", "culture"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part1",
+    "level": "6.0-7.0",
+    "prompt": "Do you think it is important to learn a second language? Why or why not?",
+    "topicTags": ["education", "culture"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "6.0-7.0",
+    "prompt": "Describe a skill you learned that you found useful. You should say:\n- what the skill is\n- when and how you learned it\n- how often you use it\nand explain why you found it useful.",
+    "topicTags": ["education", "work"],
+    "followup": ["Do you think schools should teach more practical skills?", "How has the definition of useful skills changed over time?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "7.0-8.0",
+    "prompt": "Describe a time when you had to make a difficult decision. You should say:\n- what the decision was\n- what options you had\n- how you made the decision\nand explain whether you were satisfied with the outcome.",
+    "topicTags": ["society", "work"],
+    "followup": ["Do young people make decisions differently from older people?", "Should important decisions be made quickly or slowly?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "5.0-6.0",
+    "prompt": "Describe a gift you gave to someone recently. You should say:\n- what the gift was\n- who you gave it to\n- why you chose that gift\nand explain how the person reacted.",
+    "topicTags": ["culture", "society"],
+    "followup": ["Is it better to give money or a physical gift?", "How have gift-giving traditions changed in your country?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "6.0-7.0",
+    "prompt": "Describe a time when you helped someone. You should say:\n- who you helped\n- what you helped them with\n- how you felt about helping them\nand explain what happened as a result.",
+    "topicTags": ["society", "culture"],
+    "followup": ["Do you think people are less willing to help strangers today?", "Should helping others be taught in schools?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "7.0-8.0",
+    "prompt": "Describe a piece of technology that has changed the way you work or study. You should say:\n- what the technology is\n- when you started using it\n- how you use it\nand explain how it has changed your work or study habits.",
+    "topicTags": ["technology", "education", "work"],
+    "followup": ["Do you think people rely too much on technology?", "What technology might change education in the future?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "5.0-6.0",
+    "prompt": "Describe a festival or celebration in your country that you enjoy. You should say:\n- what the festival is\n- when it takes place\n- what people do during the festival\nand explain why you enjoy it.",
+    "topicTags": ["culture", "society"],
+    "followup": ["Are traditional festivals becoming less popular?", "Should cultural festivals be promoted to tourists?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "6.0-7.0",
+    "prompt": "Describe a book or film that had a strong impact on you. You should say:\n- what the book or film was\n- what it was about\n- when you read or watched it\nand explain why it had such a strong impact on you.",
+    "topicTags": ["media", "culture", "education"],
+    "followup": ["Do films have more influence than books on young people?", "Should schools use films as educational tools?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "7.0-8.0",
+    "prompt": "Describe an environmental problem in your area. You should say:\n- what the problem is\n- what caused it\n- how it affects people\nand explain what you think should be done about it.",
+    "topicTags": ["environment", "government", "health"],
+    "followup": ["Whose responsibility is it to solve environmental problems?", "Can individuals really make a difference to the environment?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "5.0-6.0",
+    "prompt": "Describe a place in your city that you like to visit. You should say:\n- where it is\n- what you do there\n- who you go with\nand explain why you like going there.",
+    "topicTags": ["culture", "society"],
+    "followup": ["How have public spaces in cities changed over time?", "Do people need more green spaces in cities?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part2",
+    "level": "6.0-7.0",
+    "prompt": "Describe an achievement you are proud of. You should say:\n- what you achieved\n- when it happened\n- how difficult it was\nand explain why you feel proud of it.",
+    "topicTags": ["education", "work", "society"],
+    "followup": ["Is it important to celebrate achievements?", "Do people today focus too much on success?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "6.0-7.0",
+    "prompt": "Some people say that the education system in most countries needs to change. What changes do you think are necessary, and why?",
+    "topicTags": ["education", "government", "technology"],
+    "followup": ["Should students be allowed to choose all their subjects?", "How might artificial intelligence change education?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "7.0-8.0",
+    "prompt": "How do you think technology will change the way people work in the next twenty years?",
+    "topicTags": ["technology", "work", "society"],
+    "followup": ["Will some jobs disappear completely because of automation?", "How can workers prepare for a technology-driven economy?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "6.0-7.0",
+    "prompt": "Do you think governments should do more to protect the environment, or should individuals take more responsibility?",
+    "topicTags": ["environment", "government", "society"],
+    "followup": ["Can economic growth and environmental protection go together?", "What role should businesses play in protecting the environment?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "5.0-6.0",
+    "prompt": "Why do you think some people enjoy travelling to other countries? What are the benefits?",
+    "topicTags": ["culture", "education", "society"],
+    "followup": ["Is tourism always good for local communities?", "How has international travel changed people's understanding of other cultures?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "7.0-8.0",
+    "prompt": "To what extent should the media be free to report on any topic without restriction?",
+    "topicTags": ["media", "government", "society"],
+    "followup": ["How can people tell the difference between reliable and unreliable news?", "Should social media platforms be held responsible for the content users share?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "6.0-7.0",
+    "prompt": "Some people believe that competition between children at school is a good thing, while others think it puts too much pressure on them. What is your view?",
+    "topicTags": ["education", "health", "society"],
+    "followup": ["How does competition at school prepare children for adult life?", "Are there better ways to motivate students than competition?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "5.0-6.0",
+    "prompt": "What are the advantages and disadvantages of living in a large city compared to a small town?",
+    "topicTags": ["society", "environment", "work"],
+    "followup": ["Do you think more people will move to cities in the future?", "What can be done to improve life in small towns?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "7.0-8.0",
+    "prompt": "In many countries, people are living longer than ever before. What challenges does an ageing population create for society?",
+    "topicTags": ["health", "government", "society"],
+    "followup": ["Should the retirement age be raised?", "How can societies ensure that elderly people have a good quality of life?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "6.0-7.0",
+    "prompt": "Some people think that art and music should receive more government funding. Do you agree, and why?",
+    "topicTags": ["culture", "government", "media"],
+    "followup": ["Is art important for society, or is it a luxury?", "How has technology affected the way people create and consume art?"],
+    "source": "seed"
+  },
+  {
+    "type": "speaking",
+    "part": "part3",
+    "level": "5.0-6.0",
+    "prompt": "Do you think it is important for people to have a good work-life balance? Why or why not?",
+    "topicTags": ["work", "health", "society"],
+    "followup": ["What can employers do to help their staff achieve a better balance?", "How has the idea of work-life balance changed in recent years?"],
+    "source": "seed"
+  }
+]

@@ -124,35 +124,37 @@ export function LearningCalendar({ history }: Props) {
         <StatBox label="Speaking" value={String(totalSpeaking)} sub={`of ${totalSessions}`} amber />
       </div>
 
-      {/* Month labels */}
-      <div className="flex gap-1 mb-0.5 pl-0">
-        {weeks.map((_, wi) => {
-          const label = monthLabels.find((m) => m.col === wi);
-          return (
-            <div key={wi} className="w-4 shrink-0 text-[9px] text-zinc-400 font-medium leading-none truncate">
-              {label?.label ?? ''}
-            </div>
-          );
-        })}
-      </div>
+      {/* Calendar grid: 16 cols x 7 rows — scrollable on mobile */}
+      <div className="overflow-x-auto -mx-2 px-2 pb-2">
+        {/* Month labels */}
+        <div className="flex gap-1 mb-0.5 pl-0 min-w-max">
+          {weeks.map((_, wi) => {
+            const label = monthLabels.find((m) => m.col === wi);
+            return (
+              <div key={wi} className="w-4 shrink-0 text-[9px] text-zinc-400 font-medium leading-none truncate">
+                {label?.label ?? ''}
+              </div>
+            );
+          })}
+        </div>
 
-      {/* Calendar grid: 16 cols × 7 rows */}
-      <div className="flex gap-1">
-        {weeks.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-1 shrink-0">
-            {week.map((day, di) => (
-              <div
-                key={di}
-                title={day ? `${day.key}${day.w + day.s > 0 ? ` · W:${day.w} S:${day.s}` : ''}` : ''}
-                className={[
-                  'h-4 w-4 rounded-sm transition-colors',
-                  cellColor(day),
-                  day?.isToday ? 'ring-2 ring-zinc-500 ring-offset-1' : '',
-                ].join(' ')}
-              />
-            ))}
-          </div>
-        ))}
+        <div className="flex gap-1 min-w-max">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="flex flex-col gap-1 shrink-0">
+              {week.map((day, di) => (
+                <div
+                  key={di}
+                  title={day ? `${day.key}${day.w + day.s > 0 ? ` · W:${day.w} S:${day.s}` : ''}` : ''}
+                  className={[
+                    'h-4 w-4 rounded-sm transition-colors',
+                    cellColor(day),
+                    day?.isToday ? 'ring-2 ring-zinc-500 ring-offset-1' : '',
+                  ].join(' ')}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Legend */}

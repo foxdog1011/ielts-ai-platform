@@ -14,6 +14,8 @@ import { listHistory } from "@/lib/history";
 import { saveScore } from "@/lib/kv";
 import type { HistoryRecord } from "@/lib/history";
 import type { AgentContext, AgentPipelineResult } from "@/lib/agents/types";
+import { recordGamification } from "@/features/gamification/record-gamification";
+import { getUserIdFromHeaders } from "@/features/gamification/get-user-id";
 
 const Body = z.object({
   taskId: z.string().min(1),
@@ -120,6 +122,16 @@ export async function _handlePost(req: NextRequest, deps: WritingDeps): Promise<
         nextTaskRecommendation: studyPlan.nextTaskRecommendation,
         milestoneBand: studyPlan.milestoneBand,
       },
+    }).catch(() => undefined);
+
+    // Gamification: record streak + award XP (fire-and-forget, never blocks response)
+    const userId = getUserIdFromHeaders(req.headers);
+    const overallBand =
+      typeof result.band?.overall === "number" ? result.band.overall : undefined;
+    recordGamification({
+      userId,
+      examType: "writing",
+      overallBand,
     }).catch(() => undefined);
 
     return NextResponse.json({

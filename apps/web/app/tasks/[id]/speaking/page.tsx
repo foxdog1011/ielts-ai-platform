@@ -272,30 +272,30 @@ export default function SpeakingPage() {
 
   return (
     <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
-      <header className="mx-auto max-w-6xl px-6 sm:px-8 pt-8 pb-4">
-        <div className="flex items-center justify-between">
+      <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-6 sm:pt-8 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">
+            <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">
               ← 回首頁
             </Link>
             <h1 className="text-[18px] font-medium tracking-tight">Speaking（Part 2）</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
               className={[
-                'rounded-xl border px-3 py-1.5 text-[12px]',
+                'rounded-xl border px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px]',
                 loadingPrompt
                   ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400'
                   : 'border-zinc-300 bg-white hover:bg-zinc-50',
               ].join(' ')}
             >
-              {loadingPrompt ? '抽題中…' : '換一題'}
+              {loadingPrompt ? '抽題中...' : '換一題'}
             </button>
             <button
               onClick={() => resetAll(true)}
-              className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-[12px] hover:bg-zinc-50"
+              className="rounded-xl border border-zinc-300 bg-white px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50"
               title="清空錄音/稿/結果並重新開始"
             >
               開始新一輪
@@ -303,35 +303,35 @@ export default function SpeakingPage() {
             {prepMode ? (
               <button
                 onClick={cancelPrepMode}
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700 hover:bg-red-100"
+                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-red-700 hover:bg-red-100"
               >
                 取消
               </button>
             ) : recState === 'idle' ? (
               <button
                 onClick={startPrepMode}
-                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[12px] text-purple-800 hover:bg-purple-100"
+                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
                 title="1分鐘準備，時間到自動開始錄音"
               >
-                ⏱ 模擬考
+                模擬考
               </button>
             ) : null}
-            <div className="text-[11px] text-zinc-500">Task #{taskId}</div>
+            <div className="text-[12px] sm:text-[11px] text-zinc-500">Task #{taskId}</div>
           </div>
         </div>
       </header>
 
       {/* Prep countdown banner */}
       {prepMode && (
-        <div className="sticky top-0 z-20 mx-auto max-w-6xl px-6 sm:px-8 py-2 flex items-center justify-center gap-3 bg-purple-50 border-b border-purple-200">
+        <div className="sticky top-0 z-20 mx-auto max-w-6xl px-4 sm:px-8 py-3 sm:py-2 flex items-center justify-center gap-3 bg-purple-50 border-b border-purple-200">
           <span className="text-[12px] font-medium text-zinc-700">準備時間</span>
           <span className="text-[20px] font-bold tabular-nums text-purple-700">{prepMM}:{prepSS}</span>
           <span className="text-[11px] text-zinc-500">時間到自動開始錄音</span>
         </div>
       )}
 
-      <section className="mx-auto max-w-6xl px-6 sm:px-8 pb-12">
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="mx-auto max-w-6xl px-4 sm:px-8 pb-12">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
           {/* 左側：題目 + 錄音 */}
           <div className="space-y-6">
             {/* 題目卡 */}
@@ -358,11 +358,11 @@ export default function SpeakingPage() {
             </div>
 
             {/* 錄音卡 */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
+            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between">
-                <div className="text-[14px] font-medium">兩分鐘口說</div>
-                <div className="rounded-lg border border-zinc-200 px-2 py-1 text-[12px] text-zinc-700">
-                  計時 {mm}:{ss}
+                <div className="text-[15px] sm:text-[14px] font-medium">兩分鐘口說</div>
+                <div className="rounded-lg border border-zinc-200 px-3 py-1.5 text-[13px] sm:text-[12px] text-zinc-700 font-medium tabular-nums">
+                  {mm}:{ss}
                 </div>
               </div>
 
@@ -370,21 +370,21 @@ export default function SpeakingPage() {
                 {recState !== 'recording' ? (
                   <button
                     onClick={startRec}
-                    className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 hover:bg-amber-100"
+                    className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm text-amber-900 hover:bg-amber-100"
                   >
                     開始錄音
                   </button>
                 ) : (
                   <button
                     onClick={stopRec}
-                    className="rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900 hover:bg-red-100"
+                    className="rounded-xl border border-red-300 bg-red-50 px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm text-red-900 hover:bg-red-100"
                   >
                     停止
                   </button>
                 )}
                 <button
                   onClick={() => resetAll(true)}
-                  className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm hover:bg-zinc-50"
+                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm hover:bg-zinc-50"
                 >
                   重新開始
                 </button>
@@ -393,9 +393,9 @@ export default function SpeakingPage() {
 
               {/* 人工逐字稿（可選） */}
               <div className="mt-4">
-                <div className="text-[12px] text-zinc-500">若想跳過自動轉寫，可直接貼上逐字稿：</div>
+                <div className="text-[13px] sm:text-[12px] text-zinc-500">若想跳過自動轉寫，可直接貼上逐字稿：</div>
                 <textarea
-                  className="mt-2 w-full min-h-[100px] rounded-xl border border-zinc-200 bg-white p-3 text-[13px] leading-relaxed outline-none focus:ring-2 focus:ring-zinc-300"
+                  className="mt-2 w-full min-h-[100px] rounded-xl border border-zinc-200 bg-white p-3 text-[14px] sm:text-[13px] leading-relaxed outline-none focus:ring-2 focus:ring-zinc-300"
                   placeholder="（可選）在此輸入口說逐字稿..."
                   value={manualTranscript}
                   onChange={(e) => setManualTranscript(e.target.value)}
@@ -407,13 +407,13 @@ export default function SpeakingPage() {
                   onClick={submit}
                   disabled={submitting || (!audioUrl && !manualTranscript.trim()) || !prompt}
                   className={[
-                    'rounded-xl border px-4 py-2 text-sm transition-colors',
+                    'rounded-xl border px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm transition-colors w-full sm:w-auto',
                     submitting
                       ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400'
                       : 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100',
                   ].join(' ')}
                 >
-                  {submitting ? '分析中…' : '送出並取得評分'}
+                  {submitting ? '分析中...' : '送出並取得評分'}
                 </button>
               </div>
             </div>

@@ -11,6 +11,12 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 
+/** Usage stats persisted per prompt. */
+export type PromptUsage = {
+  usedCount: number;
+  lastUsedTs: number;
+};
+
 /** 題型 / 分項型別 */
 export type PromptType = "writing" | "speaking";
 export type WritingPart = "task1-ac" | "task1-gt" | "task2";
@@ -44,6 +50,7 @@ const LIST_KEY = (type: PromptType, part: WritingPart | SpeakingPart) =>
   `prompts:v1:${type}:${part}`;
 const HASH_SET_KEY = `prompts:v1:hashes`;
 const FLAG_KEY = (id: string) => `prompts:v1:flags:${id}`;
+const USAGE_KEY = (id: string) => `prompts:v1:usage:${id}`;
 
 /* -------------------- Utils -------------------- */
 function makeId(): string {
@@ -186,6 +193,30 @@ export async function enrichWithFlags(rows: PromptItem[]): Promise<PromptItemWit
   return out;
 }
 
+/* -------------------- Usage Tracking -------------------- */
+
+/** Read usage stats for a single prompt. */
+export async function getPromptUsage(id: string): Promise<PromptUsage> {
+  noStore();
+  const usage = await kvGetJSON<PromptUsage>(USAGE_KEY(id));
+  return usage ?? { usedCount: 0, lastUsedTs: 0 };
+}
+
+/**
+ * Mark a prompt as used — increments usedCount and sets lastUsedTs to now.
+ * Returns the updated usage object (immutable — a new object is always returned).
+ */
+export async function markPromptUsed(promptId: string): Promise<PromptUsage> {
+  noStore();
+  const prev = await getPromptUsage(promptId);
+  const next: PromptUsage = {
+    usedCount: prev.usedCount + 1,
+    lastUsedTs: Date.now(),
+  };
+  await kvSetJSON(USAGE_KEY(promptId), next);
+  return next;
+}
+
 /* -------------------- Seeds -------------------- */
 
 const SEED_PROMPTS: PromptDraft[] = [
@@ -237,45 +268,94 @@ const SEED_PROMPTS: PromptDraft[] = [
   },
 ];
 
-/** 嘗試從 public/prompts/*.json 讀檔種子；若無檔案就用內建 SEED_PROMPTS */
+/** Valid part values used to coerce raw JSON entries. */
+const VALID_WRITING_PARTS: readonly string[] = ["task1-ac", "task1-gt", "task2"];
+const VALID_SPEAKING_PARTS: readonly string[] = ["part1", "part2", "part3"];
+
+function coercePart(
+  raw: unknown,
+  type: PromptType,
+): WritingPart | SpeakingPart | undefined {
+  const s = String(raw ?? "").trim();
+  if (type === "writing" && VALID_WRITING_PARTS.includes(s)) return s as WritingPart;
+  if (type === "speaking" && VALID_SPEAKING_PARTS.includes(s)) return s as SpeakingPart;
+  return undefined;
+}
+
+/**
+ * Load seed prompts from public/prompts/*.json files.
+ * Falls back to the hard-coded SEED_PROMPTS when no files are found.
+ *
+ * Supported files:
+ *   - writing-seeds.json  (all writing parts)
+ *   - speaking-seeds.json (all speaking parts)
+ *   - Legacy: writing_task2.json, speaking_part2.json
+ */
 export async function seedFromFiles(): Promise<PromptItem[]> {
   noStore();
 
   const drafts: PromptDraft[] = [];
-  const tries: Array<{ file: string; type: PromptType; part: WritingPart | SpeakingPart }> = [
-    { file: "writing_task2.json", type: "writing", part: "task2" },
-    { file: "speaking_part2.json", type: "speaking", part: "part2" },
+
+  /** Seed-file descriptors: new multi-part files + legacy single-part files. */
+  const seedFiles: Array<{
+    file: string;
+    defaultType: PromptType;
+    defaultPart?: WritingPart | SpeakingPart;
+  }> = [
+    { file: "writing-seeds.json", defaultType: "writing" },
+    { file: "speaking-seeds.json", defaultType: "speaking" },
+    // Legacy filenames for backward compatibility
+    { file: "writing_task2.json", defaultType: "writing", defaultPart: "task2" },
+    { file: "speaking_part2.json", defaultType: "speaking", defaultPart: "part2" },
   ];
 
-  for (const t of tries) {
-    const p = path.join(process.cwd(), "public", "prompts", t.file);
+  for (const sf of seedFiles) {
+    const p = path.join(process.cwd(), "public", "prompts", sf.file);
     try {
       const buf = await fs.readFile(p, "utf8");
-      const json = JSON.parse(buf);
-      const arr = Array.isArray(json?.items) ? json.items : Array.isArray(json) ? json : [];
+      const json: unknown = JSON.parse(buf);
+      const arr: unknown[] = Array.isArray((json as any)?.items)
+        ? (json as any).items
+        : Array.isArray(json)
+          ? (json as unknown[])
+          : [];
+
       for (const raw of arr) {
+        const r = raw as Record<string, unknown>;
+        const type: PromptType =
+          r.type === "writing" || r.type === "speaking"
+            ? (r.type as PromptType)
+            : sf.defaultType;
+        const part = coercePart(r.part, type) ?? sf.defaultPart;
+        if (!part) continue; // skip entries without a determinable part
+
         drafts.push({
-          type: t.type,
-          part: t.part,
-          prompt: String(raw?.prompt || "").trim(),
-          topicTags: normalizeTags(raw?.topicTags),
-          followup: Array.isArray(raw?.followup)
-            ? raw.followup.map((q: any) => String(q || "").trim()).filter(Boolean).slice(0, 6)
+          type,
+          part,
+          prompt: String(r.prompt ?? "").trim(),
+          topicTags: normalizeTags(r.topicTags),
+          followup: Array.isArray(r.followup)
+            ? (r.followup as unknown[])
+                .map((q) => String(q ?? "").trim())
+                .filter(Boolean)
+                .slice(0, 6)
             : undefined,
-          level: (["5.0-6.0", "6.0-7.0", "7.0-8.0"] as PromptLevel[]).includes(raw?.level)
-            ? (raw.level as PromptLevel)
+          level: (["5.0-6.0", "6.0-7.0", "7.0-8.0"] as PromptLevel[]).includes(
+            r.level as PromptLevel,
+          )
+            ? (r.level as PromptLevel)
             : undefined,
           source: "seed",
         });
       }
     } catch {
-      // 檔案不存在或壞掉就忽略
+      // File missing or malformed — skip silently.
     }
   }
 
-  // 若沒讀到任何檔案，就用內建 SEED_PROMPTS
-  const toSave = drafts.length ? drafts : SEED_PROMPTS;
-  if (!toSave.length) return [];
+  // Fall back to hard-coded seeds when no files were loaded.
+  const toSave = drafts.length > 0 ? drafts : SEED_PROMPTS;
+  if (toSave.length === 0) return [];
 
   const saved = await savePromptsUniq(toSave);
   return saved;

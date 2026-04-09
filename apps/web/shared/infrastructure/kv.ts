@@ -152,6 +152,20 @@ export async function kvSetHas(key: string, member: string): Promise<boolean> {
 }
 
 /* ------------------------------------------------------------------ */
+/* User-scoped key helpers                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Namespace a KV key under a specific user.
+ * Use this to scope per-user data (history, scores, preferences).
+ *
+ * @example userKey("abc123", "scores:v1:writing") => "u:abc123:scores:v1:writing"
+ */
+export function userKey(userId: string, key: string): string {
+  return `u:${userId}:${key}`;
+}
+
+/* ------------------------------------------------------------------ */
 /* Health info                                                         */
 /* ------------------------------------------------------------------ */
 

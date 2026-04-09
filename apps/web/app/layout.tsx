@@ -2,10 +2,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
 
-// 如果你有用 next/font，保留/調整你的字體設定；以下是範例：
 import { Inter } from "next/font/google";
 import { Noto_Sans_TC } from "next/font/google";
 import { ToastProvider } from "../components/Toast";
+import { SessionProvider } from "@/features/auth/components/SessionProvider";
 
 export const metadata: Metadata = {
   title: "IELTS AI",
@@ -24,11 +24,31 @@ const notoSansTC = Noto_Sans_TC({
   display: "swap",
 });
 
+// Inline script to prevent flash of wrong theme on load.
+// Reads localStorage and system preference, applies `dark` class before paint.
+const themeInitScript = `
+(function(){
+  try {
+    var s = localStorage.getItem('theme');
+    var d = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (d) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  } catch(e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-Hant" className={`${inter.variable} ${notoSansTC.variable}`}>
+    <html lang="zh-Hant" className={`${inter.variable} ${notoSansTC.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="font-brand antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <SessionProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </SessionProvider>
       </body>
     </html>
   );

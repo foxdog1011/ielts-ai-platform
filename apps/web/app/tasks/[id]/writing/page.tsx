@@ -236,19 +236,19 @@ export default function WritingTaskPage() {
 
   return (
     <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
-      <header className="mx-auto max-w-6xl px-6 sm:px-8 pt-8 pb-4">
-        <div className="flex items-center justify-between">
+      <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-6 sm:pt-8 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800">← 回首頁</Link>
+            <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">← 回首頁</Link>
             <h1 className="text-[18px] font-medium tracking-tight">Writing Task 2</h1>
             <MlStatusBadge />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
               className={[
-                'rounded-xl border px-3 py-1.5 text-[12px]',
+                'rounded-xl border px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px]',
                 loadingPrompt ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400' : 'border-zinc-300 bg-white hover:bg-zinc-50'
               ].join(' ')}
             >
@@ -256,7 +256,7 @@ export default function WritingTaskPage() {
             </button>
             <button
               onClick={() => resetAttempt(true)}
-              className="rounded-xl border border-zinc-300 bg-white px-3 py-1.5 text-[12px] hover:bg-zinc-50"
+              className="rounded-xl border border-zinc-300 bg-white px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50"
               title="清空草稿並重新開始一次"
             >
               開始新一輪
@@ -264,20 +264,20 @@ export default function WritingTaskPage() {
             {examMode ? (
               <button
                 onClick={cancelExamMode}
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700 hover:bg-red-100"
+                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-red-700 hover:bg-red-100"
               >
                 取消模擬考
               </button>
             ) : (
               <button
                 onClick={startExamMode}
-                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[12px] text-purple-800 hover:bg-purple-100"
+                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
                 title="40 分鐘限時，時間到自動送出"
               >
-                ⏱ 模擬考
+                模擬考
               </button>
             )}
-            <div className="text-[11px] text-zinc-500">Task #{taskId}</div>
+            <div className="text-[12px] sm:text-[11px] text-zinc-500">Task #{taskId}</div>
           </div>
         </div>
       </header>
@@ -285,7 +285,7 @@ export default function WritingTaskPage() {
       {/* Exam mode countdown banner */}
       {examMode && (
         <div className={[
-          'sticky top-0 z-20 mx-auto max-w-6xl px-6 sm:px-8 py-2',
+          'sticky top-0 z-20 mx-auto max-w-6xl px-4 sm:px-8 py-3 sm:py-2',
           'flex items-center justify-center gap-3',
           examUrgent ? 'bg-red-50 border-b border-red-200' : 'bg-purple-50 border-b border-purple-200',
         ].join(' ')}>
@@ -300,8 +300,8 @@ export default function WritingTaskPage() {
         </div>
       )}
 
-      <section className="mx-auto max-w-6xl px-6 sm:px-8 pb-12">
-        <div className="grid gap-6 lg:grid-cols-[1.6fr_0.4fr]">
+      <section className="mx-auto max-w-6xl px-4 sm:px-8 pb-12">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.6fr_0.4fr]">
           {/* 左側 */}
           <div className="space-y-6">
             {/* 題目卡 */}
@@ -354,29 +354,32 @@ export default function WritingTaskPage() {
             </div>
 
             {/* 編輯器 */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3 text-[12px] text-zinc-500">
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1">
-                    時間 <span className="font-medium text-zinc-800">{minutes}:{sec.toString().padStart(2, '0')}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1">
-                    字數 <span className="font-medium text-zinc-800">{words}</span>
-                  </span>
-                  <span className="hidden sm:inline text-zinc-500">（{wordHint}）</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-[12px] text-zinc-500">目標字數</label>
-                  <input type="range" min={180} max={350} step={10}
-                    value={targetWords} onChange={(e) => { dirtyRef.current = true; setTargetWords(Number(e.target.value)); }}
-                    className="w-52 accent-zinc-700" />
-                  <span className="text-[12px] text-zinc-700">{targetWords} words</span>
+            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
+              {/* Word count and timer bar - sticky on mobile for visibility during writing */}
+              <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-white/95 backdrop-blur border-b border-zinc-100 mb-3 sm:relative sm:border-b-0 sm:mb-0 sm:bg-transparent sm:backdrop-blur-none">
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 text-[13px] sm:text-[12px] text-zinc-500">
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1.5 sm:py-1">
+                      時間 <span className="font-medium text-zinc-800">{minutes}:{sec.toString().padStart(2, '0')}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1.5 sm:py-1">
+                      字數 <span className="font-medium text-zinc-800">{words}</span>
+                    </span>
+                    <span className="hidden sm:inline text-zinc-500">({wordHint})</span>
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-[13px] sm:text-[12px] text-zinc-500 shrink-0">目標字數</label>
+                    <input type="range" min={180} max={350} step={10}
+                      value={targetWords} onChange={(e) => { dirtyRef.current = true; setTargetWords(Number(e.target.value)); }}
+                      className="flex-1 sm:w-52 accent-zinc-700 min-h-[44px]" />
+                    <span className="text-[13px] sm:text-[12px] text-zinc-700 shrink-0">{targetWords}</span>
+                  </div>
                 </div>
               </div>
 
               <textarea
-                className="mt-3 w-full min-h-[300px] rounded-xl border border-zinc-200 bg-white p-4 text-[14px] leading-[1.75] outline-none focus:ring-2 focus:ring-zinc-300"
-                placeholder="在此撰寫或貼上你的作文……"
+                className="mt-3 w-full min-h-[250px] sm:min-h-[300px] rounded-xl border border-zinc-200 bg-white p-3 sm:p-4 text-[15px] sm:text-[14px] leading-[1.75] outline-none focus:ring-2 focus:ring-zinc-300"
+                placeholder="在此撰寫或貼上你的作文..."
                 value={essay}
                 onChange={(e) => { dirtyRef.current = true; setEssay(e.target.value); }}
               />
@@ -385,12 +388,12 @@ export default function WritingTaskPage() {
                 {savedAt ? <>已自動保存 {new Date(savedAt).toLocaleTimeString()}</> : '將自動保存草稿'}
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-[12px] text-zinc-500">快捷鍵：Ctrl/Cmd+Enter 送出，Esc 清空結果預覽</div>
-                <div className="flex items-center gap-2">
+              <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="hidden sm:block text-[12px] text-zinc-500">快捷鍵：Ctrl/Cmd+Enter 送出，Esc 清空結果預覽</div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => { setEssay(''); localStorage.removeItem(draftKey(taskId)); setSeconds(0); setResult(undefined); }}
-                    className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm hover:bg-zinc-50"
+                    className="rounded-xl border border-zinc-300 bg-white px-3 py-2.5 sm:py-2 text-[14px] sm:text-sm min-h-[44px] hover:bg-zinc-50 flex-1 sm:flex-none"
                   >
                     清空草稿
                   </button>
@@ -398,13 +401,13 @@ export default function WritingTaskPage() {
                     onClick={onSubmit}
                     disabled={submitting || essay.trim().length < 30 || !prompt}
                     className={[
-                      'rounded-xl border px-4 py-2 text-sm transition-colors',
+                      'rounded-xl border px-4 py-2.5 sm:py-2 text-[14px] sm:text-sm min-h-[44px] transition-colors flex-1 sm:flex-none',
                       submitting
                         ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400'
                         : 'border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100',
                     ].join(' ')}
                   >
-                    {submitting ? '分析中…' : '送出並取得評分'}
+                    {submitting ? '分析中...' : '送出並取得評分'}
                   </button>
                 </div>
               </div>
@@ -425,7 +428,7 @@ export default function WritingTaskPage() {
                   <CopyBtn text={result?.rewritten || ''} label="複製優化稿" onDone={() => toast.push('已複製優化稿')} />
                 </div>
               </div>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
+              <div className="mt-3 grid gap-4 grid-cols-1 md:grid-cols-2">
                 <div>
                   <div className="text-[12px] text-zinc-500 mb-1">
                     你的原文

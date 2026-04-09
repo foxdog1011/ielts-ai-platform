@@ -1,0 +1,252 @@
+[
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "6.0-7.0",
+    "prompt": "Some people believe that universities should focus on providing academic knowledge, while others think they should prepare students for the job market. Discuss both views and give your own opinion.",
+    "topicTags": ["education", "work", "society"],
+    "followup": ["How can universities balance theoretical and practical education?", "Should employers be responsible for training their staff?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "7.0-8.0",
+    "prompt": "In many countries, the gap between the rich and the poor is widening. What problems does this cause, and what measures can governments take to address this issue?",
+    "topicTags": ["society", "government", "work"],
+    "followup": ["Is economic inequality inevitable in a capitalist society?", "How does wealth inequality affect social mobility?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "5.0-6.0",
+    "prompt": "Some people think that children should spend more time studying, while others believe they need more free time to play. Discuss both views and give your opinion.",
+    "topicTags": ["education", "health", "society"],
+    "followup": ["What role does play have in child development?", "How much homework is appropriate for primary school children?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "6.0-7.0",
+    "prompt": "The use of social media has increased significantly among young people. Do the advantages of social media outweigh the disadvantages?",
+    "topicTags": ["technology", "media", "society"],
+    "followup": ["Should social media platforms be regulated by governments?", "How does social media affect mental health?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "7.0-8.0",
+    "prompt": "Some people argue that scientific research should be carried out and controlled by governments rather than private companies. To what extent do you agree or disagree?",
+    "topicTags": ["technology", "government", "society"],
+    "followup": ["What are the risks of privately funded research?", "Should all scientific findings be publicly accessible?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "6.0-7.0",
+    "prompt": "In many cities, air pollution and traffic congestion are serious problems. What are the causes of this, and what solutions can be proposed?",
+    "topicTags": ["environment", "government", "health"],
+    "followup": ["Should private cars be banned in city centres?", "How effective are congestion charges?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "5.0-6.0",
+    "prompt": "Some people think that the best way to stay healthy is to exercise every day, while others believe that a balanced diet is more important. Discuss both views and give your opinion.",
+    "topicTags": ["health", "society"],
+    "followup": ["What prevents people from leading healthy lifestyles?", "Should governments promote healthy living through advertising?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "7.0-8.0",
+    "prompt": "Some people believe that cultural traditions are destroyed when they are used as money-making attractions for tourists. To what extent do you agree or disagree?",
+    "topicTags": ["culture", "society", "work"],
+    "followup": ["How can tourism benefit local cultures?", "Should governments protect cultural heritage sites from commercial development?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "6.0-7.0",
+    "prompt": "Many people now work from home rather than travelling to work each day. Do the advantages of working from home outweigh the disadvantages?",
+    "topicTags": ["work", "technology", "society"],
+    "followup": ["How does remote work affect employee productivity?", "What are the long-term impacts of remote work on city infrastructure?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task2",
+    "level": "5.0-6.0",
+    "prompt": "In some countries, it is now illegal to smoke in public places. Some people think this is a good rule, while others disagree. Discuss both views and give your own opinion.",
+    "topicTags": ["health", "government", "society"],
+    "followup": ["Should governments have the right to restrict personal choices?", "What other public health measures have been successful?"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "6.0-7.0",
+    "prompt": "The bar chart below shows the percentage of the population living in urban areas in four different countries between 1970 and 2020, with projections to 2050. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["society", "government"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "5.0-6.0",
+    "prompt": "The line graph below shows the number of international tourists visiting three different countries from 2005 to 2020. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["culture", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "7.0-8.0",
+    "prompt": "The pie charts below compare household expenditure in a European country in 1990 and 2020. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["society", "work"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "6.0-7.0",
+    "prompt": "The table below gives information about the underground railway systems in six major cities. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["technology", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "7.0-8.0",
+    "prompt": "The diagram below shows the process of producing chocolate from cacao beans. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["technology", "work"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "6.0-7.0",
+    "prompt": "The two maps below show an island before and after the construction of tourist facilities. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["environment", "culture"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "5.0-6.0",
+    "prompt": "The bar chart below shows the average monthly rainfall and temperature in a coastal city throughout the year. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["environment", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "7.0-8.0",
+    "prompt": "The flow chart below illustrates the stages involved in recycling plastic bottles. Summarise the information by selecting and reporting the main features.",
+    "topicTags": ["environment", "technology"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "6.0-7.0",
+    "prompt": "The graph below shows the proportion of the population aged 65 and over in three countries between 1940 and 2040. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["health", "society", "government"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-ac",
+    "level": "5.0-6.0",
+    "prompt": "The chart below shows the number of men and women in further education in three different countries in 2020. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
+    "topicTags": ["education", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "6.0-7.0",
+    "prompt": "You recently attended a training course for your job. Write a letter to your manager. In your letter:\n- describe the course you attended\n- explain what you learned from the course\n- suggest how the company could benefit from this training.",
+    "topicTags": ["work", "education"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "5.0-6.0",
+    "prompt": "You have a friend who lives in another city. You would like to visit them during the holidays. Write a letter to your friend. In your letter:\n- explain why you want to visit\n- suggest some dates for the visit\n- ask what activities you could do together.",
+    "topicTags": ["culture", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "7.0-8.0",
+    "prompt": "You are unhappy about a plan to build a new shopping centre in your neighbourhood. Write a letter to the local council. In your letter:\n- say how you learned about the plan\n- explain the problems the shopping centre would cause\n- suggest what should be done instead.",
+    "topicTags": ["environment", "government", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "6.0-7.0",
+    "prompt": "You recently bought a product online and it was damaged when it arrived. Write a letter to the company. In your letter:\n- describe what you bought\n- explain what was wrong with it\n- say what you would like the company to do.",
+    "topicTags": ["technology", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "5.0-6.0",
+    "prompt": "A friend has asked you to recommend a restaurant. Write a letter to your friend. In your letter:\n- say which restaurant you recommend\n- describe the food and atmosphere\n- explain why you think your friend would enjoy it.",
+    "topicTags": ["culture", "health"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "7.0-8.0",
+    "prompt": "You work for a company and have noticed that some office equipment is not working properly. Write a letter to the office manager. In your letter:\n- describe the problems with the equipment\n- explain how this affects your work\n- suggest what should be done about it.",
+    "topicTags": ["work", "technology"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "6.0-7.0",
+    "prompt": "You recently moved to a new city and want to join a local sports club. Write a letter to the club secretary. In your letter:\n- introduce yourself and explain your situation\n- ask about the types of activities available\n- enquire about the membership fees and schedule.",
+    "topicTags": ["health", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "5.0-6.0",
+    "prompt": "Your English-speaking neighbour has been making a lot of noise at night. Write a letter to your neighbour. In your letter:\n- introduce yourself\n- describe the problem\n- suggest a solution.",
+    "topicTags": ["society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "7.0-8.0",
+    "prompt": "You have been offered a place at a university, but you cannot start at the date they have given you. Write a letter to the university admissions office. In your letter:\n- explain your situation\n- describe what you would like to happen\n- say why this would be beneficial for both you and the university.",
+    "topicTags": ["education", "society"],
+    "source": "seed"
+  },
+  {
+    "type": "writing",
+    "part": "task1-gt",
+    "level": "6.0-7.0",
+    "prompt": "You recently took a short course at a college and were very satisfied with it. Write a letter to a friend. In your letter:\n- describe the course\n- explain what you enjoyed most about it\n- recommend the course to your friend.",
+    "topicTags": ["education", "work"],
+    "source": "seed"
+  }
+]

@@ -8,6 +8,8 @@ export {
   enrichWithFlags,
   hashPrompt,
   seedFromFiles,
+  getPromptUsage,
+  markPromptUsed,
 } from "@/lib/promptStore";
 export type {
   PromptType,
@@ -18,4 +20,5 @@ export type {
   PromptDraft,
   PromptFlags,
   PromptItemWithFlags,
+  PromptUsage,
 } from "@/lib/promptStore";

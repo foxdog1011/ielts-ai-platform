@@ -35,12 +35,12 @@ export default function NotebookPage() {
 
   return (
     <main className="min-h-dvh bg-white text-zinc-900 font-brand">
-      <header className="mx-auto max-w-3xl px-6 pt-8 pb-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      <header className="mx-auto max-w-3xl px-4 sm:px-6 pt-6 sm:pt-8 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800 transition-colors">← 回首頁</Link>
+            <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 transition-colors min-h-[44px] flex items-center">← 回首頁</Link>
             <h1 className="text-[18px] font-semibold tracking-tight">錯題本</h1>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500">{entries.length} 條</span>
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[12px] sm:text-[11px] text-zinc-500">{entries.length} 條</span>
           </div>
           <div className="flex items-center gap-1.5">
             {(["all", "writing", "speaking"] as const).map((t) => (
@@ -48,7 +48,7 @@ export default function NotebookPage() {
                 key={t}
                 onClick={() => setFilter(t)}
                 className={[
-                  "rounded-xl border px-3 py-1.5 text-[12px] font-medium transition-colors",
+                  "rounded-xl border px-3 py-2 sm:py-1.5 min-h-[44px] text-[13px] sm:text-[12px] font-medium transition-colors",
                   filter === t
                     ? "border-zinc-900 bg-zinc-900 text-white"
                     : "border-zinc-200 bg-white hover:bg-zinc-50",
@@ -61,7 +61,7 @@ export default function NotebookPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-6 pb-12 space-y-3">
+      <section className="mx-auto max-w-3xl px-4 sm:px-6 pb-12 space-y-3">
         {loading && (
           <div className="space-y-2">
             {[1,2,3].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-zinc-100" />)}
@@ -104,14 +104,14 @@ function NotebookCard({ entry, onDelete }: { entry: NotebookEntry; onDelete: (id
         </div>
         <button
           onClick={() => onDelete(entry.id)}
-          className="text-[11px] text-zinc-400 hover:text-red-500 transition-colors shrink-0"
+          className="w-11 h-11 sm:w-auto sm:h-auto flex items-center justify-center text-[14px] sm:text-[11px] text-zinc-400 hover:text-red-500 transition-colors shrink-0"
           title="刪除"
         >
           ✕
         </button>
       </div>
 
-      <div className="mt-2 text-[13px] leading-relaxed text-zinc-800">
+      <div className="mt-2 text-[14px] sm:text-[13px] leading-relaxed text-zinc-800">
         {entry.explanation}
       </div>
     </div>

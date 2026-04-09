@@ -28,28 +28,28 @@ export default async function HistoryPage({ searchParams }: PageProps) {
   const speakingRows = data.filter((r) => r.type === "speaking");
 
   return (
-    <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
-      <header className="mx-auto max-w-6xl px-6 sm:px-8 pt-8 pb-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+    <main className="relative min-h-dvh bg-[var(--bg)] text-[var(--text)] font-brand">
+      <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-6 sm:pt-8 pb-4 animate-fade-up">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800 transition-colors">← 回首頁</Link>
-            <h1 className="text-[18px] font-semibold tracking-tight">歷史紀錄</h1>
-            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] text-zinc-500">{data.length} 筆</span>
+            <Link href="/" className="text-[14px] sm:text-[13px] text-[var(--text-muted)] hover:text-[var(--color-primary)] theme-transition min-h-[44px] flex items-center">&larr; Home</Link>
+            <h1 className="text-[18px] font-semibold tracking-tight">History</h1>
+            <span className="rounded-full bg-[var(--color-primary-50)] text-[var(--color-primary)] px-2.5 py-0.5 text-[12px] sm:text-[11px] font-medium">{data.length} records</span>
           </div>
           <div className="flex items-center gap-2">
             <TypeTabs active={type} />
             <Link
               href={`/api/export?type=${type ?? "all"}`}
-              className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-[12px] hover:bg-zinc-50 transition-colors"
-              title="匯出 CSV"
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 sm:py-1.5 min-h-[44px] flex items-center text-[13px] sm:text-[12px] hover:border-[var(--color-primary-200)] hover:text-[var(--color-primary)] theme-transition"
+              title="Export CSV"
             >
-              ↓ CSV
+              CSV
             </Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 sm:px-8 pb-12 space-y-6">
+      <section className="mx-auto max-w-6xl px-4 sm:px-8 pb-12 space-y-6">
 
         {/* Stats strip */}
         {data.length > 0 && (
@@ -72,15 +72,15 @@ export default async function HistoryPage({ searchParams }: PageProps) {
         )}
 
         {data.length === 0 ? (
-          <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-8 text-center shadow-sm">
+          <div className="glass-card p-8 text-center animate-fade-up">
             <div className="text-[32px] mb-3">📝</div>
-            <div className="text-[15px] text-zinc-600">尚無歷史紀錄</div>
+            <div className="text-[15px] text-[var(--text-secondary)]">No history yet</div>
             <div className="mt-4 flex items-center justify-center gap-3">
-              <Link className="rounded-xl border border-blue-300 bg-blue-50 px-4 py-2 text-[13px] text-blue-900 hover:bg-blue-100 transition-colors" href="/tasks/1/writing">
-                寫一篇 Writing
+              <Link className="btn-primary" href="/tasks/1/writing">
+                Start Writing
               </Link>
-              <Link className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-[13px] text-amber-900 hover:bg-amber-100 transition-colors" href="/tasks/1/speaking">
-                錄一段 Speaking
+              <Link className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-[13px] text-amber-900 hover:bg-amber-100 theme-transition" href="/tasks/1/speaking">
+                Start Speaking
               </Link>
             </div>
           </div>
@@ -97,27 +97,27 @@ export default async function HistoryPage({ searchParams }: PageProps) {
           <Link
             href={`/history${buildQS({ type, page: Math.max(1, page - 1) })}`}
             className={[
-              "rounded-lg border px-4 py-2 text-[12px] font-medium transition-colors",
+              "rounded-xl border px-4 py-2.5 sm:py-2 min-h-[44px] text-[13px] sm:text-[12px] font-medium theme-transition",
               page <= 1
-                ? "pointer-events-none cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-400"
-                : "border-zinc-300 bg-white hover:bg-zinc-50",
+                ? "pointer-events-none cursor-not-allowed border-[var(--border)] bg-[var(--surface)] text-[var(--text-faint)]"
+                : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--color-primary-200)] hover:text-[var(--color-primary)]",
             ].join(" ")}
             aria-disabled={page <= 1}
           >
-            ← 上一頁
+            &larr; Previous
           </Link>
-          <div className="text-[12px] text-zinc-500">Page {page}</div>
+          <div className="text-[12px] text-[var(--text-muted)]">Page {page}</div>
           <Link
             href={`/history${buildQS({ type, page: hasNext ? page + 1 : page })}`}
             className={[
-              "rounded-lg border px-4 py-2 text-[12px] font-medium transition-colors",
+              "rounded-xl border px-4 py-2.5 sm:py-2 min-h-[44px] text-[13px] sm:text-[12px] font-medium theme-transition",
               hasNext
-                ? "border-zinc-300 bg-white hover:bg-zinc-50"
-                : "pointer-events-none cursor-not-allowed border-zinc-200 bg-zinc-50 text-zinc-400",
+                ? "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--color-primary-200)] hover:text-[var(--color-primary)]"
+                : "pointer-events-none cursor-not-allowed border-[var(--border)] bg-[var(--surface)] text-[var(--text-faint)]",
             ].join(" ")}
             aria-disabled={!hasNext}
           >
-            下一頁 →
+            Next &rarr;
           </Link>
         </div>
       </section>
@@ -129,7 +129,7 @@ export default async function HistoryPage({ searchParams }: PageProps) {
 
 function TypeTabs({ active }: { active?: "writing" | "speaking" }) {
   const tabs = [
-    { key: undefined as undefined | "writing" | "speaking", label: "全部" },
+    { key: undefined as undefined | "writing" | "speaking", label: "All" },
     { key: "writing" as const, label: "Writing" },
     { key: "speaking" as const, label: "Speaking" },
   ];
@@ -142,10 +142,10 @@ function TypeTabs({ active }: { active?: "writing" | "speaking" }) {
             key={`${t.label}-${String(t.key)}`}
             href={`/history${buildQS({ type: t.key, page: 1 })}`}
             className={[
-              "rounded-xl border px-3 py-1.5 text-[12px] font-medium transition-colors",
+              "rounded-xl border px-3 py-2 sm:py-1.5 min-h-[44px] flex items-center text-[13px] sm:text-[12px] font-medium theme-transition",
               selected
-                ? "border-zinc-900 bg-zinc-900 text-white"
-                : "border-zinc-200 bg-white hover:bg-zinc-50",
+                ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--color-primary-200)] hover:text-[var(--color-primary)]",
             ].join(" ")}
             aria-current={selected ? "page" : undefined}
           >
@@ -168,16 +168,16 @@ function StatCard({
   color: "blue" | "amber";
   suffix?: string;
 }) {
-  const accent = color === "blue"
-    ? "text-blue-800 bg-blue-50 border-blue-200"
-    : "text-amber-800 bg-amber-50 border-amber-200";
-  const labelColor = color === "blue" ? "text-blue-600" : "text-amber-600";
+  const isBlue = color === "blue";
   return (
-    <div className={`rounded-xl border px-4 py-3.5 ${accent}`}>
-      <div className={`text-[12px] font-medium ${labelColor}`}>{label}</div>
-      <div className="mt-1 text-[22px] font-bold">
+    <div className={[
+      "glass-card-sm px-4 py-3.5 theme-transition",
+      isBlue ? "hover:border-[var(--color-primary-200)]" : "hover:border-amber-300",
+    ].join(" ")}>
+      <div className={`text-[12px] font-medium ${isBlue ? "text-[var(--color-primary)]" : "text-amber-500"}`}>{label}</div>
+      <div className="mt-1 text-[22px] font-bold text-[var(--text)] animate-score-pop">
         {value}
-        {suffix && <span className="text-[13px] font-normal opacity-70 ml-1">{suffix}</span>}
+        {suffix && <span className="text-[13px] font-normal text-[var(--text-muted)] ml-1">{suffix}</span>}
       </div>
     </div>
   );
@@ -194,39 +194,39 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
     const overall = w.band?.overall;
     const pct = overall ? Math.min(100, (overall / 9) * 100) : 0;
     return (
-      <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
+      <div className="glass-card p-4 hover-lift hover:border-[var(--color-primary-200)] theme-transition">
         <div className="flex items-start gap-3">
           {/* Number */}
-          <div className="shrink-0 w-7 text-[11px] text-zinc-400 pt-1 text-right font-mono">#{index}</div>
+          <div className="shrink-0 w-7 text-[11px] text-[var(--text-faint)] pt-1 text-right font-mono">#{index}</div>
 
           {/* Type badge */}
-          <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-100 px-2.5 py-1.5 text-[12px] font-bold text-blue-700">W</div>
+          <div className="shrink-0 rounded-lg border border-[var(--color-primary-200)] bg-[var(--color-primary-50)] px-2.5 py-1.5 text-[12px] font-bold text-[var(--color-primary)]">W</div>
 
           <div className="flex-1 min-w-0">
             {/* Prompt */}
             {w.prompt && (
-              <p className="line-clamp-2 text-[13px] text-zinc-800 font-medium leading-snug">{w.prompt}</p>
+              <p className="line-clamp-2 text-[13px] text-[var(--text)] font-medium leading-snug">{w.prompt}</p>
             )}
 
             {/* Band scores */}
             <div className="mt-2.5 flex items-center gap-4 flex-wrap">
               {/* Overall */}
               {overall != null && (
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[26px] font-bold text-zinc-900 leading-none">
+                <div className="flex items-baseline gap-1 animate-score-pop">
+                  <span className="text-[26px] font-bold text-[var(--text)] leading-none">
                     {overall.toFixed(1).replace(/\.0$/, "")}
                   </span>
-                  <span className="text-[12px] text-zinc-400 font-normal">/9</span>
+                  <span className="text-[12px] text-[var(--text-faint)] font-normal">/9</span>
                 </div>
               )}
 
               {/* Progress bar */}
               {overall != null && (
                 <div className="flex-1 min-w-[80px] max-w-[140px]">
-                  <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
+                  <div className="h-2 rounded-full bg-[var(--border-subtle)] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-blue-400 transition-all"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full animate-progress-fill"
+                      style={{ width: `${pct}%`, backgroundColor: "var(--color-primary)" }}
                     />
                   </div>
                 </div>
@@ -243,9 +243,9 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
                   v != null ? (
                     <span
                       key={k}
-                      className="rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1 text-[12px] text-zinc-600"
+                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[12px] text-[var(--text-secondary)]"
                     >
-                      {k} <span className="font-bold text-zinc-800">{v.toFixed(1).replace(/\.0$/, "")}</span>
+                      {k} <span className="font-bold text-[var(--text)]">{v.toFixed(1).replace(/\.0$/, "")}</span>
                     </span>
                   ) : null,
                 )}
@@ -253,10 +253,10 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
             </div>
 
             {/* Meta row */}
-            <div className="mt-2 flex items-center gap-3 text-[12px] text-zinc-500">
+            <div className="mt-2 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
               {when && <span>{when}</span>}
-              {w.words && <span className="text-zinc-400">{w.words} words</span>}
-              {w.durationSec && <span className="text-zinc-400">{fmtSec(w.durationSec)}</span>}
+              {w.words && <span className="text-[var(--text-faint)]">{w.words} words</span>}
+              {w.durationSec && <span className="text-[var(--text-faint)]">{fmtSec(w.durationSec)}</span>}
             </div>
           </div>
         </div>
@@ -269,32 +269,32 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
   const overall = s.band?.overall ?? s.band?.content;
   const pct = overall ? Math.min(100, (overall / 9) * 100) : 0;
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-amber-200 transition-all">
+    <div className="glass-card p-4 hover-lift hover:border-amber-300 theme-transition">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 w-7 text-[11px] text-zinc-400 pt-1 text-right font-mono">#{index}</div>
-        <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-100 px-2.5 py-1.5 text-[12px] font-bold text-amber-700">S</div>
+        <div className="shrink-0 w-7 text-[11px] text-[var(--text-faint)] pt-1 text-right font-mono">#{index}</div>
+        <div className="shrink-0 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[12px] font-bold text-amber-700">S</div>
 
         <div className="flex-1 min-w-0">
           {s.prompt && (
-            <p className="line-clamp-2 text-[13px] text-zinc-800 font-medium leading-snug">{s.prompt}</p>
+            <p className="line-clamp-2 text-[13px] text-[var(--text)] font-medium leading-snug">{s.prompt}</p>
           )}
 
           <div className="mt-2.5 flex items-center gap-4 flex-wrap">
             {overall != null && (
-              <div className="flex items-baseline gap-1">
-                <span className="text-[26px] font-bold text-zinc-900 leading-none">
+              <div className="flex items-baseline gap-1 animate-score-pop">
+                <span className="text-[26px] font-bold text-[var(--text)] leading-none">
                   {overall.toFixed(1).replace(/\.0$/, "")}
                 </span>
-                <span className="text-[12px] text-zinc-400 font-normal">/9</span>
+                <span className="text-[12px] text-[var(--text-faint)] font-normal">/9</span>
               </div>
             )}
 
             {overall != null && (
               <div className="flex-1 min-w-[80px] max-w-[140px]">
-                <div className="h-2 rounded-full bg-zinc-100 overflow-hidden">
+                <div className="h-2 rounded-full bg-[var(--border-subtle)] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-amber-400 transition-all"
-                    style={{ width: `${pct}%` }}
+                    className="h-full rounded-full animate-progress-fill"
+                    style={{ width: `${pct}%`, backgroundColor: "#f59e0b" }}
                   />
                 </div>
               </div>
@@ -311,18 +311,18 @@ function HistoryCard({ rec, index }: { rec: HistoryRecord; index: number }) {
                 v != null ? (
                   <span
                     key={k}
-                    className="rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1 text-[12px] text-zinc-600"
+                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[12px] text-[var(--text-secondary)]"
                   >
-                    {k} <span className="font-bold text-zinc-800">{v.toFixed(1).replace(/\.0$/, "")}</span>
+                    {k} <span className="font-bold text-[var(--text)]">{v.toFixed(1).replace(/\.0$/, "")}</span>
                   </span>
                 ) : null,
               )}
             </div>
           </div>
 
-          <div className="mt-2 flex items-center gap-3 text-[12px] text-zinc-500">
+          <div className="mt-2 flex items-center gap-3 text-[12px] text-[var(--text-muted)]">
             {when && <span>{when}</span>}
-            {s.durationSec && <span className="text-zinc-400">{fmtSec(s.durationSec)}</span>}
+            {s.durationSec && <span className="text-[var(--text-faint)]">{fmtSec(s.durationSec)}</span>}
           </div>
         </div>
       </div>

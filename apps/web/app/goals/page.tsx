@@ -64,14 +64,14 @@ export default function GoalsPage() {
 
   return (
     <main className="min-h-dvh bg-white text-zinc-900 font-brand">
-      <header className="mx-auto max-w-2xl px-6 pt-8 pb-4">
+      <header className="mx-auto max-w-2xl px-4 sm:px-6 pt-6 sm:pt-8 pb-4">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-[13px] text-zinc-500 hover:text-zinc-800 transition-colors">← 回首頁</Link>
+          <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 transition-colors min-h-[44px] flex items-center">← 回首頁</Link>
           <h1 className="text-[18px] font-semibold tracking-tight">練習目標</h1>
         </div>
       </header>
 
-      <section className="mx-auto max-w-2xl px-6 pb-12 space-y-6">
+      <section className="mx-auto max-w-2xl px-4 sm:px-6 pb-12 space-y-6">
 
         {/* This week's progress */}
         <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-6 shadow-sm">
@@ -145,7 +145,7 @@ export default function GoalsPage() {
                   onClick={save}
                   disabled={saving}
                   className={[
-                    "ml-auto rounded-xl border px-4 py-2 text-[13px] font-medium transition-colors",
+                    "ml-auto rounded-xl border px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-[13px] font-medium transition-colors",
                     saved
                       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
                       : saving
@@ -233,24 +233,24 @@ function GoalInput({
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <label className="text-[13px] text-zinc-700 flex-1">{label}</label>
+      <label className="text-[14px] sm:text-[13px] text-zinc-700 flex-1">{label}</label>
       <div className="flex items-center gap-2">
         <button
           onClick={() => onChange(Math.max(min, value - step))}
-          className="w-7 h-7 rounded-lg border border-zinc-200 bg-white text-[14px] hover:bg-zinc-50 transition-colors flex items-center justify-center"
+          className="w-11 h-11 sm:w-8 sm:h-8 rounded-lg border border-zinc-200 bg-white text-[16px] sm:text-[14px] hover:bg-zinc-50 transition-colors flex items-center justify-center"
         >
           −
         </button>
-        <span className="w-12 text-center text-[14px] font-semibold text-zinc-900">
+        <span className="w-12 text-center text-[15px] sm:text-[14px] font-semibold text-zinc-900">
           {value}
         </span>
         <button
           onClick={() => onChange(Math.min(max, value + step))}
-          className="w-7 h-7 rounded-lg border border-zinc-200 bg-white text-[14px] hover:bg-zinc-50 transition-colors flex items-center justify-center"
+          className="w-11 h-11 sm:w-8 sm:h-8 rounded-lg border border-zinc-200 bg-white text-[16px] sm:text-[14px] hover:bg-zinc-50 transition-colors flex items-center justify-center"
         >
           +
         </button>
-        {suffix && <span className="text-[12px] text-zinc-400 w-8">{suffix}</span>}
+        {suffix && <span className="text-[13px] sm:text-[12px] text-zinc-400 w-8">{suffix}</span>}
       </div>
     </div>
   );

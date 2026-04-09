@@ -6,6 +6,14 @@ import { SparkLine } from "@/components/SparkLine";
 import { buildWeeklySummaryPayload, type ExamTypeSummary } from "@/lib/weeklySummary";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LearningCalendar } from "@/components/LearningCalendar";
+import { MobileNav } from "@/components/MobileNav";
+import { getStreak } from "@/features/gamification/streak-service";
+import { getXP } from "@/features/gamification/xp-service";
+import { getDailyChallenge } from "@/features/gamification/daily-challenge";
+import { getUserId } from "@/features/gamification/get-user-id";
+import { StreakBadge } from "@/features/gamification/components/StreakBadge";
+import { XPBar } from "@/features/gamification/components/XPBar";
+import { DailyChallenge as DailyChallengeCard } from "@/features/gamification/components/DailyChallenge";
 
 export default async function HomePage() {
   noStore();
@@ -20,6 +28,19 @@ export default async function HomePage() {
   ]);
 
   const weeklySummary = buildWeeklySummaryPayload({ writingHistory, speakingHistory });
+
+  // Gamification data (fetched in parallel, errors silently absorbed)
+  const userId = await getUserId().catch(() => "anonymous");
+  const [streakInfo, xpInfo, dailyChallenge] = await Promise.all([
+    getStreak(userId).catch(() => ({ currentStreak: 0, longestStreak: 0, lastPracticeDate: "", streakFreezes: 0 })),
+    getXP(userId).catch(() => ({ totalXP: 0, level: 0, xpToNextLevel: 100 })),
+    getDailyChallenge(userId).catch(() => ({
+      date: new Date().toISOString().slice(0, 10),
+      prompt: "Some people believe that universities should focus on providing academic skills. Discuss both views.",
+      type: "writing" as const,
+      completed: false,
+    })),
+  ]);
 
   const latestWOverall =
     typeof latestW?.band === "object" && typeof (latestW as any)?.band?.overall === "number"
@@ -59,103 +80,126 @@ export default async function HomePage() {
       : null;
 
   return (
-    <main className="relative min-h-dvh bg-[#f7f6f3] text-zinc-900 font-brand">
+    <main className="relative min-h-dvh bg-[var(--bg)] text-[var(--text)] font-brand">
       <BackgroundDecor />
 
       {/* Header */}
-      <header className="mx-auto max-w-6xl px-6 sm:px-8 pt-8 pb-5">
+      <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-8 pb-5 animate-fade-up">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center shadow-sm">
-              <span className="text-white text-[11px] font-bold">AI</span>
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center shadow-md">
+              <span className="text-white text-[11px] font-bold tracking-wide">AI</span>
             </div>
             <h1 className="text-[17px] font-semibold tracking-tight">IELTS AI</h1>
           </div>
 
-          <nav className="flex items-center gap-1.5 text-[12px]">
+          <nav className="hidden sm:flex items-center gap-1.5 text-[13px] sm:text-[12px]">
             {[
-              { href: "/history", label: "歷史紀錄" },
-              { href: "/prompts", label: "題庫" },
-              { href: "/goals", label: "練習目標" },
-              { href: "/notebook", label: "錯題本" },
-              { href: "/calibration", label: "校準曲線" },
+              { href: "/history", label: "History" },
+              { href: "/prompts", label: "Prompts" },
+              { href: "/goals", label: "Goals" },
+              { href: "/notebook", label: "Notebook" },
+              { href: "/calibration", label: "Calibration" },
             ].map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
-                className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 hover:bg-zinc-50 hover:border-zinc-300 transition-colors"
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 min-h-[44px] flex items-center hover:border-[var(--color-primary-200)] hover:text-[var(--color-primary)] theme-transition"
               >
                 {label}
               </Link>
             ))}
+            <StreakBadge initialStreak={streakInfo} />
             <ThemeToggle />
           </nav>
+          {/* Mobile nav */}
+          <div className="flex sm:hidden items-center gap-2">
+            <StreakBadge initialStreak={streakInfo} />
+            <ThemeToggle />
+            <MobileNav />
+          </div>
         </div>
       </header>
 
-      {/* Hero section */}
-      <section className="mx-auto max-w-6xl px-6 sm:px-8">
-        <div className="rounded-3xl border border-zinc-200/60 bg-white/90 p-8 sm:p-12 shadow-sm backdrop-blur">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
+      {/* Hero section with gradient */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-8 animate-fade-up animate-fade-up-1">
+        <div className="hero-gradient rounded-3xl p-8 sm:p-12 shadow-lg relative overflow-hidden">
+          {/* Floating decorative orbs */}
+          <div aria-hidden className="absolute top-6 right-12 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+          <div aria-hidden className="absolute bottom-4 left-8 w-24 h-24 rounded-full bg-white/5 blur-xl" />
+
+          <div className="relative flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h2 className="text-[26px] sm:text-[30px] leading-[1.2] font-semibold tracking-tight">
+              <h2 className="text-[26px] sm:text-[32px] leading-[1.2] font-bold tracking-tight text-white">
                 Less Distraction. More Expression.
               </h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-zinc-600 max-w-xl">
-                專為 IELTS Writing 與 Speaking 打造的 AI 練習平台，即時評分、雷達分析、進步趨勢一目了然。
+              <p className="mt-3 text-[15px] leading-relaxed text-white/80 max-w-xl">
+                AI-powered IELTS Writing &amp; Speaking platform with instant scoring, radar analysis, and progress tracking.
               </p>
             </div>
 
             {/* Stats strip */}
             {totalSessions > 0 && (
-              <div className="flex items-center gap-4">
-                <StatPill label="練習次數" value={String(totalSessions)} />
-                {avgBand && <StatPill label="近期平均" value={`${avgBand} /9`} accent />}
+              <div className="flex items-center gap-3">
+                <HeroStat label="Sessions" value={String(totalSessions)} />
+                {avgBand && <HeroStat label="Avg Band" value={`${avgBand}`} accent />}
               </div>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Main Content Area */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-8 -mt-6 relative z-10">
+        <div className="glass-card p-8 sm:p-10 animate-fade-up animate-fade-up-2">
+
+          {/* Gamification strip: XP bar + Daily challenge */}
+          <div className="mb-8 grid gap-4 sm:grid-cols-2">
+            <XPBar initialXP={xpInfo} />
+            <DailyChallengeCard challenge={dailyChallenge} />
+          </div>
 
           {/* Main action cards */}
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <PrimaryCard
               title="Writing Task 2"
-              desc="即時分項評分、雷達圖分析、逐段建議、優化版本"
+              desc="Instant sub-score grading, radar chart analysis, paragraph-level feedback"
               href="/tasks/1/writing"
               tone="brand"
               meta={fmtLatest(latestWOverall)}
               metaHref="/history?type=writing"
               trend={writingTrend}
               actions={[
-                { label: "開始 Writing", href: "/tasks/1/writing" },
-                { label: "抽一題", href: "/tasks/1/writing?q=random", subtle: true },
+                { label: "Start Writing", href: "/tasks/1/writing" },
+                { label: "Random", href: "/tasks/1/writing?q=random", subtle: true },
               ]}
             />
 
             <PrimaryCard
-              title="Speaking (Part 2)"
-              desc="兩分鐘限時錄音、轉文字、雷達圖、口語反饋"
+              title="Speaking Part 2"
+              desc="2-minute timed recording, speech-to-text, radar chart, spoken feedback"
               href="/tasks/1/speaking"
               tone="speak"
               meta={fmtLatest(latestSOverall)}
               metaHref="/history?type=speaking"
               trend={speakingTrend}
               actions={[
-                { label: "開始 Speaking", href: "/tasks/1/speaking" },
-                { label: "抽一題", href: "/tasks/1/speaking?q=random", subtle: true },
+                { label: "Start Speaking", href: "/tasks/1/speaking" },
+                { label: "Random", href: "/tasks/1/speaking?q=random", subtle: true },
               ]}
             />
           </div>
 
           {/* Recent sessions */}
           {recentHistory.length > 0 && (
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-semibold text-zinc-700">最近練習</h3>
-                <Link href="/history" className="text-[12px] text-zinc-400 hover:text-zinc-700 transition-colors">
-                  查看全部 →
+            <div className="mt-10 animate-fade-up animate-fade-up-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[14px] font-semibold text-[var(--text)]">Recent Sessions</h3>
+                <Link href="/history" className="text-[12px] text-[var(--text-muted)] hover:text-[var(--color-primary)] theme-transition">
+                  View all &rarr;
                 </Link>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {recentHistory.slice(0, 6).map((rec, i) => (
                   <RecentCard key={i} rec={rec} />
                 ))}
@@ -165,18 +209,18 @@ export default async function HomePage() {
 
           {/* Learning calendar */}
           {allHistory.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-8 animate-fade-up animate-fade-up-4">
               <LearningCalendar history={allHistory} />
             </div>
           )}
 
           {/* Weekly summary */}
           {(weeklySummary.writing != null || weeklySummary.speaking != null) && (
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[13px] font-semibold text-zinc-700">本週進度</h3>
+            <div className="mt-10 animate-fade-up animate-fade-up-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[14px] font-semibold text-[var(--text)]">This Week</h3>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {weeklySummary.writing != null && <WeeklySummaryCard summary={weeklySummary.writing} />}
                 {weeklySummary.speaking != null && <WeeklySummaryCard summary={weeklySummary.speaking} />}
               </div>
@@ -184,15 +228,19 @@ export default async function HomePage() {
           )}
 
           {/* Feature pills */}
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+          <div className="mt-10 grid gap-4 grid-cols-1 sm:grid-cols-3 animate-fade-up animate-fade-up-5">
             {[
-              { t: "真考向度評分", d: "依 IELTS 四大構面評分：Task, Coherence, Lexical, Grammar" },
-              { t: "雷達圖分析", d: "視覺化各維度強弱，一眼找出最需要改進的方向" },
-              { t: "可比對的進步", d: "保存每次結果形成趨勢，聚焦高影響錯誤" },
+              { icon: "🎯", t: "IELTS-Aligned Scoring", d: "Graded across 4 dimensions: Task, Coherence, Lexical, Grammar" },
+              { icon: "📊", t: "Radar Analysis", d: "Visualize strengths and weaknesses at a glance for targeted improvement" },
+              { icon: "📈", t: "Track Progress", d: "Every session saved as a trend point. Focus on high-impact errors" },
             ].map((it) => (
-              <div key={it.t} className="rounded-xl border border-zinc-200 bg-white/70 p-4 hover:border-zinc-300 transition-colors">
-                <div className="text-[13px] font-semibold text-zinc-900">{it.t}</div>
-                <div className="mt-1 text-[12px] leading-relaxed text-zinc-500">{it.d}</div>
+              <div
+                key={it.t}
+                className="glass-card-sm p-5 hover-lift theme-transition group"
+              >
+                <div className="text-[24px] mb-2 group-hover:animate-score-pop">{it.icon}</div>
+                <div className="text-[13px] font-semibold text-[var(--text)]">{it.t}</div>
+                <div className="mt-1.5 text-[12px] leading-relaxed text-[var(--text-muted)]">{it.d}</div>
               </div>
             ))}
           </div>
@@ -200,8 +248,8 @@ export default async function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="mx-auto max-w-6xl px-6 sm:px-8 py-10">
-        <p className="text-[12px] text-zinc-400">© {new Date().getFullYear()} IELTS AI · Powered by GPT-4o / o3-mini</p>
+      <footer className="mx-auto max-w-6xl px-4 sm:px-8 py-10">
+        <p className="text-[12px] text-[var(--text-faint)]">&copy; {new Date().getFullYear()} IELTS AI &middot; Powered by GPT-4o / o3-mini</p>
       </footer>
     </main>
   );
@@ -218,9 +266,9 @@ function pickSpeakingOverall(rec?: HistoryRecord): number | undefined {
 }
 
 function fmtLatest(n?: number) {
-  if (n == null || Number.isNaN(Number(n))) return "尚未有紀錄";
+  if (n == null || Number.isNaN(Number(n))) return "No records yet";
   const s = Number(n).toFixed(1).replace(/\.0$/, "");
-  return `最近：${s} /9`;
+  return `Latest: ${s} /9`;
 }
 
 function fmtDate(rec: HistoryRecord) {
@@ -232,11 +280,30 @@ function fmtDate(rec: HistoryRecord) {
 
 /* ---------------- components ---------------- */
 
+function HeroStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className={[
+      "rounded-xl px-4 py-2.5 text-center backdrop-blur-sm",
+      accent
+        ? "bg-white/20 border border-white/30"
+        : "bg-white/10 border border-white/20",
+    ].join(" ")}>
+      <div className="text-[20px] font-bold text-white">{value}</div>
+      <div className="text-[11px] text-white/70 mt-0.5">{label}</div>
+    </div>
+  );
+}
+
 function StatPill({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className={`rounded-xl border px-3 py-2 text-center ${accent ? "border-blue-200 bg-blue-50" : "border-zinc-200 bg-white"}`}>
-      <div className={`text-[18px] font-bold ${accent ? "text-blue-700" : "text-zinc-900"}`}>{value}</div>
-      <div className="text-[11px] text-zinc-500 mt-0.5">{label}</div>
+    <div className={[
+      "rounded-xl border px-3 py-2 text-center theme-transition",
+      accent
+        ? "border-[var(--color-primary-200)] bg-[var(--color-primary-50)]"
+        : "border-[var(--border)] bg-[var(--surface)]",
+    ].join(" ")}>
+      <div className={`text-[18px] font-bold ${accent ? "text-[var(--color-primary)]" : "text-[var(--text)]"}`}>{value}</div>
+      <div className="text-[11px] text-[var(--text-muted)] mt-0.5">{label}</div>
     </div>
   );
 }
@@ -244,24 +311,33 @@ function StatPill({ label, value, accent }: { label: string; value: string; acce
 function RecentCard({ rec }: { rec: HistoryRecord }) {
   const overall = (rec as any).band?.overall ?? (rec as any).band?.content;
   const isWriting = rec.type === "writing";
-  const accent = isWriting ? "blue" : "amber";
-  const bandColor = isWriting ? "#3b82f6" : "#f59e0b";
   const pct = overall ? Math.min(100, (overall / 9) * 100) : 0;
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white/70 px-3 py-2.5 flex items-center gap-3 hover:border-zinc-300 transition-colors">
-      <div className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-semibold ${isWriting ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+    <div className="glass-card-sm px-4 py-3 flex items-center gap-3 hover-lift theme-transition">
+      <div className={[
+        "shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold border",
+        isWriting
+          ? "bg-[var(--color-primary-50)] text-[var(--color-primary)] border-[var(--color-primary-200)]"
+          : "bg-amber-50 text-amber-700 border-amber-200",
+      ].join(" ")}>
         {isWriting ? "W" : "S"}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <span className="text-[12px] font-semibold text-zinc-900">
-            {overall != null ? `Band ${Number(overall).toFixed(1).replace(/\.0$/, "")}` : "—"}
+          <span className="text-[12px] font-semibold text-[var(--text)]">
+            {overall != null ? `Band ${Number(overall).toFixed(1).replace(/\.0$/, "")}` : "\u2014"}
           </span>
-          <span className="text-[11px] text-zinc-400">{fmtDate(rec)}</span>
+          <span className="text-[11px] text-[var(--text-faint)]">{fmtDate(rec)}</span>
         </div>
-        <div className="mt-1 h-1 w-full rounded-full bg-zinc-100 overflow-hidden">
-          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: bandColor }} />
+        <div className="mt-1.5 h-1.5 w-full rounded-full bg-[var(--border-subtle)] overflow-hidden">
+          <div
+            className="h-full rounded-full animate-progress-fill"
+            style={{
+              width: `${pct}%`,
+              backgroundColor: isWriting ? "var(--color-primary)" : "#f59e0b",
+            }}
+          />
         </div>
       </div>
     </div>
@@ -281,14 +357,14 @@ function PrimaryCard(props: {
   const isBlue = props.tone === "brand";
   const palette = isBlue
     ? {
-        band: "from-blue-500/70 via-sky-400/60 to-blue-500/70",
-        dot: "bg-blue-500/20",
-        ring: "ring-blue-300/40 hover:ring-blue-400/50",
-        sparkColor: "#3b82f6",
-        action: "border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100",
+        band: "from-[var(--color-primary)]/60 via-[var(--color-primary-light)]/50 to-[var(--color-primary)]/60",
+        dot: "bg-[var(--color-primary)]/20",
+        ring: "ring-[var(--color-primary-200)] hover:ring-[var(--color-primary)]/40",
+        sparkColor: "var(--color-primary)",
+        action: "border-[var(--color-primary-200)] bg-[var(--color-primary-50)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-100)]",
       }
     : {
-        band: "from-amber-500/70 via-orange-400/60 to-amber-500/70",
+        band: "from-amber-500/60 via-orange-400/50 to-amber-500/60",
         dot: "bg-amber-500/20",
         ring: "ring-amber-300/40 hover:ring-amber-400/50",
         sparkColor: "#f59e0b",
@@ -298,48 +374,47 @@ function PrimaryCard(props: {
   return (
     <div
       className={[
-        "relative overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 p-6 sm:p-7 shadow-sm backdrop-blur",
-        "ring-1 ring-inset transition-[transform,box-shadow] duration-200 will-change-transform",
-        "hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.06)]",
+        "relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-6 sm:p-7 shadow-sm backdrop-blur",
+        "ring-1 ring-inset hover-lift theme-transition",
         palette.ring,
       ].join(" ")}
     >
       {/* Decorative stripe */}
       <div
         aria-hidden
-        className={["absolute -left-8 top-0 h-full w-24 -skew-x-[14deg] opacity-90 bg-gradient-to-b", palette.band].join(" ")}
+        className={["absolute -left-8 top-0 h-full w-24 -skew-x-[14deg] opacity-80 bg-gradient-to-b", palette.band].join(" ")}
       />
       <div className="relative ml-6 sm:ml-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-inset ring-white/60 backdrop-blur bg-white/60">
+            <div className="h-10 w-10 shrink-0 rounded-xl ring-1 ring-inset ring-white/60 backdrop-blur bg-[var(--surface-overlay)]">
               <div className={`h-full w-full rounded-xl ${palette.dot}`} />
             </div>
             <div>
-              <h3 className="text-[17px] font-semibold tracking-tight">{props.title}</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-zinc-500">{props.desc}</p>
+              <h3 className="text-[17px] font-semibold tracking-tight text-[var(--text)]">{props.title}</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-[var(--text-muted)]">{props.desc}</p>
             </div>
           </div>
-          <Link href={props.href} className="ml-auto hidden text-zinc-400 hover:text-zinc-700 sm:block" aria-label={`前往 ${props.title}`}>→</Link>
+          <Link href={props.href} className="ml-auto hidden text-[var(--text-faint)] hover:text-[var(--color-primary)] sm:block theme-transition" aria-label={`Go to ${props.title}`}>&rarr;</Link>
         </div>
 
         {/* Trend sparkline */}
         {props.trend && props.trend.length >= 2 && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-[11px] text-zinc-400">趨勢</span>
+            <span className="text-[11px] text-[var(--text-faint)]">Trend</span>
             <SparkLine values={props.trend} width={100} height={28} color={palette.sparkColor} />
-            <span className="text-[11px] text-zinc-500">
+            <span className="text-[11px] text-[var(--text-muted)]">
               {props.trend[props.trend.length - 1].toFixed(1).replace(/\.0$/, "")} /9
             </span>
           </div>
         )}
 
         {/* meta + actions */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           {props.meta && (
             <Link
               href={props.metaHref || "#"}
-              className="inline-flex items-center rounded-lg border border-zinc-200 bg-white/70 px-2 py-1 text-[12px] text-zinc-600 hover:border-zinc-300 transition-colors"
+              className="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--surface-overlay)] px-2 py-1 text-[12px] text-[var(--text-secondary)] hover:border-[var(--color-primary-200)] theme-transition"
             >
               {props.meta}
             </Link>
@@ -350,8 +425,10 @@ function PrimaryCard(props: {
                 key={a.href + a.label}
                 href={a.href}
                 className={[
-                  "rounded-xl border px-3 py-1.5 text-[12px] font-medium transition-colors",
-                  a.subtle ? "border-zinc-300 bg-white hover:bg-zinc-50" : palette.action,
+                  "rounded-xl border px-3.5 py-2 text-[12px] font-medium theme-transition",
+                  a.subtle
+                    ? "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] hover:border-[var(--color-primary-200)]"
+                    : palette.action,
                 ].join(" ")}
               >
                 {a.label}
@@ -366,73 +443,73 @@ function PrimaryCard(props: {
 
 function WeeklySummaryCard({ summary }: { summary: ExamTypeSummary }) {
   const isWriting = summary.examType === "writing";
-  const accent = isWriting ? "blue" : "amber";
   const trendIcon: Record<string, string> = {
-    improving: "↑",
-    stable: "→",
-    declining: "↓",
-    first_session: "★",
-    insufficient_data: "—",
+    improving: "\u2191",
+    stable: "\u2192",
+    declining: "\u2193",
+    first_session: "\u2605",
+    insufficient_data: "\u2014",
   };
   const trendColor: Record<string, string> = {
-    improving: "text-emerald-600",
-    stable: "text-zinc-500",
-    declining: "text-red-500",
-    first_session: "text-blue-500",
-    insufficient_data: "text-zinc-400",
+    improving: "text-[var(--color-success)]",
+    stable: "text-[var(--text-muted)]",
+    declining: "text-[var(--color-error)]",
+    first_session: "text-[var(--color-primary)]",
+    insufficient_data: "text-[var(--text-faint)]",
   };
   const urgencyBadge: Record<string, string> = {
-    urgent: "bg-red-50 text-red-700 border-red-200",
-    normal: "bg-zinc-50 text-zinc-600 border-zinc-200",
-    maintenance: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    urgent: "bg-[var(--color-error-light)] text-[var(--color-error)] border-[var(--color-error)]/20",
+    normal: "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border)]",
+    maintenance: "bg-[var(--color-success-light)] text-[var(--color-success-dark)] border-[var(--color-success)]/20",
   };
   const urgencyLabel: Record<string, string> = {
-    urgent: "需加強",
-    normal: "穩定",
-    maintenance: "保持",
+    urgent: "Needs Work",
+    normal: "Steady",
+    maintenance: "On Track",
   };
-  const borderColor = isWriting ? "border-blue-100" : "border-amber-100";
-  const headerColor = isWriting ? "text-blue-700" : "text-amber-700";
 
   return (
-    <div className={`rounded-xl border ${borderColor} bg-white/80 p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className={`text-[12px] font-semibold ${headerColor}`}>
+    <div className={[
+      "glass-card-sm p-5 theme-transition",
+      isWriting ? "hover:border-[var(--color-primary-200)]" : "hover:border-amber-300",
+    ].join(" ")}>
+      <div className="flex items-center justify-between mb-3">
+        <span className={`text-[13px] font-semibold ${isWriting ? "text-[var(--color-primary)]" : "text-amber-500"}`}>
           {isWriting ? "Writing" : "Speaking"}
         </span>
-        <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${urgencyBadge[summary.urgency]}`}>
+        <span className={`rounded-md border px-2 py-0.5 text-[10px] font-medium ${urgencyBadge[summary.urgency]}`}>
           {urgencyLabel[summary.urgency]}
         </span>
       </div>
       <div className="flex items-baseline gap-2">
         {summary.latestBand != null ? (
           <>
-            <span className="text-[22px] font-bold text-zinc-900">
+            <span className="text-[24px] font-bold text-[var(--text)] animate-score-pop">
               {summary.latestBand.toFixed(1).replace(/\.0$/, "")}
             </span>
-            <span className="text-[11px] text-zinc-400">/9</span>
+            <span className="text-[11px] text-[var(--text-faint)]">/9</span>
           </>
         ) : (
-          <span className="text-[14px] text-zinc-400">尚無紀錄</span>
+          <span className="text-[14px] text-[var(--text-muted)]">No records yet</span>
         )}
         {summary.trend !== "insufficient_data" && (
-          <span className={`text-[13px] font-semibold ${trendColor[summary.trend]}`}>
+          <span className={`text-[14px] font-semibold ${trendColor[summary.trend]}`}>
             {trendIcon[summary.trend]}
           </span>
         )}
       </div>
-      <div className="mt-2 flex items-center gap-3 text-[11px] text-zinc-500">
-        <span>本週 {summary.sessionCount} 次</span>
-        {summary.avgBand != null && <span>均分 {summary.avgBand}</span>}
+      <div className="mt-2.5 flex items-center gap-3 text-[11px] text-[var(--text-muted)]">
+        <span>This week: {summary.sessionCount}</span>
+        {summary.avgBand != null && <span>Avg: {summary.avgBand}</span>}
         {summary.bandDelta != null && summary.bandDelta !== 0 && (
-          <span className={summary.bandDelta > 0 ? "text-emerald-600" : "text-red-500"}>
+          <span className={summary.bandDelta > 0 ? "text-[var(--color-success)]" : "text-[var(--color-error)]"}>
             {summary.bandDelta > 0 ? "+" : ""}{summary.bandDelta}
           </span>
         )}
       </div>
       {summary.persistentWeaknesses.length > 0 && (
-        <div className="mt-2 text-[11px] text-zinc-500">
-          待加強：{summary.persistentWeaknesses.slice(0, 2).join("、")}
+        <div className="mt-2 text-[11px] text-[var(--text-muted)]">
+          Focus: {summary.persistentWeaknesses.slice(0, 2).join(", ")}
         </div>
       )}
     </div>
@@ -442,34 +519,37 @@ function WeeklySummaryCard({ summary }: { summary: ExamTypeSummary }) {
 function BackgroundDecor() {
   return (
     <>
+      {/* Soft radial gradients */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
         style={{
           backgroundImage:
-            "radial-gradient(60% 40% at 30% -10%, rgba(9,9,11,0.06), transparent 60%), radial-gradient(50% 35% at 80% 0%, rgba(24,24,27,0.05), transparent 65%)",
+            "radial-gradient(60% 40% at 30% -10%, rgba(74,144,217,0.08), transparent 60%), radial-gradient(50% 35% at 80% 0%, rgba(74,144,217,0.05), transparent 65%)",
         }}
       />
+      {/* Subtle dot grid */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-40 dark:opacity-10"
         style={{
           backgroundImage:
-            "radial-gradient(#d4d4d8 1px, transparent 1px), radial-gradient(#e4e4e7 1px, transparent 1px)",
-          backgroundSize: "22px 22px, 44px 44px",
-          backgroundPosition: "0 0, 11px 11px",
-          maskImage: "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)",
+            "radial-gradient(var(--text-faint) 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+          maskImage: "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
         }}
       />
+      {/* Blue orb */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-24 -left-24 h-[320px] w-[320px] -z-10 rounded-3xl blur-2xl"
-        style={{ background: "radial-gradient(closest-side, rgba(59,130,246,0.16), transparent 75%)" }}
+        className="pointer-events-none absolute -top-24 -left-24 h-[320px] w-[320px] -z-10 rounded-3xl blur-3xl"
+        style={{ background: "radial-gradient(closest-side, rgba(74,144,217,0.15), transparent 75%)" }}
       />
+      {/* Warm orb */}
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-28 -right-24 h-[300px] w-[300px] -z-10 rounded-3xl blur-2xl"
-        style={{ background: "radial-gradient(closest-side, rgba(245,158,11,0.14), transparent 75%)" }}
+        className="pointer-events-none absolute -bottom-28 -right-24 h-[300px] w-[300px] -z-10 rounded-3xl blur-3xl"
+        style={{ background: "radial-gradient(closest-side, rgba(255,184,0,0.1), transparent 75%)" }}
       />
     </>
   );
