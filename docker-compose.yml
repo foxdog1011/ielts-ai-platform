@@ -13,6 +13,7 @@ services:
       - N8N_PROTOCOL=http
       - WEBHOOK_URL=http://localhost:5678/
       - GENERIC_TIMEZONE=Asia/Taipei
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1490915452631650306/ccglLeI-LK_Ki_KJ0DpUBwAWf-HA7O84AzhylNAogC6nY80F3oh0tyFAJuy1GTXbSSnp
     volumes:
       - n8n_data:/home/node/.n8n
       - ./apps/web/n8n:/home/node/workflows:ro

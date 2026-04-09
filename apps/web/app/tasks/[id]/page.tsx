@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@ielts/ui'
 import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
@@ -11,8 +10,18 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold">Welcome to IELTS AI Platform</h1>
       <p className="text-gray-600">Choose a task to begin:</p>
       <div className="flex justify-center gap-6 mt-6">
-        <Button onClick={() => router.push('/tasks/1/writing')}>Writing Task</Button>
-        <Button onClick={() => router.push('/tasks/1/speaking')}>Speaking Task</Button>
+        <button
+          onClick={() => router.push('/tasks/1/writing')}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          Writing Task
+        </button>
+        <button
+          onClick={() => router.push('/tasks/1/speaking')}
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+        >
+          Speaking Task
+        </button>
       </div>
     </div>
   )

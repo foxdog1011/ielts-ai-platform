@@ -1,0 +1,1815 @@
+{
+  "id": "1001",
+  "name": "JARVIS YouTube v2 — n8n 全排程",
+  "nodes": [
+    {
+      "id": "trigger-am-short",
+      "name": "Cron 盤前快報 08:00 Mon-Fri",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 100],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "trigger-pm-short",
+      "name": "Cron 盤後速報 14:30 Mon-Fri",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 600],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 14 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "trigger-long-tue",
+      "name": "Cron 個股深度分析 12:00 Tue",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 1100],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 12 * * 2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "trigger-long-fri",
+      "name": "Cron 三大法人週報 12:00 Fri",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 1600],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 12 * * 5"
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "set-slot-am",
+      "name": "Set Slot morning",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 100],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ slot: 'morning', slot_label: '盤前快報' }) }}"
+      }
+    },
+    {
+      "id": "set-slot-pm",
+      "name": "Set Slot afternoon",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 600],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ slot: 'afternoon', slot_label: '盤後速報' }) }}"
+      }
+    },
+    {
+      "id": "set-slot-long-tue",
+      "name": "Set Slot long_tuesday",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 1100],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ slot: 'long_tuesday', slot_label: '個股深度分析' }) }}"
+      }
+    },
+    {
+      "id": "set-slot-long-fri",
+      "name": "Set Slot long_friday",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 1600],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify({ slot: 'long_friday', slot_label: '三大法人週報' }) }}"
+      }
+    },
+
+    {
+      "id": "weekly-exclude-am",
+      "name": "Weekly Exclude List (AM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 100],
+      "parameters": {
+        "jsCode": "// Maintain a weekly exclude list using static data store\nconst store = $getWorkflowStaticData('global');\nconst now = new Date();\nconst monday = new Date(now);\nmonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));\nconst weekKey = monday.toISOString().slice(0, 10);\n\n// Reset if new week\nif (store.weekKey !== weekKey) {\n  store.weekKey = weekKey;\n  store.usedSymbols = [];\n}\n\nreturn [{\n  json: {\n    ...items[0].json,\n    exclude_symbols: store.usedSymbols || [],\n    week_key: weekKey\n  }\n}];"
+      }
+    },
+    {
+      "id": "weekly-exclude-pm",
+      "name": "Weekly Exclude List (PM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 600],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst now = new Date();\nconst monday = new Date(now);\nmonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));\nconst weekKey = monday.toISOString().slice(0, 10);\n\nif (store.weekKey !== weekKey) {\n  store.weekKey = weekKey;\n  store.usedSymbols = [];\n}\n\nreturn [{\n  json: {\n    ...items[0].json,\n    exclude_symbols: store.usedSymbols || [],\n    week_key: weekKey\n  }\n}];"
+      }
+    },
+    {
+      "id": "weekly-exclude-long-tue",
+      "name": "Weekly Exclude List (Tue)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 1100],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst now = new Date();\nconst monday = new Date(now);\nmonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));\nconst weekKey = monday.toISOString().slice(0, 10);\n\nif (store.weekKey !== weekKey) {\n  store.weekKey = weekKey;\n  store.usedSymbols = [];\n}\n\nreturn [{\n  json: {\n    ...items[0].json,\n    exclude_symbols: store.usedSymbols || [],\n    week_key: weekKey\n  }\n}];"
+      }
+    },
+    {
+      "id": "weekly-exclude-long-fri",
+      "name": "Weekly Exclude List (Fri)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 1600],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst now = new Date();\nconst monday = new Date(now);\nmonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));\nconst weekKey = monday.toISOString().slice(0, 10);\n\nif (store.weekKey !== weekKey) {\n  store.weekKey = weekKey;\n  store.usedSymbols = [];\n}\n\nreturn [{\n  json: {\n    ...items[0].json,\n    exclude_symbols: store.usedSymbols || [],\n    week_key: weekKey\n  }\n}];"
+      }
+    },
+
+    {
+      "id": "pick-stock-am",
+      "name": "Pick Stock (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/pick-stock",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ slot: $json.slot, exclude_symbols: $json.exclude_symbols }) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 120000
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "pick-stock-pm",
+      "name": "Pick Stock (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 600],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/pick-stock",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ slot: $json.slot, exclude_symbols: $json.exclude_symbols }) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 120000
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "pick-stock-long-tue",
+      "name": "Pick Stock (Tue Long)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 1100],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/pick-stock",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ slot: $json.slot, exclude_symbols: $json.exclude_symbols }) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 120000
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "pick-stock-long-fri",
+      "name": "Pick Stock (Fri Long)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 1600],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/pick-stock",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ slot: $json.slot, exclude_symbols: $json.exclude_symbols }) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "maxTries": 3,
+            "waitBetweenTries": 120000
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+
+    {
+      "id": "check-pick-am",
+      "name": "Has Pick? (AM)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1160, 100],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-pick-am",
+              "leftValue": "={{ $json.symbol }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-pick-pm",
+      "name": "Has Pick? (PM)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1160, 600],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-pick-pm",
+              "leftValue": "={{ $json.symbol }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-pick-long-tue",
+      "name": "Has Pick? (Tue Long)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1160, 1100],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-pick-long-tue",
+              "leftValue": "={{ $json.symbol }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-pick-long-fri",
+      "name": "Has Pick? (Fri Long)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1160, 1600],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-pick-long-fri",
+              "leftValue": "={{ $json.symbol }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "discord-skip-am",
+      "name": "Discord Skip (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '⏭️ [盤前快報] ' + new Date().toISOString().slice(0,10) + ' 今天無交易資料，跳過影片製作' }) }}"
+      }
+    },
+    {
+      "id": "discord-skip-pm",
+      "name": "Discord Skip (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 700],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '⏭️ [盤後速報] ' + new Date().toISOString().slice(0,10) + ' 今天無交易資料，跳過影片製作' }) }}"
+      }
+    },
+    {
+      "id": "discord-skip-long-tue",
+      "name": "Discord Skip (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 1200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '⏭️ [個股深度分析] ' + new Date().toISOString().slice(0,10) + ' 今天無交易資料，跳過影片製作' }) }}"
+      }
+    },
+    {
+      "id": "discord-skip-long-fri",
+      "name": "Discord Skip (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 1700],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '⏭️ [三大法人週報] ' + new Date().toISOString().slice(0,10) + ' 今天無交易資料，跳過影片製作' }) }}"
+      }
+    },
+
+    {
+      "id": "record-symbol-am",
+      "name": "Record Symbol (AM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 60],
+      "parameters": {
+        "jsCode": "// Add picked symbol to weekly exclude list\nconst store = $getWorkflowStaticData('global');\nconst symbol = items[0].json.symbol;\nif (symbol && !store.usedSymbols.includes(symbol)) {\n  store.usedSymbols.push(symbol);\n}\nreturn items;"
+      }
+    },
+    {
+      "id": "record-symbol-pm",
+      "name": "Record Symbol (PM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 560],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst symbol = items[0].json.symbol;\nif (symbol && !store.usedSymbols.includes(symbol)) {\n  store.usedSymbols.push(symbol);\n}\nreturn items;"
+      }
+    },
+    {
+      "id": "record-symbol-long-tue",
+      "name": "Record Symbol (Tue)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 1060],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst symbol = items[0].json.symbol;\nif (symbol && !store.usedSymbols.includes(symbol)) {\n  store.usedSymbols.push(symbol);\n}\nreturn items;"
+      }
+    },
+    {
+      "id": "record-symbol-long-fri",
+      "name": "Record Symbol (Fri)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 1560],
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nconst symbol = items[0].json.symbol;\nif (symbol && !store.usedSymbols.includes(symbol)) {\n  store.usedSymbols.push(symbol);\n}\nreturn items;"
+      }
+    },
+
+    {
+      "id": "generate-am",
+      "name": "Generate Video (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 60],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'morning', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "generate-pm",
+      "name": "Generate Video (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 560],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'afternoon', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "generate-long-tue",
+      "name": "Generate Video (Tue Long)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 1060],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'long_tuesday', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "generate-long-fri",
+      "name": "Generate Video (Fri Long)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, 1560],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'long_friday', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+
+    {
+      "id": "check-gen-am",
+      "name": "Gen OK? (AM)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1880, 60],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-gen-am",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-gen-pm",
+      "name": "Gen OK? (PM)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1880, 560],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-gen-pm",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-gen-long-tue",
+      "name": "Gen OK? (Tue)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1880, 1060],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-gen-long-tue",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-gen-long-fri",
+      "name": "Gen OK? (Fri)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1880, 1560],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-gen-long-fri",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "retry-gen-am",
+      "name": "Retry Gen Wait (AM)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2120, 140],
+      "parameters": { "amount": 5, "unit": "minutes" },
+      "webhookId": "retry-gen-am-webhook"
+    },
+    {
+      "id": "retry-gen-pm",
+      "name": "Retry Gen Wait (PM)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2120, 640],
+      "parameters": { "amount": 5, "unit": "minutes" },
+      "webhookId": "retry-gen-pm-webhook"
+    },
+    {
+      "id": "retry-gen-long-tue",
+      "name": "Retry Gen Wait (Tue)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2120, 1140],
+      "parameters": { "amount": 5, "unit": "minutes" },
+      "webhookId": "retry-gen-long-tue-webhook"
+    },
+    {
+      "id": "retry-gen-long-fri",
+      "name": "Retry Gen Wait (Fri)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2120, 1640],
+      "parameters": { "amount": 5, "unit": "minutes" },
+      "webhookId": "retry-gen-long-fri-webhook"
+    },
+
+    {
+      "id": "retry-gen-am-req",
+      "name": "Retry Generate (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 140],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'morning', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "retry-gen-pm-req",
+      "name": "Retry Generate (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 640],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'afternoon', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "retry-gen-long-tue-req",
+      "name": "Retry Generate (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 1140],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'long_tuesday', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "retry-gen-long-fri-req",
+      "name": "Retry Generate (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2360, 1640],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ symbol: $json.symbol, title: $json.title, slot: $json.slot || 'long_friday', is_holiday_fallback: $json.is_holiday_fallback || false }) }}",
+        "options": { "timeout": 600000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+
+    {
+      "id": "check-retry-gen-am",
+      "name": "Retry Gen OK? (AM)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2600, 140],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-retry-gen-am",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-retry-gen-pm",
+      "name": "Retry Gen OK? (PM)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2600, 640],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-retry-gen-pm",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-retry-gen-long-tue",
+      "name": "Retry Gen OK? (Tue)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2600, 1140],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-retry-gen-long-tue",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-retry-gen-long-fri",
+      "name": "Retry Gen OK? (Fri)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2600, 1640],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "cond-retry-gen-long-fri",
+              "leftValue": "={{ $json.video_path || $json.video_url }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "isNotEmpty" }
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "discord-gen-fail-am",
+      "name": "Discord Gen Fail (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '❌ [盤前快報] 影片生成失敗（已重試1次）\\n錯誤: ' + ($json.error || $json.message || 'Unknown error') }) }}"
+      }
+    },
+    {
+      "id": "discord-gen-fail-pm",
+      "name": "Discord Gen Fail (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 720],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '❌ [盤後速報] 影片生成失敗（已重試1次）\\n錯誤: ' + ($json.error || $json.message || 'Unknown error') }) }}"
+      }
+    },
+    {
+      "id": "discord-gen-fail-long-tue",
+      "name": "Discord Gen Fail (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 1220],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '❌ [個股深度分析] 影片生成失敗（已重試1次）\\n錯誤: ' + ($json.error || $json.message || 'Unknown error') }) }}"
+      }
+    },
+    {
+      "id": "discord-gen-fail-long-fri",
+      "name": "Discord Gen Fail (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 1720],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '❌ [三大法人週報] 影片生成失敗（已重試1次）\\n錯誤: ' + ($json.error || $json.message || 'Unknown error') }) }}"
+      }
+    },
+
+    {
+      "id": "upload-am",
+      "name": "Upload YouTube (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2120, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'morning', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "upload-pm",
+      "name": "Upload YouTube (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2120, 520],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'afternoon', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "upload-long-tue",
+      "name": "Upload YouTube (Tue Long)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2120, 1020],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'long_tuesday', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "upload-long-fri",
+      "name": "Upload YouTube (Fri Long)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2120, 1520],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'long_friday', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+
+    {
+      "id": "check-upload-am",
+      "name": "Upload OK? (AM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2360, 20],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isQuotaError = (item.error || '').includes('uploadLimitExceeded') || (item.message || '').includes('uploadLimitExceeded');\nconst isSuccess = !!item.youtube_url;\n\nreturn [{\n  json: {\n    ...item,\n    upload_status: isSuccess ? 'success' : (isQuotaError ? 'quota_exceeded' : 'failed'),\n    is_quota_error: isQuotaError\n  }\n}];"
+      }
+    },
+    {
+      "id": "check-upload-pm",
+      "name": "Upload OK? (PM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2360, 520],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isQuotaError = (item.error || '').includes('uploadLimitExceeded') || (item.message || '').includes('uploadLimitExceeded');\nconst isSuccess = !!item.youtube_url;\n\nreturn [{\n  json: {\n    ...item,\n    upload_status: isSuccess ? 'success' : (isQuotaError ? 'quota_exceeded' : 'failed'),\n    is_quota_error: isQuotaError\n  }\n}];"
+      }
+    },
+    {
+      "id": "check-upload-long-tue",
+      "name": "Upload OK? (Tue)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2360, 1020],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isQuotaError = (item.error || '').includes('uploadLimitExceeded') || (item.message || '').includes('uploadLimitExceeded');\nconst isSuccess = !!item.youtube_url;\n\nreturn [{\n  json: {\n    ...item,\n    upload_status: isSuccess ? 'success' : (isQuotaError ? 'quota_exceeded' : 'failed'),\n    is_quota_error: isQuotaError\n  }\n}];"
+      }
+    },
+    {
+      "id": "check-upload-long-fri",
+      "name": "Upload OK? (Fri)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2360, 1520],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isQuotaError = (item.error || '').includes('uploadLimitExceeded') || (item.message || '').includes('uploadLimitExceeded');\nconst isSuccess = !!item.youtube_url;\n\nreturn [{\n  json: {\n    ...item,\n    upload_status: isSuccess ? 'success' : (isQuotaError ? 'quota_exceeded' : 'failed'),\n    is_quota_error: isQuotaError\n  }\n}];"
+      }
+    },
+
+    {
+      "id": "upload-route-am",
+      "name": "Upload Route (AM)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2600, 20],
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "outputKey": "success",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "success",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "quota",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "quota_exceeded",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "retry",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "failed",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "upload-route-pm",
+      "name": "Upload Route (PM)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2600, 520],
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "outputKey": "success",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "success",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "quota",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "quota_exceeded",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "retry",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "failed",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "upload-route-long-tue",
+      "name": "Upload Route (Tue)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2600, 1020],
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "outputKey": "success",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "success",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "quota",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "quota_exceeded",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "retry",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "failed",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "upload-route-long-fri",
+      "name": "Upload Route (Fri)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2600, 1520],
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "outputKey": "success",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "success",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "quota",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "quota_exceeded",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "retry",
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.upload_status }}",
+                    "rightValue": "failed",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    {
+      "id": "discord-success-am",
+      "name": "Discord Success (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, -40],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '✅ [盤前快報] **' + ($json.title || 'Untitled') + '** 已上傳！\\n🔗 ' + $json.youtube_url }) }}"
+      }
+    },
+    {
+      "id": "discord-success-pm",
+      "name": "Discord Success (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 460],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '✅ [盤後速報] **' + ($json.title || 'Untitled') + '** 已上傳！\\n🔗 ' + $json.youtube_url }) }}"
+      }
+    },
+    {
+      "id": "discord-success-long-tue",
+      "name": "Discord Success (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 960],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '✅ [個股深度分析] **' + ($json.title || 'Untitled') + '** 已上傳！\\n🔗 ' + $json.youtube_url }) }}"
+      }
+    },
+    {
+      "id": "discord-success-long-fri",
+      "name": "Discord Success (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 1460],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '✅ [三大法人週報] **' + ($json.title || 'Untitled') + '** 已上傳！\\n🔗 ' + $json.youtube_url }) }}"
+      }
+    },
+
+    {
+      "id": "discord-quota-am",
+      "name": "Discord Quota (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 20],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '🚫 [盤前快報] YouTube 上傳配額已超過（uploadLimitExceeded），不再重試\\n影片: ' + ($json.title || 'N/A') }) }}"
+      }
+    },
+    {
+      "id": "discord-quota-pm",
+      "name": "Discord Quota (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 520],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '🚫 [盤後速報] YouTube 上傳配額已超過（uploadLimitExceeded），不再重試\\n影片: ' + ($json.title || 'N/A') }) }}"
+      }
+    },
+    {
+      "id": "discord-quota-long-tue",
+      "name": "Discord Quota (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 1020],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '🚫 [個股深度分析] YouTube 上傳配額已超過（uploadLimitExceeded），不再重試\\n影片: ' + ($json.title || 'N/A') }) }}"
+      }
+    },
+    {
+      "id": "discord-quota-long-fri",
+      "name": "Discord Quota (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2840, 1520],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: '🚫 [三大法人週報] YouTube 上傳配額已超過（uploadLimitExceeded），不再重試\\n影片: ' + ($json.title || 'N/A') }) }}"
+      }
+    },
+
+    {
+      "id": "retry-upload-wait-am",
+      "name": "Retry Upload Wait (AM)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2840, 80],
+      "parameters": { "amount": 10, "unit": "minutes" },
+      "webhookId": "retry-upload-am-webhook"
+    },
+    {
+      "id": "retry-upload-wait-pm",
+      "name": "Retry Upload Wait (PM)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2840, 580],
+      "parameters": { "amount": 10, "unit": "minutes" },
+      "webhookId": "retry-upload-pm-webhook"
+    },
+    {
+      "id": "retry-upload-wait-long-tue",
+      "name": "Retry Upload Wait (Tue)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2840, 1080],
+      "parameters": { "amount": 10, "unit": "minutes" },
+      "webhookId": "retry-upload-long-tue-webhook"
+    },
+    {
+      "id": "retry-upload-wait-long-fri",
+      "name": "Retry Upload Wait (Fri)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2840, 1580],
+      "parameters": { "amount": 10, "unit": "minutes" },
+      "webhookId": "retry-upload-long-fri-webhook"
+    },
+
+    {
+      "id": "retry-upload-am-req",
+      "name": "Retry Upload (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3080, 80],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'morning', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "retry-upload-pm-req",
+      "name": "Retry Upload (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3080, 580],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'afternoon', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "retry-upload-long-tue-req",
+      "name": "Retry Upload (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3080, 1080],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'long_tuesday', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "retry-upload-long-fri-req",
+      "name": "Retry Upload (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3080, 1580],
+      "parameters": {
+        "method": "POST",
+        "url": "http://35.76.187.226/api/video-gen/upload-youtube",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ video_path: $json.video_path, video_url: $json.video_url, title: $json.title, description: $json.description, tags: $json.tags, slot: 'long_friday', privacy: 'public' }) }}",
+        "options": { "timeout": 300000 }
+      },
+      "onError": "continueErrorOutput"
+    },
+
+    {
+      "id": "discord-retry-upload-result-am",
+      "name": "Discord Retry Upload Result (AM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3320, 80],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isSuccess = !!item.youtube_url;\nreturn [{\n  json: {\n    content: isSuccess\n      ? '✅ [盤前快報] **' + (item.title || 'Untitled') + '** 已上傳（重試成功）！\\n🔗 ' + item.youtube_url\n      : '❌ [盤前快報] YouTube 上傳最終失敗（已重試1次）\\n錯誤: ' + (item.error || item.message || 'Unknown')\n  }\n}];"
+      }
+    },
+    {
+      "id": "discord-retry-upload-result-pm",
+      "name": "Discord Retry Upload Result (PM)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3320, 580],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isSuccess = !!item.youtube_url;\nreturn [{\n  json: {\n    content: isSuccess\n      ? '✅ [盤後速報] **' + (item.title || 'Untitled') + '** 已上傳（重試成功）！\\n🔗 ' + item.youtube_url\n      : '❌ [盤後速報] YouTube 上傳最終失敗（已重試1次）\\n錯誤: ' + (item.error || item.message || 'Unknown')\n  }\n}];"
+      }
+    },
+    {
+      "id": "discord-retry-upload-result-long-tue",
+      "name": "Discord Retry Upload Result (Tue)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3320, 1080],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isSuccess = !!item.youtube_url;\nreturn [{\n  json: {\n    content: isSuccess\n      ? '✅ [個股深度分析] **' + (item.title || 'Untitled') + '** 已上傳（重試成功）！\\n🔗 ' + item.youtube_url\n      : '❌ [個股深度分析] YouTube 上傳最終失敗（已重試1次）\\n錯誤: ' + (item.error || item.message || 'Unknown')\n  }\n}];"
+      }
+    },
+    {
+      "id": "discord-retry-upload-result-long-fri",
+      "name": "Discord Retry Upload Result (Fri)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3320, 1580],
+      "parameters": {
+        "jsCode": "const item = items[0].json;\nconst isSuccess = !!item.youtube_url;\nreturn [{\n  json: {\n    content: isSuccess\n      ? '✅ [三大法人週報] **' + (item.title || 'Untitled') + '** 已上傳（重試成功）！\\n🔗 ' + item.youtube_url\n      : '❌ [三大法人週報] YouTube 上傳最終失敗（已重試1次）\\n錯誤: ' + (item.error || item.message || 'Unknown')\n  }\n}];"
+      }
+    },
+
+    {
+      "id": "discord-send-retry-upload-am",
+      "name": "Discord Send Retry Result (AM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3560, 80],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}"
+      }
+    },
+    {
+      "id": "discord-send-retry-upload-pm",
+      "name": "Discord Send Retry Result (PM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3560, 580],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}"
+      }
+    },
+    {
+      "id": "discord-send-retry-upload-long-tue",
+      "name": "Discord Send Retry Result (Tue)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3560, 1080],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}"
+      }
+    },
+    {
+      "id": "discord-send-retry-upload-long-fri",
+      "name": "Discord Send Retry Result (Fri)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3560, 1580],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DISCORD_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content }) }}"
+      }
+    },
+
+    {
+      "id": "merge-retry-gen-am",
+      "name": "Merge Retry Gen (AM)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2840, 140]
+    },
+    {
+      "id": "merge-retry-gen-pm",
+      "name": "Merge Retry Gen (PM)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2840, 640]
+    },
+    {
+      "id": "merge-retry-gen-long-tue",
+      "name": "Merge Retry Gen (Tue)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2840, 1140]
+    },
+    {
+      "id": "merge-retry-gen-long-fri",
+      "name": "Merge Retry Gen (Fri)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2840, 1640]
+    }
+  ],
+
+  "connections": {
+    "Cron 盤前快報 08:00 Mon-Fri": {
+      "main": [[{ "node": "Set Slot morning", "type": "main", "index": 0 }]]
+    },
+    "Cron 盤後速報 14:30 Mon-Fri": {
+      "main": [[{ "node": "Set Slot afternoon", "type": "main", "index": 0 }]]
+    },
+    "Cron 個股深度分析 12:00 Tue": {
+      "main": [[{ "node": "Set Slot long_tuesday", "type": "main", "index": 0 }]]
+    },
+    "Cron 三大法人週報 12:00 Fri": {
+      "main": [[{ "node": "Set Slot long_friday", "type": "main", "index": 0 }]]
+    },
+
+    "Set Slot morning": {
+      "main": [[{ "node": "Weekly Exclude List (AM)", "type": "main", "index": 0 }]]
+    },
+    "Set Slot afternoon": {
+      "main": [[{ "node": "Weekly Exclude List (PM)", "type": "main", "index": 0 }]]
+    },
+    "Set Slot long_tuesday": {
+      "main": [[{ "node": "Weekly Exclude List (Tue)", "type": "main", "index": 0 }]]
+    },
+    "Set Slot long_friday": {
+      "main": [[{ "node": "Weekly Exclude List (Fri)", "type": "main", "index": 0 }]]
+    },
+
+    "Weekly Exclude List (AM)": {
+      "main": [[{ "node": "Pick Stock (AM)", "type": "main", "index": 0 }]]
+    },
+    "Weekly Exclude List (PM)": {
+      "main": [[{ "node": "Pick Stock (PM)", "type": "main", "index": 0 }]]
+    },
+    "Weekly Exclude List (Tue)": {
+      "main": [[{ "node": "Pick Stock (Tue Long)", "type": "main", "index": 0 }]]
+    },
+    "Weekly Exclude List (Fri)": {
+      "main": [[{ "node": "Pick Stock (Fri Long)", "type": "main", "index": 0 }]]
+    },
+
+    "Pick Stock (AM)": {
+      "main": [
+        [{ "node": "Has Pick? (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pick Stock (PM)": {
+      "main": [
+        [{ "node": "Has Pick? (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pick Stock (Tue Long)": {
+      "main": [
+        [{ "node": "Has Pick? (Tue Long)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pick Stock (Fri Long)": {
+      "main": [
+        [{ "node": "Has Pick? (Fri Long)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Has Pick? (AM)": {
+      "main": [
+        [{ "node": "Record Symbol (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Pick? (PM)": {
+      "main": [
+        [{ "node": "Record Symbol (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Pick? (Tue Long)": {
+      "main": [
+        [{ "node": "Record Symbol (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Pick? (Fri Long)": {
+      "main": [
+        [{ "node": "Record Symbol (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Skip (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Record Symbol (AM)": {
+      "main": [[{ "node": "Generate Video (AM)", "type": "main", "index": 0 }]]
+    },
+    "Record Symbol (PM)": {
+      "main": [[{ "node": "Generate Video (PM)", "type": "main", "index": 0 }]]
+    },
+    "Record Symbol (Tue)": {
+      "main": [[{ "node": "Generate Video (Tue Long)", "type": "main", "index": 0 }]]
+    },
+    "Record Symbol (Fri)": {
+      "main": [[{ "node": "Generate Video (Fri Long)", "type": "main", "index": 0 }]]
+    },
+
+    "Generate Video (AM)": {
+      "main": [
+        [{ "node": "Gen OK? (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Video (PM)": {
+      "main": [
+        [{ "node": "Gen OK? (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Video (Tue Long)": {
+      "main": [
+        [{ "node": "Gen OK? (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Video (Fri Long)": {
+      "main": [
+        [{ "node": "Gen OK? (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Gen OK? (AM)": {
+      "main": [
+        [{ "node": "Upload YouTube (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gen OK? (PM)": {
+      "main": [
+        [{ "node": "Upload YouTube (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gen OK? (Tue)": {
+      "main": [
+        [{ "node": "Upload YouTube (Tue Long)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gen OK? (Fri)": {
+      "main": [
+        [{ "node": "Upload YouTube (Fri Long)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Gen Wait (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Retry Gen Wait (AM)": {
+      "main": [[{ "node": "Retry Generate (AM)", "type": "main", "index": 0 }]]
+    },
+    "Retry Gen Wait (PM)": {
+      "main": [[{ "node": "Retry Generate (PM)", "type": "main", "index": 0 }]]
+    },
+    "Retry Gen Wait (Tue)": {
+      "main": [[{ "node": "Retry Generate (Tue)", "type": "main", "index": 0 }]]
+    },
+    "Retry Gen Wait (Fri)": {
+      "main": [[{ "node": "Retry Generate (Fri)", "type": "main", "index": 0 }]]
+    },
+
+    "Retry Generate (AM)": {
+      "main": [
+        [{ "node": "Retry Gen OK? (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Generate (PM)": {
+      "main": [
+        [{ "node": "Retry Gen OK? (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Generate (Tue)": {
+      "main": [
+        [{ "node": "Retry Gen OK? (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Generate (Fri)": {
+      "main": [
+        [{ "node": "Retry Gen OK? (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Retry Gen OK? (AM)": {
+      "main": [
+        [{ "node": "Upload YouTube (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Gen OK? (PM)": {
+      "main": [
+        [{ "node": "Upload YouTube (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Gen OK? (Tue)": {
+      "main": [
+        [{ "node": "Upload YouTube (Tue Long)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Gen OK? (Fri)": {
+      "main": [
+        [{ "node": "Upload YouTube (Fri Long)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Gen Fail (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Upload YouTube (AM)": {
+      "main": [
+        [{ "node": "Upload OK? (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Upload OK? (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload YouTube (PM)": {
+      "main": [
+        [{ "node": "Upload OK? (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Upload OK? (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload YouTube (Tue Long)": {
+      "main": [
+        [{ "node": "Upload OK? (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Upload OK? (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload YouTube (Fri Long)": {
+      "main": [
+        [{ "node": "Upload OK? (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Upload OK? (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Upload OK? (AM)": {
+      "main": [[{ "node": "Upload Route (AM)", "type": "main", "index": 0 }]]
+    },
+    "Upload OK? (PM)": {
+      "main": [[{ "node": "Upload Route (PM)", "type": "main", "index": 0 }]]
+    },
+    "Upload OK? (Tue)": {
+      "main": [[{ "node": "Upload Route (Tue)", "type": "main", "index": 0 }]]
+    },
+    "Upload OK? (Fri)": {
+      "main": [[{ "node": "Upload Route (Fri)", "type": "main", "index": 0 }]]
+    },
+
+    "Upload Route (AM)": {
+      "main": [
+        [{ "node": "Discord Success (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Quota (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Upload Wait (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload Route (PM)": {
+      "main": [
+        [{ "node": "Discord Success (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Quota (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Upload Wait (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload Route (Tue)": {
+      "main": [
+        [{ "node": "Discord Success (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Quota (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Upload Wait (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upload Route (Fri)": {
+      "main": [
+        [{ "node": "Discord Success (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Quota (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Retry Upload Wait (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Retry Upload Wait (AM)": {
+      "main": [[{ "node": "Retry Upload (AM)", "type": "main", "index": 0 }]]
+    },
+    "Retry Upload Wait (PM)": {
+      "main": [[{ "node": "Retry Upload (PM)", "type": "main", "index": 0 }]]
+    },
+    "Retry Upload Wait (Tue)": {
+      "main": [[{ "node": "Retry Upload (Tue)", "type": "main", "index": 0 }]]
+    },
+    "Retry Upload Wait (Fri)": {
+      "main": [[{ "node": "Retry Upload (Fri)", "type": "main", "index": 0 }]]
+    },
+
+    "Retry Upload (AM)": {
+      "main": [
+        [{ "node": "Discord Retry Upload Result (AM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Retry Upload Result (AM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Upload (PM)": {
+      "main": [
+        [{ "node": "Discord Retry Upload Result (PM)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Retry Upload Result (PM)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Upload (Tue)": {
+      "main": [
+        [{ "node": "Discord Retry Upload Result (Tue)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Retry Upload Result (Tue)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Retry Upload (Fri)": {
+      "main": [
+        [{ "node": "Discord Retry Upload Result (Fri)", "type": "main", "index": 0 }],
+        [{ "node": "Discord Retry Upload Result (Fri)", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Discord Retry Upload Result (AM)": {
+      "main": [[{ "node": "Discord Send Retry Result (AM)", "type": "main", "index": 0 }]]
+    },
+    "Discord Retry Upload Result (PM)": {
+      "main": [[{ "node": "Discord Send Retry Result (PM)", "type": "main", "index": 0 }]]
+    },
+    "Discord Retry Upload Result (Tue)": {
+      "main": [[{ "node": "Discord Send Retry Result (Tue)", "type": "main", "index": 0 }]]
+    },
+    "Discord Retry Upload Result (Fri)": {
+      "main": [[{ "node": "Discord Send Retry Result (Fri)", "type": "main", "index": 0 }]]
+    }
+  },
+
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "timezone": "Asia/Taipei",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+
+  "staticData": {
+    "global": {
+      "weekKey": "",
+      "usedSymbols": []
+    }
+  },
+
+  "tags": [
+    { "name": "youtube" },
+    { "name": "automation" },
+    { "name": "v2" }
+  ],
+
+  "pinData": {},
+
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "jarvis-youtube-v2"
+  }
+}

@@ -1,0 +1,12 @@
+fastapi>=0.110.0,<1.0
+uvicorn[standard]>=0.29.0,<1.0
+python-multipart>=0.0.9
+# ML dependencies (same as ../requirements.txt)
+pandas
+numpy
+scikit-learn
+xgboost
+sentence-transformers
+torch
+librosa
+soundfile

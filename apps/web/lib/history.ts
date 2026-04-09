@@ -1,61 +1,31 @@
 // apps/web/lib/history.ts
-// 只依賴 lib/kv.ts 的 listScores / saveScore / ScorePayload
+// Delegates to shared/domain/types.ts for type definitions.
+// Uses shared/utils/time.ts for toEpochMs.
 
 import { unstable_noStore as noStore } from "next/cache";
-import { listScores, saveScore, type ScorePayload, type DiagSummary, type PlanSnapshot } from "@/lib/kv";
+import { listScores, saveScore, type ScorePayload } from "@/lib/kv";
+import { toEpochMs as _toEpochMs } from "@/shared/utils/time";
 
-export type WritingBand = {
-  overall?: number;
-  taskResponse?: number;
-  coherence?: number;
-  lexical?: number;
-  grammar?: number;
-};
+// Re-export domain types from shared layer
+export type {
+  WritingBand,
+  SpeakingBand,
+  BaseRecord,
+  WritingRecord,
+  SpeakingRecord,
+  HistoryRecord,
+} from "@/shared/domain/types";
+export type { DiagSummary, PlanSnapshot } from "@/shared/domain/types";
 
-export type SpeakingBand = {
-  overall?: number;
-  content?: number;
-  grammar?: number;
-  vocab?: number;
-  fluency?: number;
-  pronunciation?: number;
-};
-
-export type BaseRecord = {
-  taskId: string;
-  prompt?: string;
-  durationSec?: number;
-  scoreTrace?: Record<string, unknown>;
-  ts?: number;
-  createdAt?: string;
-  diagSummary?: DiagSummary;
-  planSnapshot?: PlanSnapshot;
-};
-
-export type WritingRecord = BaseRecord & {
-  type: "writing";
-  words?: number;
-  band?: WritingBand | null;
-};
-
-export type SpeakingRecord = BaseRecord & {
-  type: "speaking";
-  band?: SpeakingBand | null;
-  speakingFeatures?: Record<string, number | string | boolean>;
-};
-
-export type HistoryRecord = WritingRecord | SpeakingRecord;
+import type { HistoryRecord } from "@/shared/domain/types";
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const TAKE_CAP = 200;
 
 function toEpochMs(rec: Partial<HistoryRecord>): number {
-  if (typeof rec.ts === "number" && Number.isFinite(rec.ts)) return rec.ts;
-  if (rec.createdAt) {
-    const t = Date.parse(rec.createdAt);
-    if (!Number.isNaN(t)) return t;
-  }
-  return Date.now();
+  const result = _toEpochMs(rec as { ts?: number; createdAt?: string });
+  // history.ts originally returned Date.now() as fallback (unlike shared which returns 0)
+  return result || Date.now();
 }
 
 /** 把「舊→新」反轉成「新→舊」，再做 offset/limit 切片 */

@@ -498,41 +498,7 @@ function buildWeeklySummaryLine(
   return `${consistencyNote}${trendNote}${focusNote}`.trim();
 }
 
-// ── Shared utilities ──────────────────────────────────────────────────────────
+// ── Shared utilities (imported from shared layer) ────────────────────────────
 
-/** Map internal dim keys to readable labels used in natural-language strings. */
-const DIM_LABELS: Record<string, string> = {
-  // writing
-  taskResponse: "Task Response",
-  coherence: "Coherence",
-  lexical: "Vocabulary",
-  grammar: "Grammar",
-  // speaking
-  content: "Content",
-  vocab: "Vocabulary",
-  fluency: "Fluency",
-  pronunciation: "Pronunciation",
-  // 01-suffixed keys (from diagnosis)
-  content_01: "Content",
-  grammar_01: "Grammar",
-  vocab_01: "Vocabulary",
-  fluency_01: "Fluency",
-  pronunciation_01: "Pronunciation",
-  tr_01: "Task Response",
-  cc_01: "Coherence",
-  lr_01: "Vocabulary",
-  gra_01: "Grammar",
-};
-
-function friendlyDim(dim: string): string {
-  return DIM_LABELS[dim] ?? dim;
-}
-
-function toEpochMs(rec: Partial<HistoryRecord>): number {
-  if (typeof rec.ts === "number" && Number.isFinite(rec.ts)) return rec.ts;
-  if (rec.createdAt) {
-    const t = Date.parse(rec.createdAt);
-    if (!Number.isNaN(t)) return t;
-  }
-  return 0;
-}
+import { friendlyDim } from "@/shared/constants/dimensions";
+import { toEpochMs } from "@/shared/utils/time";

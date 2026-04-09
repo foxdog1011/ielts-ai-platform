@@ -4,8 +4,13 @@
     "baseUrl": ".", // 讓 "@/..." 以本資料夾為根
     "paths": {
       "@/*": [
-        "app/*",
         "./*"
+      ],
+      "@/features/*": [
+        "features/*"
+      ],
+      "@/shared/*": [
+        "shared/*"
       ],
       "@ielts/ui": [
         "../../packages/ui/src"

@@ -14,18 +14,16 @@ import type { PlanSnapshot } from "@/lib/kv";
 import { computeRepeatedWeaknesses, computeProgressStatus } from "@/lib/planner";
 import { computeRecurringAnomalies } from "@/lib/coach";
 
-// ── Shared utilities ──────────────────────────────────────────────────────────
+// ── Shared utilities (imported from shared layer) ────────────────────────────
+
+import { friendlyDim } from "@/shared/constants/dimensions";
+import { toEpochMs } from "@/shared/utils/time";
 
 const SEVEN_DAYS_MS  = 7  * 24 * 60 * 60 * 1000;
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 function toMs(rec: Pick<HistoryRecord, "ts" | "createdAt">): number {
-  if (typeof rec.ts === "number" && Number.isFinite(rec.ts)) return rec.ts;
-  if (rec.createdAt) {
-    const t = Date.parse(rec.createdAt);
-    if (!Number.isNaN(t)) return t;
-  }
-  return 0;
+  return toEpochMs(rec);
 }
 
 function getOverall(rec: HistoryRecord): number | null {
@@ -44,22 +42,6 @@ function latestPlanSnapshot(records: HistoryRecord[]): PlanSnapshot | null {
     if (ps) return ps;
   }
   return null;
-}
-
-/** Dim key → human-readable label (mirrors coach.ts DIM_LABELS). */
-const DIM_LABELS: Record<string, string> = {
-  taskResponse: "Task Response",
-  coherence:    "Coherence",
-  lexical:      "Vocabulary",
-  grammar:      "Grammar",
-  content:      "Content",
-  vocab:        "Vocabulary",
-  fluency:      "Fluency",
-  pronunciation:"Pronunciation",
-};
-
-function friendlyDim(dim: string): string {
-  return DIM_LABELS[dim] ?? dim;
 }
 
 const URGENCY_ORDER: Record<"urgent" | "normal" | "maintenance", number> = {
