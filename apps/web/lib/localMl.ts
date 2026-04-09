@@ -1,6 +1,6 @@
 // apps/web/lib/localMl.ts
-import { spawn } from "node:child_process";
-import path from "node:path";
+// Calls the FastAPI ML scoring service over HTTP.
+// Falls back to null/disabled when ML_SERVICE_URL is not configured.
 
 export type LocalScore = {
   ok: boolean;
@@ -8,44 +8,126 @@ export type LocalScore = {
   err?: string;
 };
 
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "";
+const DEFAULT_TIMEOUT_MS = 30_000;
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Unexpected error";
+}
+
 export async function runLocalScore(opts: {
   text?: string;
   audio?: string;
   transcript?: string;
   timeoutMs?: number;
 }): Promise<LocalScore> {
-  const ML_CWD = process.env.ML_CWD || "";
-  const PYTHON_BIN = process.env.PYTHON_BIN || "";
-  if (!ML_CWD || !PYTHON_BIN) {
-    return { ok: false, err: "ML_CWD or PYTHON_BIN not set" };
+  if (!ML_SERVICE_URL) {
+    return { ok: false, err: "ML_SERVICE_URL not set" };
   }
 
-  const scorePy = path.join(ML_CWD, "src", "score_cli.py");
-  const args = [scorePy];
-  if (opts.text) args.push("--text", opts.text);
-  if (opts.audio) args.push("--audio", opts.audio);
-  if (opts.transcript) args.push("--transcript", opts.transcript);
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  return new Promise<LocalScore>((resolve) => {
-    const ps = spawn(PYTHON_BIN, args, { cwd: ML_CWD });
-    let out = "";
-    let err = "";
+  // If audio path is provided, use the speaking endpoint
+  if (opts.audio) {
+    return scoreSpeaking(opts.audio, opts.transcript, timeoutMs);
+  }
 
-    const killTimer = setTimeout(() => {
-      try { ps.kill("SIGKILL"); } catch {}
-      resolve({ ok: false, err: "timeout" });
-    }, opts.timeoutMs ?? Number(process.env.REQUEST_TIMEOUT_MS || 30000));
+  // Otherwise use the writing endpoint
+  const textForContent = opts.text || opts.transcript || "";
+  if (!textForContent.trim()) {
+    return { ok: false, err: "No text provided for scoring" };
+  }
 
-    ps.stdout.on("data", (d) => (out += d.toString()));
-    ps.stderr.on("data", (d) => (err += d.toString()));
-    ps.on("close", () => {
-      clearTimeout(killTimer);
-      try {
-        const json = JSON.parse(out);
-        resolve({ ok: true, json });
-      } catch {
-        resolve({ ok: false, err: err || "invalid json from score_cli.py" });
-      }
+  return scoreWriting(textForContent, timeoutMs);
+}
+
+async function scoreWriting(
+  text: string,
+  timeoutMs: number,
+): Promise<LocalScore> {
+  const url = `${ML_SERVICE_URL}/score/writing`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+      signal: controller.signal,
     });
-  });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "unknown error");
+      return { ok: false, err: `ML service returned ${response.status}: ${detail}` };
+    }
+
+    const json = await response.json();
+    return { ok: true, json };
+  } catch (error: unknown) {
+    const msg = getErrorMessage(error);
+    if (msg.includes("abort")) {
+      return { ok: false, err: "timeout" };
+    }
+    return { ok: false, err: msg };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function scoreSpeaking(
+  audioPath: string,
+  transcript: string | undefined,
+  timeoutMs: number,
+): Promise<LocalScore> {
+  // For speaking, we need to send the audio file as multipart/form-data.
+  // On the server side (Next.js API route), the audio is already a file path.
+  // We read the file and send it to the ML service.
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+
+  if (!fs.existsSync(audioPath)) {
+    return { ok: false, err: `Audio file not found: ${audioPath}` };
+  }
+
+  const url = `${ML_SERVICE_URL}/score/speaking`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const fileBuffer = fs.readFileSync(audioPath);
+    const fileName = path.basename(audioPath);
+    const blob = new Blob([fileBuffer]);
+
+    const formData = new FormData();
+    formData.append("audio", blob, fileName);
+    if (transcript) {
+      formData.append("transcript", transcript);
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "unknown error");
+      return { ok: false, err: `ML service returned ${response.status}: ${detail}` };
+    }
+
+    const json = await response.json();
+    return { ok: true, json };
+  } catch (error: unknown) {
+    const msg = getErrorMessage(error);
+    if (msg.includes("abort")) {
+      return { ok: false, err: "timeout" };
+    }
+    return { ok: false, err: msg };
+  } finally {
+    clearTimeout(timer);
+  }
 }

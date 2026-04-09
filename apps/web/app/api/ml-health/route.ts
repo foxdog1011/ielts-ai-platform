@@ -1,34 +1,50 @@
 import { NextResponse } from "next/server";
-import { existsSync } from "node:fs";
-import path from "node:path";
 
 export async function GET() {
-  const mlCwd = process.env.ML_CWD || "";
-  const pythonBin = process.env.PYTHON_BIN || "";
+  const mlServiceUrl = process.env.ML_SERVICE_URL || "";
 
-  if (!mlCwd || !pythonBin) {
+  if (!mlServiceUrl) {
     return NextResponse.json({
       ok: true,
       mlOnline: false,
       mode: "llm-only",
-      reason: "ML_CWD or PYTHON_BIN not set",
+      reason: "ML_SERVICE_URL not set",
     });
   }
 
-  const scriptPath = path.join(mlCwd, "src", "score_cli.py");
-  if (!existsSync(scriptPath)) {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5_000);
+
+    const response = await fetch(`${mlServiceUrl}/health`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      return NextResponse.json({
+        ok: true,
+        mlOnline: false,
+        mode: "llm-only",
+        reason: `ML service returned ${response.status}`,
+      });
+    }
+
+    const data = await response.json();
+    return NextResponse.json({
+      ok: true,
+      mlOnline: true,
+      mode: "hybrid",
+      modelLoaded: data.model_loaded ?? false,
+      reason: null,
+    });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "unknown error";
     return NextResponse.json({
       ok: true,
       mlOnline: false,
       mode: "llm-only",
-      reason: "score_cli.py not found",
+      reason: `ML service unreachable: ${msg}`,
     });
   }
-
-  return NextResponse.json({
-    ok: true,
-    mlOnline: true,
-    mode: "hybrid",
-    reason: null,
-  });
 }
