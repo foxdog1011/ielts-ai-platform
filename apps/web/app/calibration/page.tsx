@@ -94,15 +94,16 @@ function parseQuantileMap(data: any): QPair[] {
     return sanitizePairs(pairs);
   }
 
-  // 2) { q: number[], band: number[] }
+  // 2) { q: number[], band: number[] } or { overall01: number[], band: number[] }
+  const qArr = data?.q || data?.overall01;
   if (
     data &&
-    Array.isArray(data.q) &&
+    Array.isArray(qArr) &&
     Array.isArray(data.band) &&
-    data.q.length === data.band.length &&
-    data.q.length > 0
+    qArr.length === data.band.length &&
+    qArr.length > 0
   ) {
-    const pairs = data.q.map((q: any, i: number) => [Number(q), Number(data.band[i])] as QPair);
+    const pairs = qArr.map((q: any, i: number) => [Number(q), Number(data.band[i])] as QPair);
     return sanitizePairs(pairs);
   }
 
