@@ -18,7 +18,10 @@ import type { AgentContext, AgentPipelineResult } from "@/lib/agents/types";
 // ── Stub helpers ──────────────────────────────────────────────────────────────
 
 function makeReq(body: unknown): NextRequest {
-  return { json: async () => body } as unknown as NextRequest;
+  return {
+    json: async () => body,
+    headers: new Headers({ "x-forwarded-for": "127.0.0.1" }),
+  } as unknown as NextRequest;
 }
 
 const STUB_BAND = { overall: 6, content: 7, grammar: 6.5, vocab: 6, fluency: 4.5, pronunciation: 5.5 };
