@@ -8,6 +8,7 @@ import { StudyPlanBlock, type StudyPlan } from '@/components/StudyPlanBlock';
 import { CoachBlock, type CoachSnapshotData } from '@/components/CoachBlock';
 import { RadarChart } from '@/components/RadarChart';
 import { getPromptText } from '@/lib/promptUtils';
+import ShareScoreCard from '@/components/ShareScoreCard';
 
 type AgentMeta = { durationMs: number; agentsRan: string[] };
 type EvalResp = {
@@ -533,6 +534,21 @@ export default function SpeakingPage() {
                     </details>
                   )}
                 </div>
+              )}
+
+              {/* Share */}
+              {resp?.content?.band?.overall != null && (
+                <ShareScoreCard
+                  type="speaking"
+                  overall={resp.content.band.overall}
+                  scores={[
+                    { label: 'Task Response', value: resp.content.band.taskResponse },
+                    { label: 'Vocabulary', value: resp.content.band.vocabulary },
+                    { label: 'Grammar', value: resp.content.band.grammar },
+                    { label: 'Fluency', value: resp.speech?.band?.fluency },
+                    { label: 'Pronunciation', value: resp.speech?.band?.pronunciation },
+                  ]}
+                />
               )}
 
               {/* Study plan */}

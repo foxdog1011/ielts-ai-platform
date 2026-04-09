@@ -10,6 +10,7 @@ import { MlStatusBadge } from '@/components/MlStatusBadge';
 import { RadarChart } from '@/components/RadarChart';
 import { InlineEssay } from '@/components/InlineEssay';
 import { getPromptText } from '@/lib/promptUtils';
+import ShareScoreCard from '@/components/ShareScoreCard';
 
 type BandScores = { overall?: number; taskResponse?: number; coherence?: number; lexical?: number; grammar?: number; };
 type ParagraphFeedback = { index: number; comment: string };
@@ -520,6 +521,16 @@ export default function WritingTaskPage() {
                       <ScoreRow compact label="Coherence & Cohesion" value={result.band.coherence} />
                       <ScoreRow compact label="Lexical Resource" value={result.band.lexical} />
                       <ScoreRow compact label="Grammar Range & Accuracy" value={result.band.grammar} />
+                      <ShareScoreCard
+                        type="writing"
+                        overall={result.band.overall}
+                        scores={[
+                          { label: 'Task Response', value: result.band.taskResponse },
+                          { label: 'Coherence', value: result.band.coherence },
+                          { label: 'Lexical', value: result.band.lexical },
+                          { label: 'Grammar', value: result.band.grammar },
+                        ]}
+                      />
                     </div>
                   )}
 
