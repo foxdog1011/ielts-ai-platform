@@ -5,12 +5,15 @@
 
 import { recordPractice } from "@/features/gamification/streak-service";
 import { awardXP, XP_AMOUNTS } from "@/features/gamification/xp-service";
+import { checkAndUpdatePR } from "@/features/gamification/pr-service";
+import { recordWeeklyProgress } from "@/features/gamification/weekly-goals";
 
 export interface GamificationInput {
   readonly userId: string;
   readonly examType: "writing" | "speaking";
   readonly overallBand?: number;
   readonly isDailyChallenge?: boolean;
+  readonly dimensionScores?: Record<string, number>;
 }
 
 export async function recordGamification(input: GamificationInput): Promise<void> {
@@ -31,6 +34,14 @@ export async function recordGamification(input: GamificationInput): Promise<void
         `perfect score bonus (${input.overallBand})`,
       );
     }
+
+    // Check for personal records
+    if (input.dimensionScores && Object.keys(input.dimensionScores).length > 0) {
+      await checkAndUpdatePR(input.userId, input.examType, input.dimensionScores);
+    }
+
+    // Record weekly progress
+    await recordWeeklyProgress(input.userId);
 
     // Daily challenge bonus
     if (input.isDailyChallenge) {

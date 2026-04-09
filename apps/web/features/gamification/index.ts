@@ -9,4 +9,10 @@ export type { XPInfo } from "./xp-service";
 export { getDailyChallenge, markDailyCompleted } from "./daily-challenge";
 export type { DailyChallenge } from "./daily-challenge";
 
+export { getPersonalRecords, checkAndUpdatePR } from "./pr-service";
+export type { PersonalRecord, PRData, NewPR } from "./pr-service";
+
+export { getWeeklyGoal, setWeeklyGoal, recordWeeklyProgress } from "./weekly-goals";
+export type { WeeklyGoal } from "./weekly-goals";
+
 export { getUserId, getUserIdFromHeaders } from "./get-user-id";
