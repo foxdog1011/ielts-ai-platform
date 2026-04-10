@@ -17,6 +17,7 @@ export type SpeakingPipelineInput = {
   mime?: string;
   manualTranscript?: string;
   durationSec?: number;
+  part?: 1 | 2 | 3;
 };
 
 export async function runSpeakingPipeline(
@@ -76,6 +77,7 @@ export async function runSpeakingPipeline(
     transcript,
     prompt: input.prompt,
     client: deps?.openaiClient,
+    part: input.part,
   });
   timings.llm_ms = llmTimer.elapsedMs();
   // Clamp to minimum 0.1 so fusion always has at least one valid subscore

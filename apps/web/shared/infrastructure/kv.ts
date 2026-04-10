@@ -113,6 +113,23 @@ export async function kvListPushJSON(key: string, obj: unknown) {
   }
 }
 
+/** Push an item and trim the list to keep only the last `maxLen` entries. */
+export async function kvListPushAndTrim(key: string, obj: unknown, maxLen: number) {
+  noStore();
+  const json = JSON.stringify(obj);
+  const kv = await getKV();
+  if (kv) {
+    await kv.rpush(key, json);
+    await kv.ltrim(key, -maxLen, -1);
+  } else {
+    memRpushJSON(key, json);
+    const arr = memLists.get(key);
+    if (arr && arr.length > maxLen) {
+      memLists.set(key, arr.slice(-maxLen));
+    }
+  }
+}
+
 export async function kvListTailJSON<T>(key: string, take: number): Promise<T[]> {
   noStore();
   const kv = await getKV();

@@ -7,11 +7,14 @@ import { recordPractice } from "@/features/gamification/streak-service";
 import { awardXP, XP_AMOUNTS } from "@/features/gamification/xp-service";
 import { checkAndUpdatePR } from "@/features/gamification/pr-service";
 import { recordWeeklyProgress } from "@/features/gamification/weekly-goals";
+import { recordActivity, anonymizeUserId } from "@/features/activity/activity-service";
+import { updateLeaderboard } from "@/features/leaderboard/leaderboard-service";
 
 export interface GamificationInput {
   readonly userId: string;
   readonly examType: "writing" | "speaking";
   readonly overallBand?: number;
+  readonly taskType?: string;
   readonly isDailyChallenge?: boolean;
   readonly dimensionScores?: Record<string, number>;
 }
@@ -36,8 +39,30 @@ export async function recordGamification(input: GamificationInput): Promise<void
     }
 
     // Check for personal records
+    let isNewPR = false;
     if (input.dimensionScores && Object.keys(input.dimensionScores).length > 0) {
-      await checkAndUpdatePR(input.userId, input.examType, input.dimensionScores);
+      const newPRs = await checkAndUpdatePR(input.userId, input.examType, input.dimensionScores);
+      isNewPR = newPRs.length > 0;
+    }
+
+    // Record to activity feed
+    if (input.overallBand != null) {
+      const displayName = anonymizeUserId(input.userId);
+      await recordActivity({
+        userId: input.userId,
+        displayName,
+        type: input.examType,
+        taskType: input.taskType,
+        overallBand: input.overallBand,
+        isNewPR,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Update leaderboard
+    if (input.overallBand != null) {
+      const lbName = anonymizeUserId(input.userId);
+      await updateLeaderboard(input.userId, lbName, input.examType, input.overallBand);
     }
 
     // Record weekly progress

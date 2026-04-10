@@ -3,7 +3,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "5.0-6.0",
-    "prompt": "Do you enjoy reading? What kind of books do you like to read?",
+    "prompt": "Do you enjoy reading?\nWhat kind of books do you like to read?\nDo you prefer reading paper books or e-books?\nDid you read a lot when you were a child?",
     "topicTags": ["culture", "education"],
     "source": "seed"
   },
@@ -11,7 +11,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "5.0-6.0",
-    "prompt": "What do you usually do in your free time? Has this changed since you were younger?",
+    "prompt": "What do you usually do in your free time?\nHas this changed since you were younger?\nDo you think people today have enough free time?\nWhat new hobby would you like to try?",
     "topicTags": ["society", "culture"],
     "source": "seed"
   },
@@ -19,7 +19,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "5.0-6.0",
-    "prompt": "Do you prefer cooking at home or eating out? Why?",
+    "prompt": "Do you prefer cooking at home or eating out?\nWhat is your favourite dish to cook?\nDo you think cooking is an important skill?\nHave you ever taken a cooking class?",
     "topicTags": ["health", "culture"],
     "source": "seed"
   },
@@ -27,7 +27,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "6.0-7.0",
-    "prompt": "How often do you use public transport? What do you think could improve it in your city?",
+    "prompt": "How often do you use public transport?\nWhat could be improved about public transport in your city?\nDo you prefer travelling by bus or by train?\nHow do most people in your area get to work?",
     "topicTags": ["environment", "government"],
     "source": "seed"
   },
@@ -35,7 +35,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "5.0-6.0",
-    "prompt": "Do you like taking photographs? What do you usually photograph?",
+    "prompt": "Do you like taking photographs?\nWhat do you usually photograph?\nDo you prefer using a phone camera or a professional camera?\nHave you ever taken a photo you are really proud of?",
     "topicTags": ["technology", "culture"],
     "source": "seed"
   },
@@ -43,7 +43,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "6.0-7.0",
-    "prompt": "What kind of music do you enjoy? Has your taste in music changed over the years?",
+    "prompt": "What kind of music do you enjoy?\nHas your taste in music changed over the years?\nDo you play any musical instruments?\nDo you prefer listening to music alone or with others?",
     "topicTags": ["culture", "media"],
     "source": "seed"
   },
@@ -51,7 +51,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "5.0-6.0",
-    "prompt": "Do you prefer shopping online or in a store? Why?",
+    "prompt": "Do you prefer shopping online or in a store?\nHow often do you go shopping?\nWhat was the last thing you bought online?\nDo you think online shopping will replace physical stores?",
     "topicTags": ["technology", "society"],
     "source": "seed"
   },
@@ -59,7 +59,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "6.0-7.0",
-    "prompt": "Do you think it is important to keep up with the news? How do you usually get your news?",
+    "prompt": "Do you think it is important to keep up with the news?\nHow do you usually get your news?\nDo you trust news on social media?\nWhat kind of news are you most interested in?",
     "topicTags": ["media", "technology"],
     "source": "seed"
   },
@@ -67,7 +67,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "5.0-6.0",
-    "prompt": "What is your favourite season? Why do you like it?",
+    "prompt": "What is your favourite season?\nWhy do you like it?\nDoes the weather affect your mood?\nWhat do you usually do in summer?",
     "topicTags": ["environment", "culture"],
     "source": "seed"
   },
@@ -75,7 +75,7 @@
     "type": "speaking",
     "part": "part1",
     "level": "6.0-7.0",
-    "prompt": "Do you think it is important to learn a second language? Why or why not?",
+    "prompt": "Do you think it is important to learn a second language?\nHow did you start learning English?\nWhat is the most difficult part of learning a new language?\nWould you like to learn any other languages in the future?",
     "topicTags": ["education", "culture"],
     "source": "seed"
   },
@@ -173,90 +173,80 @@
     "type": "speaking",
     "part": "part3",
     "level": "6.0-7.0",
-    "prompt": "Some people say that the education system in most countries needs to change. What changes do you think are necessary, and why?",
+    "prompt": "Some people say that the education system in most countries needs to change. What changes do you think are necessary, and why?\nHow might artificial intelligence change education in the next decade?\nShould students be allowed to choose all their own subjects?",
     "topicTags": ["education", "government", "technology"],
-    "followup": ["Should students be allowed to choose all their subjects?", "How might artificial intelligence change education?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "7.0-8.0",
-    "prompt": "How do you think technology will change the way people work in the next twenty years?",
+    "prompt": "How do you think technology will change the way people work in the next twenty years?\nWill some jobs disappear completely because of automation?\nHow can workers prepare for a technology-driven economy?",
     "topicTags": ["technology", "work", "society"],
-    "followup": ["Will some jobs disappear completely because of automation?", "How can workers prepare for a technology-driven economy?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "6.0-7.0",
-    "prompt": "Do you think governments should do more to protect the environment, or should individuals take more responsibility?",
+    "prompt": "Do you think governments should do more to protect the environment, or should individuals take more responsibility?\nCan economic growth and environmental protection go together?\nWhat role should businesses play in protecting the environment?",
     "topicTags": ["environment", "government", "society"],
-    "followup": ["Can economic growth and environmental protection go together?", "What role should businesses play in protecting the environment?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "5.0-6.0",
-    "prompt": "Why do you think some people enjoy travelling to other countries? What are the benefits?",
+    "prompt": "Why do you think some people enjoy travelling to other countries?\nIs tourism always good for local communities?\nHow has international travel changed people's understanding of other cultures?",
     "topicTags": ["culture", "education", "society"],
-    "followup": ["Is tourism always good for local communities?", "How has international travel changed people's understanding of other cultures?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "7.0-8.0",
-    "prompt": "To what extent should the media be free to report on any topic without restriction?",
+    "prompt": "To what extent should the media be free to report on any topic without restriction?\nHow can people tell the difference between reliable and unreliable news?\nShould social media platforms be held responsible for the content users share?",
     "topicTags": ["media", "government", "society"],
-    "followup": ["How can people tell the difference between reliable and unreliable news?", "Should social media platforms be held responsible for the content users share?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "6.0-7.0",
-    "prompt": "Some people believe that competition between children at school is a good thing, while others think it puts too much pressure on them. What is your view?",
+    "prompt": "Some people believe that competition between children at school is a good thing, while others think it puts too much pressure on them. What is your view?\nHow does competition at school prepare children for adult life?\nAre there better ways to motivate students than competition?",
     "topicTags": ["education", "health", "society"],
-    "followup": ["How does competition at school prepare children for adult life?", "Are there better ways to motivate students than competition?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "5.0-6.0",
-    "prompt": "What are the advantages and disadvantages of living in a large city compared to a small town?",
+    "prompt": "What are the advantages and disadvantages of living in a large city compared to a small town?\nDo you think more people will move to cities in the future?\nWhat can be done to improve life in small towns?",
     "topicTags": ["society", "environment", "work"],
-    "followup": ["Do you think more people will move to cities in the future?", "What can be done to improve life in small towns?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "7.0-8.0",
-    "prompt": "In many countries, people are living longer than ever before. What challenges does an ageing population create for society?",
+    "prompt": "In many countries, people are living longer than ever before. What challenges does an ageing population create for society?\nShould the retirement age be raised?\nHow can societies ensure that elderly people have a good quality of life?",
     "topicTags": ["health", "government", "society"],
-    "followup": ["Should the retirement age be raised?", "How can societies ensure that elderly people have a good quality of life?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "6.0-7.0",
-    "prompt": "Some people think that art and music should receive more government funding. Do you agree, and why?",
+    "prompt": "Some people think that art and music should receive more government funding. Do you agree, and why?\nIs art important for society, or is it a luxury?\nHow has technology affected the way people create and consume art?",
     "topicTags": ["culture", "government", "media"],
-    "followup": ["Is art important for society, or is it a luxury?", "How has technology affected the way people create and consume art?"],
     "source": "seed"
   },
   {
     "type": "speaking",
     "part": "part3",
     "level": "5.0-6.0",
-    "prompt": "Do you think it is important for people to have a good work-life balance? Why or why not?",
+    "prompt": "Do you think it is important for people to have a good work-life balance? Why or why not?\nWhat can employers do to help their staff achieve a better balance?\nHow has the idea of work-life balance changed in recent years?",
     "topicTags": ["work", "health", "society"],
-    "followup": ["What can employers do to help their staff achieve a better balance?", "How has the idea of work-life balance changed in recent years?"],
     "source": "seed"
   }
 ]

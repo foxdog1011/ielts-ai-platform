@@ -76,6 +76,7 @@ export default async function HomePage() {
               { href: "/goals", label: "Goals" },
               { href: "/notebook", label: "Notebook" },
               { href: "/calibration", label: "Calibration" },
+              { href: "/leaderboard", label: "Leaderboard" },
             ].map(({ href, label }) => (
               <Link
                 key={href}

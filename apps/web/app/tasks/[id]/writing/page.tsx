@@ -31,6 +31,7 @@ export default function WritingTaskPage() {
   const qFromUrl = (searchParams?.get('q') || '').trim();
   const resetFlag = (searchParams?.get('reset') || '').trim() === '1';
 
+  const [taskType, setTaskType] = useState<'task1' | 'task2'>('task2');
   const [prompt, setPrompt] = useState<string>('');
   const [loadingPrompt, setLoadingPrompt] = useState(false);
 
@@ -46,7 +47,7 @@ export default function WritingTaskPage() {
   const [showRight, setShowRight] = useState(true);
 
   // ── Exam simulation mode ──────────────────────────────────────────────────
-  const EXAM_SECS = 40 * 60; // 40 minutes
+  const EXAM_SECS = taskType === 'task1' ? 20 * 60 : 40 * 60;
   const [examMode, setExamMode] = useState(false);
   const [examSecsLeft, setExamSecsLeft] = useState(EXAM_SECS);
   const examTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -114,10 +115,17 @@ export default function WritingTaskPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetFlag]);
 
+  // Fetch new prompt when taskType changes
+  useEffect(() => {
+    fetchRandomPrompt();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskType]);
+
   async function fetchRandomPrompt(retryOnce = true) {
+    const part = taskType === 'task1' ? 'task1-ac' : 'task2';
     try {
       setLoadingPrompt(true);
-      const res = await fetch(`/api/prompts/random?type=writing&part=task2`, { cache: 'no-store' });
+      const res = await fetch(`/api/prompts/random?type=writing&part=${part}`, { cache: 'no-store' });
       const json = await res.json();
       const text = getPromptText(json?.data);
       if (json?.ok && text) {
@@ -128,7 +136,7 @@ export default function WritingTaskPage() {
         await fetch('/api/prompts/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'writing', part: 'task2', count: 10 }),
+          body: JSON.stringify({ type: 'writing', part, count: 10 }),
         });
         await fetchRandomPrompt(false);
       } else {
@@ -197,12 +205,13 @@ export default function WritingTaskPage() {
   const sec = seconds % 60;
 
   const wordHint = useMemo(() => {
+    const minWords = taskType === 'task1' ? 150 : 250;
     const diff = words - targetWords;
-    if (words === 0) return '開始撰寫吧（建議 250 字左右）';
+    if (words === 0) return `開始撰寫吧（建議 ${minWords} 字以上）`;
     if (Math.abs(diff) <= 20) return '字數很接近目標，保持！';
     if (diff < 0) return `再多 ${Math.abs(diff)} 字會更好`;
     return `超出約 ${diff} 字，考場時間要抓緊`;
-  }, [words, targetWords]);
+  }, [words, targetWords, taskType]);
 
   async function onSubmit() {
     setError(''); setSubmitting(true); setResult(undefined);
@@ -210,7 +219,7 @@ export default function WritingTaskPage() {
       const res = await fetch('/api/writing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId, prompt, essay, targetWords, seconds }),
+        body: JSON.stringify({ taskId, taskType, prompt, essay, targetWords, seconds }),
       });
       const json: SubmitResponse = await res.json();
       if (!json.ok) throw new Error(json.error?.message || '分析失敗，稍後再試');
@@ -241,8 +250,28 @@ export default function WritingTaskPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">← 回首頁</Link>
-            <h1 className="text-[18px] font-medium tracking-tight">Writing Task 2</h1>
+            <h1 className="text-[18px] font-medium tracking-tight">Writing {taskType === 'task1' ? 'Task 1' : 'Task 2'}</h1>
             <MlStatusBadge />
+            <div className="flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5">
+              <button
+                onClick={() => { setTaskType('task1'); setTargetWords(150); }}
+                className={[
+                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                  taskType === 'task1' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700',
+                ].join(' ')}
+              >
+                Task 1
+              </button>
+              <button
+                onClick={() => { setTaskType('task2'); setTargetWords(250); }}
+                className={[
+                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                  taskType === 'task2' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700',
+                ].join(' ')}
+              >
+                Task 2
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
@@ -273,7 +302,7 @@ export default function WritingTaskPage() {
               <button
                 onClick={startExamMode}
                 className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
-                title="40 分鐘限時，時間到自動送出"
+                title={taskType === 'task1' ? '20 分鐘限時，時間到自動送出' : '40 分鐘限時，時間到自動送出'}
               >
                 模擬考
               </button>
@@ -354,6 +383,26 @@ export default function WritingTaskPage() {
               </details>
             </div>
 
+            {/* Task guidance */}
+            <div className={[
+              'rounded-xl border px-4 py-2.5 text-[12px] leading-relaxed',
+              taskType === 'task1'
+                ? 'border-amber-200 bg-amber-50/60 text-amber-800'
+                : 'border-blue-200 bg-blue-50/60 text-blue-800',
+            ].join(' ')}>
+              {taskType === 'task1' ? (
+                <>
+                  <span className="font-medium">Task 1 Academic</span> — Summarise the information by selecting and reporting the main features, and make comparisons where relevant.
+                  <span className="ml-2 text-[11px] text-amber-600">150 words minimum · ~20 minutes</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-medium">Task 2</span> — Write an essay in response to a point of view, argument, or problem.
+                  <span className="ml-2 text-[11px] text-blue-600">250 words minimum · ~40 minutes</span>
+                </>
+              )}
+            </div>
+
             {/* 編輯器 */}
             <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
               {/* Word count and timer bar - sticky on mobile for visibility during writing */}
@@ -370,7 +419,7 @@ export default function WritingTaskPage() {
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <label className="text-[13px] sm:text-[12px] text-zinc-500 shrink-0">目標字數</label>
-                    <input type="range" min={180} max={350} step={10}
+                    <input type="range" min={taskType === 'task1' ? 120 : 180} max={taskType === 'task1' ? 250 : 350} step={10}
                       value={targetWords} onChange={(e) => { dirtyRef.current = true; setTargetWords(Number(e.target.value)); }}
                       className="flex-1 sm:w-52 accent-zinc-700 min-h-[44px]" />
                     <span className="text-[13px] sm:text-[12px] text-zinc-700 shrink-0">{targetWords}</span>
@@ -509,7 +558,7 @@ export default function WritingTaskPage() {
                             size={180}
                             color="#3b82f6"
                             dims={[
-                              { label: "Task", shortLabel: "Task", value: result.band.taskResponse ?? 0 },
+                              { label: taskType === 'task1' ? "Task Ach." : "Task", shortLabel: taskType === 'task1' ? "Ach." : "Task", value: result.band.taskResponse ?? 0 },
                               { label: "Coherence", shortLabel: "Coh.", value: result.band.coherence ?? 0 },
                               { label: "Lexical", shortLabel: "Lex.", value: result.band.lexical ?? 0 },
                               { label: "Grammar", shortLabel: "Gram.", value: result.band.grammar ?? 0 },
@@ -517,7 +566,7 @@ export default function WritingTaskPage() {
                           />
                         </div>
                       )}
-                      <ScoreRow compact label="Task Response" value={result.band.taskResponse} />
+                      <ScoreRow compact label={taskType === 'task1' ? 'Task Achievement' : 'Task Response'} value={result.band.taskResponse} />
                       <ScoreRow compact label="Coherence & Cohesion" value={result.band.coherence} />
                       <ScoreRow compact label="Lexical Resource" value={result.band.lexical} />
                       <ScoreRow compact label="Grammar Range & Accuracy" value={result.band.grammar} />
@@ -525,7 +574,7 @@ export default function WritingTaskPage() {
                         type="writing"
                         overall={result.band.overall}
                         scores={[
-                          { label: 'Task Response', value: result.band.taskResponse },
+                          { label: taskType === 'task1' ? 'Task Achievement' : 'Task Response', value: result.band.taskResponse },
                           { label: 'Coherence', value: result.band.coherence },
                           { label: 'Lexical', value: result.band.lexical },
                           { label: 'Grammar', value: result.band.grammar },
@@ -663,6 +712,21 @@ async function copySafe(text: string): Promise<boolean> {
   }
 }
 
+function CopyBtn({ text, label, onDone }: { text: string; label: string; onDone: () => void }) {
+  return (
+    <button
+      onClick={async () => { if (await copySafe(text)) onDone(); }}
+      disabled={!text}
+      className={[
+        "rounded-lg border px-3 py-1.5 text-[12px]",
+        text ? "border-zinc-300 bg-white hover:bg-zinc-50" : "cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400"
+      ].join(" ")}
+    >
+      {label}
+    </button>
+  );
+}
+
 function BandBadge({ overall, margin }: { overall?: number; margin?: number }) {
   if (overall == null) return null;
   const value = Number(overall);
@@ -741,30 +805,6 @@ function SaveToNotebookBtn({ text, examType }: { text: string; examType: "writin
       ].join(' ')}
     >
       {saved === 'done' ? '✓' : '+'}
-    </button>
-  );
-}
-
-function CopyBtn({ text, label, onDone }: { text: string; label: string; onDone?: () => void }) {
-  const [done, setDone] = useState(false);
-  return (
-    <button
-      onClick={async () => {
-        if (!text) return;
-        const ok = await copySafe(text);
-        if (!ok) return;
-        setDone(true);
-        onDone?.();
-        setTimeout(() => setDone(false), 1200);
-      }}
-      className={[
-        'rounded-lg border px-2 py-1 text-[12px]',
-        text ? 'border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-800' : 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400',
-      ].join(' ')}
-      disabled={!text}
-      aria-live="polite"
-    >
-      {done ? '已複製 ✓' : label}
     </button>
   );
 }

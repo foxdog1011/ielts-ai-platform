@@ -3,6 +3,7 @@ export {
   kvSetJSON,
   kvGetJSON,
   kvListPushJSON,
+  kvListPushAndTrim,
   kvListTailJSON,
   kvSetAdd,
   kvSetHas,

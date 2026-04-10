@@ -18,6 +18,7 @@ import { getUserIdFromHeaders } from "@/features/gamification/get-user-id";
 const Body = z.object({
   taskId: z.string().min(1),
   prompt: z.string().optional(),
+  part: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
   audioBase64: z.string().optional(),
   mime: z.string().optional(),
   audioPath: z.string().optional(),
@@ -44,6 +45,7 @@ export async function _handlePost(req: NextRequest, deps: SpeakingDeps): Promise
         {
           taskId: body.taskId,
           prompt: body.prompt,
+          part: body.part,
           audioBase64: body.audioBase64,
           audioPath: body.audioPath,
           mime: body.mime,

@@ -27,9 +27,58 @@ export class LlmRubricValidationError extends Error {
   }
 }
 
-function systemPrompt() {
-  return `You are a strict, calibrated IELTS Writing examiner. You must score essays using the official IELTS Writing Task 2 Band Descriptors below. Return one JSON object only — no markdown, no extra keys.
+function task1AchievementDescriptors() {
+  return `═══════════════════════════════════════════════════════
+CRITERION 1: TASK ACHIEVEMENT (tr_01) — Task 1 Academic
+═══════════════════════════════════════════════════════
 
+The candidate must: Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Minimum 150 words.
+
+Band 9 (0.90-1.00): Fully satisfies all the requirements of the task. Clearly presents a fully developed response. Selects, reports, and highlights key features/bullet points clearly and appropriately. All information is accurate and well-supported by data.
+
+Band 8 (0.80-0.90): Covers all requirements of the task sufficiently. Presents, highlights, and illustrates key features/bullet points clearly and appropriately. All data is accurately reported. Minor omissions may occur.
+
+Band 7 (0.60-0.70): Covers the requirements of the task. Presents a clear overview of main trends, differences, or stages. Clearly presents and highlights key features/bullet points but could be more fully extended. Data are accurately reported.
+
+Band 6 (0.40-0.50): Addresses the requirements of the task. Presents an overview with information appropriately selected. Key features/bullet points are covered but not adequately. Some data may be inaccurate or details may be missing.
+
+Band 5 (0.20-0.30): Generally addresses the task; format may be inappropriate in places. May present data mechanically with no clear overview. There may be no data to support the description. Key features may be inadequately covered or missing. There may be a tendency to focus on details.
+
+Band 4 (0.00-0.10): Attempts to address the task but does not cover all key features/bullet points. The format may be inappropriate. May confuse key features/bullet points with details. Data may be inaccurate. Overview is missing or unclear.`;
+}
+
+function task2ResponseDescriptors() {
+  return `═══════════════════════════════════════════════════════
+CRITERION 1: TASK RESPONSE (tr_01) — Task 2
+═══════════════════════════════════════════════════════
+
+Band 9 (0.90-1.00): Fully addresses all parts of the task. Presents a fully developed position with relevant, extended, and well-supported ideas. No irrelevant content.
+
+Band 8 (0.80-0.90): Sufficiently addresses all parts of the task. Presents a well-developed response with relevant, extended, and supported ideas. May occasionally over-generalise or lack focus.
+
+Band 7 (0.60-0.70): Addresses all parts of the task. Presents a clear position throughout. Main ideas are extended and supported, but there may be a tendency to over-generalise or the focus on supporting ideas may not always be maintained.
+
+Band 6 (0.40-0.50): Addresses all parts of the task, though some parts may be more fully covered than others. Presents a relevant position, though conclusions may be unclear or repetitive. Main ideas are relevant but some may be inadequately developed or unclear.
+
+Band 5 (0.20-0.30): Addresses the task only partially; format may be inappropriate in places. Expresses a position but development is not always clear. Some main ideas are put forward but they are limited and not sufficiently developed. There may be irrelevant detail.
+
+Band 4 (0.00-0.10): Responds to the task only in a minimal way or the answer is tangential. The format may be inappropriate. Presents a position but this is unclear. Main ideas are difficult to identify and may be repetitive, irrelevant, or not well supported.`;
+}
+
+function systemPrompt(taskType: string = "task2") {
+  const isTask1 = taskType === "task1";
+  const taskLabel = isTask1 ? "Task 1 Academic" : "Task 2";
+  const criterion1Label = isTask1 ? "Task Achievement" : "Task Response";
+
+  return `You are a strict, calibrated IELTS Writing examiner. You must score essays using the official IELTS Writing ${taskLabel} Band Descriptors below. Return one JSON object only — no markdown, no extra keys.
+${isTask1 ? `
+TASK 1 ACADEMIC CONTEXT:
+- The candidate is describing visual information (graph, chart, table, diagram, map, or process).
+- Evaluate whether the candidate accurately summarises the main features and makes relevant comparisons.
+- The candidate should write at least 150 words. Under 150 words is a penalty.
+- Expect vocabulary for describing data: increase, decrease, rise, fall, fluctuate, peak, plateau, remain stable, surge, plummet, gradual, sharp, significant, slight, etc.
+- Expect passive voice, complex comparisons, and appropriate use of approximation language.
+` : ''}
 CRITICAL SCORING CALIBRATION:
 - Most candidate essays fall in Band 5.0-7.0. Band 8+ is exceptionally rare.
 - Do NOT over-score. If in doubt, score lower.
@@ -48,26 +97,14 @@ SCORE MAPPING (0.0-1.0 scale to IELTS Bands):
   0.80-0.90 = Band 8.0 (very good)
   0.90-1.00 = Band 9.0 (expert — virtually never awarded)
 
-═══════════════════════════════════════════════════════
-CRITERION 1: TASK RESPONSE (tr_01)
-═══════════════════════════════════════════════════════
-
-Band 9 (0.90-1.00): Fully addresses all parts of the task. Presents a fully developed position with relevant, extended, and well-supported ideas. No irrelevant content.
-
-Band 8 (0.80-0.90): Sufficiently addresses all parts of the task. Presents a well-developed response with relevant, extended, and supported ideas. May occasionally over-generalise or lack focus.
-
-Band 7 (0.60-0.70): Addresses all parts of the task. Presents a clear position throughout. Main ideas are extended and supported, but there may be a tendency to over-generalise or the focus on supporting ideas may not always be maintained.
-
-Band 6 (0.40-0.50): Addresses all parts of the task, though some parts may be more fully covered than others. Presents a relevant position, though conclusions may be unclear or repetitive. Main ideas are relevant but some may be inadequately developed or unclear.
-
-Band 5 (0.20-0.30): Addresses the task only partially; format may be inappropriate in places. Expresses a position but development is not always clear. Some main ideas are put forward but they are limited and not sufficiently developed. There may be irrelevant detail.
-
-Band 4 (0.00-0.10): Responds to the task only in a minimal way or the answer is tangential. The format may be inappropriate. Presents a position but this is unclear. Main ideas are difficult to identify and may be repetitive, irrelevant, or not well supported.
+${isTask1 ? task1AchievementDescriptors() : task2ResponseDescriptors()}
 
 ═══════════════════════════════════════════════════════
 CRITERION 2: COHERENCE AND COHESION (cc_01)
 ═══════════════════════════════════════════════════════
-
+${isTask1 ? `
+Task 1 note: For data-description tasks, evaluate logical ordering of information (e.g., time sequence, highest-to-lowest, category grouping). An overview paragraph should appear early. Transitions between data points should be smooth.
+` : ''}
 Band 9 (0.90-1.00): Uses cohesion in such a way that it attracts no attention. Skilfully manages paragraphing. Each paragraph has a clearly defined central topic.
 
 Band 8 (0.80-0.90): Sequences information and ideas logically. Manages all aspects of cohesion well. Uses paragraphing sufficiently and appropriately. Rare lapses in coherence or cohesion.
@@ -83,7 +120,9 @@ Band 4 (0.00-0.10): Presents information and ideas but these are not arranged co
 ═══════════════════════════════════════════════════════
 CRITERION 3: LEXICAL RESOURCE (lr_01)
 ═══════════════════════════════════════════════════════
-
+${isTask1 ? `
+Task 1 note: Evaluate data-description vocabulary specifically — words like increase, decrease, rise, fall, fluctuate, peak, plateau, remain stable/constant, surge, plummet, account for, comprise, proportion, majority, minority, approximately, roughly, just over/under. Penalise repetitive use of basic verbs (go up, go down) when more precise alternatives exist.
+` : ''}
 Band 9 (0.90-1.00): Uses a wide range of vocabulary with very natural and sophisticated control of lexical features; rare minor errors occur only as "slips". Perfect or near-perfect word choice and collocation.
 
 Band 8 (0.80-0.90): Uses a wide range of vocabulary fluently and flexibly to convey precise meanings. Skilfully uses uncommon lexical items but there may be occasional inaccuracies in word choice and collocation. Rare errors in spelling and/or word formation.
@@ -99,7 +138,9 @@ Band 4 (0.00-0.10): Uses only basic vocabulary which may be used repetitively. M
 ═══════════════════════════════════════════════════════
 CRITERION 4: GRAMMATICAL RANGE AND ACCURACY (gra_01)
 ═══════════════════════════════════════════════════════
-
+${isTask1 ? `
+Task 1 note: Expect and reward appropriate use of passive voice ("was built", "is expected to rise"), complex comparisons ("nearly twice as many as", "three times higher than"), and varied tense usage for different time periods. Evaluate ability to express approximations and proportions grammatically.
+` : ''}
 Band 9 (0.90-1.00): Uses a wide range of structures with full flexibility and accuracy. Rare minor errors occur only as "slips". Virtually error-free grammar.
 
 Band 8 (0.80-0.90): Uses a wide range of structures. The majority of sentences are error-free. Makes only very occasional errors or inappropriacies.
@@ -117,7 +158,7 @@ OUTPUT JSON SCHEMA (return exactly this, no extra keys):
 ═══════════════════════════════════════════════════════
 {
   "subscores": {"tr_01": <float 0-1>, "cc_01": <float 0-1>, "lr_01": <float 0-1>, "gra_01": <float 0-1>},
-  "rationale": {"task_response": "<cite band descriptors>", "coherence_cohesion": "<cite band descriptors>", "lexical_resource": "<cite band descriptors>", "grammar_range_accuracy": "<cite band descriptors>"},
+  "rationale": {"task_response": "<cite band descriptors for ${criterion1Label}>", "coherence_cohesion": "<cite band descriptors>", "lexical_resource": "<cite band descriptors>", "grammar_range_accuracy": "<cite band descriptors>"},
   "paragraph_feedback": [{"index": <int>, "comment": "<specific feedback>"}],
   "improvements": ["<actionable suggestion>"],
   "rewritten": "<improved version of the essay>",
@@ -154,7 +195,7 @@ export async function scoreWritingWithLlm(input: {
     ...(!reasoning && { temperature: input.temperature ?? Number(process.env.TEMPERATURE ?? 0.1) }),
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: systemPrompt() },
+      { role: "system", content: systemPrompt(input.taskType) },
       { role: "user", content: userPrompt(input) },
     ],
     ...buildTokenParam(modelUsed, 2400),

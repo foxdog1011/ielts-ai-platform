@@ -10,9 +10,42 @@ function buildTokenParam(model: string, tokens: number) {
     : { max_tokens: tokens };
 }
 
-function systemPrompt() {
-  return `You are a strict, calibrated IELTS Speaking examiner. You must score transcripts using the official IELTS Speaking Band Descriptors below. Return exactly one JSON object — no markdown, no extra keys.
+type SpeakingPartNum = 1 | 2 | 3;
 
+function partSpecificGuidance(part: SpeakingPartNum): string {
+  if (part === 1) {
+    return `
+PART-SPECIFIC GUIDANCE — PART 1 (Short Q&A, familiar topics):
+- Responses should be 2-3 sentences per question. Overly long answers are NOT better.
+- Focus on FLUENCY and NATURAL CONVERSATION: Can the candidate respond promptly and naturally?
+- Vocabulary range expectations are LOWER than Part 2/3 — familiar topic vocabulary is sufficient.
+- Grammar complexity expectations are MODERATE — simple but accurate structures are acceptable at Band 6+.
+- Penalise candidates who give one-word answers or cannot expand at all.
+- Do NOT penalise for lack of abstract reasoning — that belongs to Part 3.
+`;
+  }
+  if (part === 3) {
+    return `
+PART-SPECIFIC GUIDANCE — PART 3 (Abstract discussion):
+- Responses should be 4-8 sentences per question. Longer, developed answers are expected.
+- Focus on ABILITY TO DISCUSS ABSTRACT TOPICS: Can the candidate give opinions, develop arguments, and consider multiple perspectives?
+- Vocabulary range expectations are HIGHER — candidates should use topic-specific and abstract vocabulary.
+- Grammar complexity expectations are HIGH — complex structures (conditionals, passive, relative clauses) expected at Band 6+.
+- Penalise candidates who only give surface-level answers without justification or examples.
+- Reward candidates who can speculate, compare, evaluate, and develop ideas coherently.
+`;
+  }
+  return `
+PART-SPECIFIC GUIDANCE — PART 2 (Long turn / Cue card):
+- The candidate should speak for 1-2 minutes on the given topic.
+- Focus on ability to speak at length, organise ideas, and cover all bullet points on the cue card.
+- Expect a balance of description, narration, and explanation.
+`;
+}
+
+function systemPrompt(part: SpeakingPartNum = 2) {
+  return `You are a strict, calibrated IELTS Speaking examiner. You must score transcripts using the official IELTS Speaking Band Descriptors below. Return exactly one JSON object — no markdown, no extra keys.
+${partSpecificGuidance(part)}
 CRITICAL SCORING CALIBRATION:
 - Most candidates fall in Band 5.0-7.0. Band 8+ is exceptionally rare.
 - Do NOT over-score. If in doubt, score lower.
@@ -148,16 +181,18 @@ export async function scoreSpeakingWithLlm(input: {
   prompt?: string;
   model?: string;
   temperature?: number;
+  part?: SpeakingPartNum;
 }): Promise<{ rubric: SpeakingLlmRubric; tokensUsed?: number; modelUsed: string }> {
   const client = input.client ?? getOpenAIClient();
   const modelUsed = input.model ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
   const reasoning = isReasoningModel(modelUsed);
+  const part = input.part ?? 2;
   const response = await client.chat.completions.create({
     model: modelUsed,
     ...(!reasoning && { temperature: input.temperature ?? Number(process.env.TEMPERATURE ?? 0.1) }),
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: systemPrompt() },
+      { role: "system", content: systemPrompt(part) },
       { role: "user", content: userPrompt(input) },
     ],
     ...buildTokenParam(modelUsed, 1800),

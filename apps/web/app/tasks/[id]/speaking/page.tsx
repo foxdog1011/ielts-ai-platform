@@ -10,6 +10,7 @@ import { RadarChart } from '@/components/RadarChart';
 import { getPromptText } from '@/lib/promptUtils';
 import ShareScoreCard from '@/components/ShareScoreCard';
 
+type SpeakingPart = 1 | 2 | 3;
 type AgentMeta = { durationMs: number; agentsRan: string[] };
 type EvalResp = {
   ok: boolean;
@@ -44,6 +45,18 @@ type EvalResp = {
   error?: { message: string };
 };
 
+const PART_CONFIG: Record<SpeakingPart, { label: string; desc: string; apiPart: string }> = {
+  1: { label: 'Part 1', desc: 'Short Q&A (4-5 mins)', apiPart: 'part1' },
+  2: { label: 'Part 2', desc: 'Long Turn / Cue Card (2 mins)', apiPart: 'part2' },
+  3: { label: 'Part 3', desc: 'Discussion (4-5 mins)', apiPart: 'part3' },
+};
+
+function parsePartParam(val: string | null): SpeakingPart {
+  if (val === '1') return 1;
+  if (val === '3') return 3;
+  return 2;
+}
+
 export default function SpeakingPage() {
   const toast = useToast();
   const router = useRouter();
@@ -52,9 +65,16 @@ export default function SpeakingPage() {
   const searchParams = useSearchParams();
   const qFromUrl = (searchParams?.get('q') || '').trim();
   const resetFlag = (searchParams?.get('reset') || '').trim() === '1';
+  const activePart = parsePartParam(searchParams?.get('part') ?? null);
 
   const [prompt, setPrompt] = useState('');
   const [loadingPrompt, setLoadingPrompt] = useState(false);
+
+  // Part 1 & 3: multiple questions from one prompt (split by newline or numbered list)
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+  const questions = activePart !== 2
+    ? prompt.split(/\n/).map((q) => q.trim()).filter(Boolean)
+    : [prompt];
 
   // ── 模擬考：準備倒數 ──────────────────────────────────────────────────────
   const PREP_SECS = 60;
@@ -106,6 +126,16 @@ export default function SpeakingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [resp, setResp] = useState<EvalResp['data']>();
 
+  // ---------- Part switching ----------
+  function switchPart(newPart: SpeakingPart) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('part', String(newPart));
+    url.searchParams.delete('q');
+    url.searchParams.delete('reset');
+    resetAll(false);
+    router.replace(url.pathname + url.search);
+  }
+
   // ---------- 初始化題目 ----------
   useEffect(() => {
     (async () => {
@@ -121,7 +151,7 @@ export default function SpeakingPage() {
       await fetchRandomPrompt();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qFromUrl, taskId]);
+  }, [qFromUrl, taskId, activePart]);
 
   // 帶 reset=1 → 清一次並去除參數
   useEffect(() => {
@@ -138,23 +168,25 @@ export default function SpeakingPage() {
   async function fetchRandomPrompt() {
     setLoadingPrompt(true);
     setResp(undefined);
+    setCurrentQuestionIdx(0);
+    const apiPart = PART_CONFIG[activePart].apiPart;
     try {
       // 1) 直接抽
-      const r1 = await tryRandom();
+      const r1 = await tryRandom(apiPart);
       if (r1) return;
 
       // 2) 無 → 先種子
       await fetch('/api/prompts/seed', { method: 'POST' });
-      const r2 = await tryRandom();
+      const r2 = await tryRandom(apiPart);
       if (r2) return;
 
       // 3) 再無 → 生成一批
       await fetch('/api/prompts/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'speaking', part: 'part2', count: 8 }),
+        body: JSON.stringify({ type: 'speaking', part: apiPart, count: 8 }),
       });
-      const r3 = await tryRandom();
+      const r3 = await tryRandom(apiPart);
       if (r3) return;
 
       toast.push('暫無題目可抽，稍後再試');
@@ -165,8 +197,8 @@ export default function SpeakingPage() {
     }
   }
 
-  async function tryRandom(): Promise<boolean> {
-    const res = await fetch(`/api/prompts/random?type=speaking&part=part2`, { cache: 'no-store' });
+  async function tryRandom(apiPart: string): Promise<boolean> {
+    const res = await fetch(`/api/prompts/random?type=speaking&part=${apiPart}`, { cache: 'no-store' });
     const json = await res.json();
     const text = getPromptText(json?.data);
     if (json?.ok && text) {
@@ -219,6 +251,7 @@ export default function SpeakingPage() {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl('');
     setManualTranscript('');
+    setCurrentQuestionIdx(0);
     if (showToast) toast.push('已開始新一輪');
   }
 
@@ -250,11 +283,11 @@ export default function SpeakingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           taskId,
+          part: activePart,
           audioBase64,
           mime,
           durationSec: Math.max(1, durationSec),
           manualTranscript: manualTranscript.trim() || undefined,
-          // speechMetrics: { pauseRate: 0.12, avgPauseSec: 0.45 }, //（可選）若你前端有做停頓分析
         }),
       });
       const json: EvalResp = await res.json();
@@ -279,9 +312,29 @@ export default function SpeakingPage() {
             <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">
               ← 回首頁
             </Link>
-            <h1 className="text-[18px] font-medium tracking-tight">Speaking（Part 2）</h1>
+            <h1 className="text-[18px] font-medium tracking-tight">
+              Speaking（{PART_CONFIG[activePart].label}）
+            </h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Part selector */}
+            <div className="flex rounded-xl border border-zinc-200 overflow-hidden">
+              {([1, 2, 3] as SpeakingPart[]).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => switchPart(p)}
+                  className={[
+                    'px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] transition-colors',
+                    p === activePart
+                      ? 'bg-amber-50 text-amber-900 font-medium'
+                      : 'bg-white text-zinc-600 hover:bg-zinc-50',
+                    p !== 1 ? 'border-l border-zinc-200' : '',
+                  ].join(' ')}
+                >
+                  P{p}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
@@ -301,25 +354,31 @@ export default function SpeakingPage() {
             >
               開始新一輪
             </button>
-            {prepMode ? (
-              <button
-                onClick={cancelPrepMode}
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-red-700 hover:bg-red-100"
-              >
-                取消
-              </button>
-            ) : recState === 'idle' ? (
-              <button
-                onClick={startPrepMode}
-                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
-                title="1分鐘準備，時間到自動開始錄音"
-              >
-                模擬考
-              </button>
-            ) : null}
+            {/* Prep mode (mock exam) only for Part 2 */}
+            {activePart === 2 && (
+              <>
+                {prepMode ? (
+                  <button
+                    onClick={cancelPrepMode}
+                    className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-red-700 hover:bg-red-100"
+                  >
+                    取消
+                  </button>
+                ) : recState === 'idle' ? (
+                  <button
+                    onClick={startPrepMode}
+                    className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
+                    title="1分鐘準備，時間到自動開始錄音"
+                  >
+                    模擬考
+                  </button>
+                ) : null}
+              </>
+            )}
             <div className="text-[12px] sm:text-[11px] text-zinc-500">Task #{taskId}</div>
           </div>
         </div>
+        <div className="mt-1 text-[12px] text-zinc-400">{PART_CONFIG[activePart].desc}</div>
       </header>
 
       {/* Prep countdown banner */}
@@ -337,13 +396,59 @@ export default function SpeakingPage() {
           <div className="space-y-6">
             {/* 題目卡 */}
             <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
-              <div className="text-[12px] font-medium tracking-wide text-amber-700">CUE CARD</div>
-              {loadingPrompt ? (
-                <div className="mt-2 h-16 animate-pulse rounded-xl bg-zinc-100" />
+              {activePart === 2 ? (
+                <>
+                  <div className="text-[12px] font-medium tracking-wide text-amber-700">CUE CARD</div>
+                  {loadingPrompt ? (
+                    <div className="mt-2 h-16 animate-pulse rounded-xl bg-zinc-100" />
+                  ) : (
+                    <div className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.7] text-zinc-900">
+                      {prompt || '（尚未取得題目）'}
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.7] text-zinc-900">
-                  {prompt || '（尚未取得題目）'}
-                </div>
+                <>
+                  <div className="text-[12px] font-medium tracking-wide text-amber-700">
+                    {activePart === 1 ? 'PART 1 — SHORT Q&A' : 'PART 3 — DISCUSSION'}
+                  </div>
+                  {loadingPrompt ? (
+                    <div className="mt-2 h-16 animate-pulse rounded-xl bg-zinc-100" />
+                  ) : questions.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                      {questions.map((q, i) => (
+                        <div
+                          key={i}
+                          className={[
+                            'rounded-lg border px-3 py-2 text-[14px] leading-[1.6] transition-colors',
+                            i === currentQuestionIdx
+                              ? 'border-amber-300 bg-amber-50/60 text-zinc-900'
+                              : i < currentQuestionIdx
+                                ? 'border-zinc-200 bg-zinc-50 text-zinc-400 line-through'
+                                : 'border-zinc-200 bg-white text-zinc-600',
+                          ].join(' ')}
+                        >
+                          <span className="text-[12px] text-zinc-400 mr-1">Q{i + 1}.</span> {q}
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2 pt-1">
+                        <span className="text-[11px] text-zinc-400">
+                          Question {Math.min(currentQuestionIdx + 1, questions.length)} of {questions.length}
+                        </span>
+                        {currentQuestionIdx < questions.length - 1 && recState === 'idle' && (
+                          <button
+                            onClick={() => setCurrentQuestionIdx((i) => Math.min(i + 1, questions.length - 1))}
+                            className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-800 hover:bg-amber-100"
+                          >
+                            Next question
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2 text-[15px] text-zinc-500">（尚未取得題目）</div>
+                  )}
+                </>
               )}
               <details className="mt-3 group">
                 <summary className="cursor-pointer list-none text-[12px] text-zinc-500 transition-colors group-open:text-zinc-800">
@@ -361,7 +466,9 @@ export default function SpeakingPage() {
             {/* 錄音卡 */}
             <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
               <div className="flex items-center justify-between">
-                <div className="text-[15px] sm:text-[14px] font-medium">兩分鐘口說</div>
+                <div className="text-[15px] sm:text-[14px] font-medium">
+                  {activePart === 1 ? '短答錄音' : activePart === 3 ? '討論錄音' : '兩分鐘口說'}
+                </div>
                 <div className="rounded-lg border border-zinc-200 px-3 py-1.5 text-[13px] sm:text-[12px] text-zinc-700 font-medium tabular-nums">
                   {mm}:{ss}
                 </div>
@@ -586,6 +693,7 @@ const SPK_DIM_LABEL: Record<string, string> = {
 };
 
 const SPK_TASK_LABEL: Record<string, string> = {
+  speaking_part1_short_qa: 'Part 1 — Short Q&A',
   speaking_part2_long_turn: 'Part 2 — Long Turn',
   speaking_pronunciation_drill: 'Pronunciation Drill',
   speaking_part3_discussion: 'Part 3 — Discussion',
