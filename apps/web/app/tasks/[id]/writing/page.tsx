@@ -245,19 +245,26 @@ export default function WritingTaskPage() {
   }
 
   return (
-    <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
+    <main className="relative min-h-dvh bg-[#f7f5ff] text-zinc-900 font-brand">
       <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-6 sm:pt-8 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">← 回首頁</Link>
-            <h1 className="text-[18px] font-medium tracking-tight">Writing {taskType === 'task1' ? 'Task 1' : 'Task 2'}</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link href="/" className="text-[14px] sm:text-[13px] font-bold text-[#1CB0F6] hover:text-[#1899d6] min-h-[44px] flex items-center">
+              ← 回首頁
+            </Link>
+            <h1 className="text-xl font-bold tracking-tight">
+              寫作練習 {taskType === 'task1' ? 'Task 1' : 'Task 2'}
+            </h1>
             <MlStatusBadge />
-            <div className="flex rounded-lg border border-zinc-200 bg-zinc-50 p-0.5">
+            {/* Task 1/2 toggle — Duolingo segment pills */}
+            <div className="flex rounded-2xl bg-white p-1 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)] border-2 border-zinc-200">
               <button
                 onClick={() => { setTaskType('task1'); setTargetWords(150); }}
                 className={[
-                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                  taskType === 'task1' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700',
+                  'rounded-xl px-5 py-2 text-sm font-bold transition-all',
+                  taskType === 'task1'
+                    ? 'bg-[#58CC02] text-white shadow-[0_4px_0_0_#46a302]'
+                    : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50',
                 ].join(' ')}
               >
                 Task 1
@@ -265,8 +272,10 @@ export default function WritingTaskPage() {
               <button
                 onClick={() => { setTaskType('task2'); setTargetWords(250); }}
                 className={[
-                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                  taskType === 'task2' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700',
+                  'rounded-xl px-5 py-2 text-sm font-bold transition-all',
+                  taskType === 'task2'
+                    ? 'bg-[#58CC02] text-white shadow-[0_4px_0_0_#46a302]'
+                    : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50',
                 ].join(' ')}
               >
                 Task 2
@@ -278,15 +287,17 @@ export default function WritingTaskPage() {
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
               className={[
-                'rounded-xl border px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px]',
-                loadingPrompt ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400' : 'border-zinc-300 bg-white hover:bg-zinc-50'
+                'rounded-xl border-2 px-4 py-2 min-h-[44px] text-sm font-bold transition-all',
+                loadingPrompt
+                  ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400'
+                  : 'border-[#1CB0F6] bg-white text-[#1CB0F6] hover:bg-[#1CB0F6] hover:text-white shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]'
               ].join(' ')}
             >
               {loadingPrompt ? '抽題中…' : '換一題'}
             </button>
             <button
               onClick={() => resetAttempt(true)}
-              className="rounded-xl border border-zinc-300 bg-white px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50"
+              className="rounded-xl border-2 border-zinc-300 bg-white px-4 py-2 min-h-[44px] text-sm font-bold hover:bg-zinc-50 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
               title="清空草稿並重新開始一次"
             >
               開始新一輪
@@ -294,20 +305,22 @@ export default function WritingTaskPage() {
             {examMode ? (
               <button
                 onClick={cancelExamMode}
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-red-700 hover:bg-red-100"
+                className="rounded-xl border-2 border-[#FF4B4B] bg-[#FFF0F0] px-4 py-2 min-h-[44px] text-sm font-bold text-[#FF4B4B] hover:bg-[#FFE0E0] shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
               >
                 取消模擬考
               </button>
             ) : (
               <button
                 onClick={startExamMode}
-                className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
+                className="rounded-xl border-2 border-[#CE82FF] bg-[#F5EEFF] px-4 py-2 min-h-[44px] text-sm font-bold text-[#7B2FBE] hover:bg-[#EDE0FF] shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
                 title={taskType === 'task1' ? '20 分鐘限時，時間到自動送出' : '40 分鐘限時，時間到自動送出'}
               >
                 模擬考
               </button>
             )}
-            <div className="text-[12px] sm:text-[11px] text-zinc-500">Task #{taskId}</div>
+            <div className="rounded-xl bg-white border-2 border-zinc-200 px-3 py-1.5 text-xs font-bold text-zinc-500">
+              任務 #{taskId}
+            </div>
           </div>
         </div>
       </header>
@@ -316,17 +329,14 @@ export default function WritingTaskPage() {
       {examMode && (
         <div className={[
           'sticky top-0 z-20 mx-auto max-w-6xl px-4 sm:px-8 py-3 sm:py-2',
-          'flex items-center justify-center gap-3',
-          examUrgent ? 'bg-red-50 border-b border-red-200' : 'bg-purple-50 border-b border-purple-200',
+          'flex items-center justify-center gap-3 rounded-b-2xl',
+          examUrgent ? 'bg-[#FF4B4B] text-white' : 'bg-[#CE82FF] text-white',
         ].join(' ')}>
-          <span className="text-[12px] font-medium text-zinc-700">⏱ 模擬考模式</span>
-          <span className={[
-            'text-[20px] font-bold tabular-nums',
-            examUrgent ? 'text-red-600' : 'text-purple-700',
-          ].join(' ')}>
+          <span className="text-sm font-bold">模擬考模式</span>
+          <span className="text-2xl font-bold tabular-nums">
             {examMM}:{examSS}
           </span>
-          <span className="text-[11px] text-zinc-500">時間到自動送出</span>
+          <span className="text-xs font-bold opacity-80">時間到自動送出</span>
         </div>
       )}
 
@@ -335,14 +345,16 @@ export default function WritingTaskPage() {
           {/* 左側 */}
           <div className="space-y-6">
             {/* 題目卡 */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-5 sm:p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
-                  <div className="text-[12px] font-medium tracking-wide text-blue-700">PROMPT</div>
+                  <div className="inline-block rounded-xl bg-[#1CB0F6] px-3 py-1 text-xs font-bold text-white">
+                    題目
+                  </div>
                   {loadingPrompt ? (
-                    <div className="mt-2 h-16 animate-pulse rounded-xl bg-zinc-100" />
+                    <div className="mt-3 h-16 animate-pulse rounded-2xl bg-zinc-100" />
                   ) : (
-                    <div className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.7] text-zinc-900">
+                    <div className="mt-3 whitespace-pre-wrap text-base leading-[1.8] text-zinc-900 font-medium">
                       {prompt || '（尚未取得題目）'}
                     </div>
                   )}
@@ -352,8 +364,8 @@ export default function WritingTaskPage() {
                     onClick={async () => { if (await copySafe(prompt)) toast.push('已複製題目'); }}
                     disabled={!prompt}
                     className={[
-                      "rounded-lg border px-3 py-1.5 text-[12px]",
-                      prompt ? "border-zinc-300 bg-white hover:bg-zinc-50" : "cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400"
+                      "rounded-xl border-2 px-3 py-1.5 text-xs font-bold",
+                      prompt ? "border-zinc-300 bg-white hover:bg-zinc-50 shadow-[2px_2px_0_0_rgba(0,0,0,0.08)]" : "cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400"
                     ].join(" ")}
                     title="複製題目"
                   >
@@ -361,7 +373,7 @@ export default function WritingTaskPage() {
                   </button>
                   <button
                     onClick={() => setPrompt('')}
-                    className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-[12px] hover:bg-zinc-50"
+                    className="rounded-xl border-2 border-zinc-300 bg-white px-3 py-1.5 text-xs font-bold hover:bg-zinc-50 shadow-[2px_2px_0_0_rgba(0,0,0,0.08)]"
                     title="清除題目"
                   >
                     清除
@@ -371,11 +383,11 @@ export default function WritingTaskPage() {
 
               {/* 可選：修改題目 */}
               <details className="mt-3 group">
-                <summary className="cursor-pointer list-none text-[12px] text-zinc-500 transition-colors group-open:text-zinc-800">
+                <summary className="cursor-pointer list-none text-xs font-bold text-zinc-500 transition-colors group-open:text-zinc-800">
                   修改題目（可選）
                 </summary>
                 <textarea
-                  className="mt-2 w-full rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 text-[13px] leading-relaxed outline-none focus:bg-white focus:ring-2 focus:ring-zinc-300"
+                  className="mt-2 w-full rounded-2xl border-2 border-zinc-200 bg-zinc-50/60 p-3 text-sm leading-relaxed outline-none focus:bg-white focus:ring-2 focus:ring-[#1CB0F6] focus:border-[#1CB0F6]"
                   rows={2}
                   value={prompt}
                   onChange={(e) => { dirtyRef.current = true; setPrompt(e.target.value); }}
@@ -385,65 +397,65 @@ export default function WritingTaskPage() {
 
             {/* Task guidance */}
             <div className={[
-              'rounded-xl border px-4 py-2.5 text-[12px] leading-relaxed',
+              'rounded-2xl border-l-4 px-5 py-3 text-sm leading-relaxed font-medium',
               taskType === 'task1'
-                ? 'border-amber-200 bg-amber-50/60 text-amber-800'
-                : 'border-blue-200 bg-blue-50/60 text-blue-800',
+                ? 'border-l-[#FFD900] bg-[#FFFDE7] text-amber-800'
+                : 'border-l-[#1CB0F6] bg-[#E8F7FE] text-sky-800',
             ].join(' ')}>
               {taskType === 'task1' ? (
                 <>
-                  <span className="font-medium">Task 1 Academic</span> — Summarise the information by selecting and reporting the main features, and make comparisons where relevant.
-                  <span className="ml-2 text-[11px] text-amber-600">150 words minimum · ~20 minutes</span>
+                  <span className="font-bold">Task 1 學術類</span> — 選擇並報告主要特徵，在相關時進行比較，將資訊做摘要整理。
+                  <span className="ml-2 text-xs font-bold text-amber-600">至少 150 字 · 約 20 分鐘</span>
                 </>
               ) : (
                 <>
-                  <span className="font-medium">Task 2</span> — Write an essay in response to a point of view, argument, or problem.
-                  <span className="ml-2 text-[11px] text-blue-600">250 words minimum · ~40 minutes</span>
+                  <span className="font-bold">Task 2</span> — 針對觀點、論點或問題撰寫一篇議論文。
+                  <span className="ml-2 text-xs font-bold text-sky-600">至少 250 字 · 約 40 分鐘</span>
                 </>
               )}
             </div>
 
             {/* 編輯器 */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
-              {/* Word count and timer bar - sticky on mobile for visibility during writing */}
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-4 sm:p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
+              {/* Word count and timer bar */}
               <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-white/95 backdrop-blur border-b border-zinc-100 mb-3 sm:relative sm:border-b-0 sm:mb-0 sm:bg-transparent sm:backdrop-blur-none">
                 <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                  <div className="flex items-center gap-2 sm:gap-3 text-[13px] sm:text-[12px] text-zinc-500">
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1.5 sm:py-1">
-                      時間 <span className="font-medium text-zinc-800">{minutes}:{sec.toString().padStart(2, '0')}</span>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#FFD900] bg-[#FFFDE7] px-3 py-1.5 text-sm font-bold text-amber-800">
+                      ⏱ <span className="tabular-nums">{minutes}:{sec.toString().padStart(2, '0')}</span>
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-zinc-200 px-2 py-1.5 sm:py-1">
-                      字數 <span className="font-medium text-zinc-800">{words}</span>
+                    <span className="inline-flex items-center gap-1.5 rounded-xl border-2 border-[#58CC02] bg-[#F0FDE4] px-3 py-1.5 text-sm font-bold text-green-800">
+                      字數 <span className="tabular-nums">{words}</span>
                     </span>
-                    <span className="hidden sm:inline text-zinc-500">({wordHint})</span>
+                    <span className="hidden sm:inline text-xs font-bold text-zinc-500">({wordHint})</span>
                   </div>
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <label className="text-[13px] sm:text-[12px] text-zinc-500 shrink-0">目標字數</label>
+                    <label className="text-xs font-bold text-zinc-500 shrink-0">目標字數</label>
                     <input type="range" min={taskType === 'task1' ? 120 : 180} max={taskType === 'task1' ? 250 : 350} step={10}
                       value={targetWords} onChange={(e) => { dirtyRef.current = true; setTargetWords(Number(e.target.value)); }}
-                      className="flex-1 sm:w-52 accent-zinc-700 min-h-[44px]" />
-                    <span className="text-[13px] sm:text-[12px] text-zinc-700 shrink-0">{targetWords}</span>
+                      className="flex-1 sm:w-52 accent-[#58CC02] min-h-[44px]" />
+                    <span className="text-sm font-bold text-zinc-700 shrink-0">{targetWords}</span>
                   </div>
                 </div>
               </div>
 
               <textarea
-                className="mt-3 w-full min-h-[250px] sm:min-h-[300px] rounded-xl border border-zinc-200 bg-white p-3 sm:p-4 text-[15px] sm:text-[14px] leading-[1.75] outline-none focus:ring-2 focus:ring-zinc-300"
+                className="mt-3 w-full min-h-[250px] sm:min-h-[300px] rounded-2xl border-2 border-zinc-200 bg-white p-4 sm:p-5 text-base leading-[1.85] outline-none focus:ring-3 focus:ring-[#58CC02]/30 focus:border-[#58CC02] transition-all"
                 placeholder="在此撰寫或貼上你的作文..."
                 value={essay}
                 onChange={(e) => { dirtyRef.current = true; setEssay(e.target.value); }}
               />
 
-              <div className="mt-2 text-[11px] text-zinc-500">
+              <div className="mt-2 text-xs font-bold text-zinc-400">
                 {savedAt ? <>已自動保存 {new Date(savedAt).toLocaleTimeString()}</> : '將自動保存草稿'}
               </div>
 
               <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="hidden sm:block text-[12px] text-zinc-500">快捷鍵：Ctrl/Cmd+Enter 送出，Esc 清空結果預覽</div>
+                <div className="hidden sm:block text-xs font-bold text-zinc-400">快捷鍵：Ctrl/Cmd+Enter 送出，Esc 清空結果預覽</div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => { setEssay(''); localStorage.removeItem(draftKey(taskId)); setSeconds(0); setResult(undefined); }}
-                    className="rounded-xl border border-zinc-300 bg-white px-3 py-2.5 sm:py-2 text-[14px] sm:text-sm min-h-[44px] hover:bg-zinc-50 flex-1 sm:flex-none"
+                    className="rounded-xl border-2 border-zinc-300 bg-white px-4 py-2.5 sm:py-2 text-sm font-bold min-h-[44px] hover:bg-zinc-50 flex-1 sm:flex-none shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
                   >
                     清空草稿
                   </button>
@@ -451,10 +463,10 @@ export default function WritingTaskPage() {
                     onClick={onSubmit}
                     disabled={submitting || essay.trim().length < 30 || !prompt}
                     className={[
-                      'rounded-xl border px-4 py-2.5 sm:py-2 text-[14px] sm:text-sm min-h-[44px] transition-colors flex-1 sm:flex-none',
+                      'rounded-xl border-2 px-5 py-2.5 sm:py-2 text-sm font-bold min-h-[44px] transition-all flex-1 sm:flex-none',
                       submitting
                         ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400'
-                        : 'border-blue-300 bg-blue-50 text-blue-900 hover:bg-blue-100',
+                        : 'border-[#58CC02] bg-[#58CC02] text-white hover:bg-[#46a302] shadow-[0_4px_0_0_#46a302] active:shadow-none active:translate-y-1',
                     ].join(' ')}
                   >
                     {submitting ? '分析中...' : '送出並取得評分'}
@@ -463,16 +475,16 @@ export default function WritingTaskPage() {
               </div>
 
               {error && (
-                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+                <div className="mt-3 rounded-2xl border-2 border-[#FF4B4B] bg-[#FFF0F0] px-4 py-3 text-sm font-bold text-[#FF4B4B]">
                   {error}
                 </div>
               )}
             </div>
 
             {/* Compare Panel */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-5 sm:p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
               <div className="flex items-center justify-between">
-                <h3 className="text-[14px] font-medium tracking-tight">原文 vs. 優化版本</h3>
+                <h3 className="text-base font-bold tracking-tight">原文 vs. 優化版本</h3>
                 <div className="flex items-center gap-2">
                   <CopyBtn text={essay} label="複製原文" onDone={() => toast.push('已複製原文')} />
                   <CopyBtn text={result?.rewritten || ''} label="複製優化稿" onDone={() => toast.push('已複製優化稿')} />
@@ -480,10 +492,10 @@ export default function WritingTaskPage() {
               </div>
               <div className="mt-3 grid gap-4 grid-cols-1 md:grid-cols-2">
                 <div>
-                  <div className="text-[12px] text-zinc-500 mb-1">
+                  <div className="text-xs font-bold text-zinc-500 mb-1">
                     你的原文
                     {result?.paragraphFeedback?.length ? (
-                      <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] text-amber-700">
+                      <span className="ml-2 rounded-full bg-[#FFD900] px-2 py-0.5 text-[10px] font-bold text-amber-800">
                         {result.paragraphFeedback.length} 條批注
                       </span>
                     ) : null}
@@ -494,8 +506,8 @@ export default function WritingTaskPage() {
                   />
                 </div>
                 <div>
-                  <div className="text-[12px] text-zinc-500">AI 優化版本</div>
-                  <div className="mt-1 min-h-[120px] whitespace-pre-wrap rounded-xl border border-zinc-200 bg-white p-3 text-[13px] leading-relaxed text-zinc-800">
+                  <div className="text-xs font-bold text-zinc-500">AI 優化版本</div>
+                  <div className="mt-1 min-h-[120px] whitespace-pre-wrap rounded-2xl border-2 border-zinc-200 bg-white p-3 text-sm leading-relaxed text-zinc-800">
                     {result?.rewritten || '（送出後顯示）'}
                   </div>
                 </div>
@@ -505,19 +517,19 @@ export default function WritingTaskPage() {
 
           {/* 右側：AI 評分（sticky、可收合） */}
           <aside className="lg:sticky lg:top-6 self-start">
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-4 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-[13px] font-medium tracking-tight">AI 評分</h3>
+                  <h3 className="text-base font-bold tracking-tight">AI 評分</h3>
                   {result?.band?.overall != null && (
-                    <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700">
+                    <span className="rounded-xl bg-[#1CB0F6] px-2.5 py-1 text-xs font-bold text-white shadow-[0_2px_0_0_#1899d6]">
                       Band {result.band.overall}
                     </span>
                   )}
                 </div>
                 <button
                   onClick={() => setShowRight((v) => !v)}
-                  className="rounded-md border border-zinc-300 bg-white px-2 py-0.5 text-[11px] hover:bg-zinc-50"
+                  className="rounded-xl border-2 border-zinc-300 bg-white px-3 py-1 text-xs font-bold hover:bg-zinc-50"
                   aria-expanded={showRight}
                 >
                   {showRight ? '收合' : '展開'}
@@ -525,14 +537,14 @@ export default function WritingTaskPage() {
               </div>
 
               {!showRight && (
-                <div className="mt-2 text-[12px] text-zinc-500">已收合（點「展開」查看詳情）</div>
+                <div className="mt-2 text-xs font-bold text-zinc-500">已收合（點「展開」查看詳情）</div>
               )}
 
               {showRight && (
                 <>
                   {/* Empty state */}
                   {!result && !submitting && (
-                    <div className="mt-4 rounded-lg border border-dashed border-zinc-200 p-4 text-center text-[12px] text-zinc-400">
+                    <div className="mt-4 rounded-2xl border-2 border-dashed border-zinc-200 p-6 text-center text-sm font-bold text-zinc-400">
                       送出後顯示評分與學習建議
                     </div>
                   )}
@@ -540,44 +552,44 @@ export default function WritingTaskPage() {
                   {/* Loading skeleton */}
                   {submitting && (
                     <div className="mt-3 space-y-2">
-                      <div className="h-8 animate-pulse rounded-lg bg-zinc-100" />
-                      <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
-                      <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
-                      <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                      <div className="h-8 animate-pulse rounded-2xl bg-zinc-100" />
+                      <div className="h-5 animate-pulse rounded-xl bg-zinc-100" />
+                      <div className="h-5 animate-pulse rounded-xl bg-zinc-100" />
+                      <div className="h-5 animate-pulse rounded-xl bg-zinc-100" />
                     </div>
                   )}
 
                   {/* Scores */}
                   {result?.band && (
-                    <div className="mt-3 space-y-1.5">
+                    <div className="mt-3 space-y-2">
                       <BandBadge overall={result.band.overall} margin={result.bandMargin} />
                       {/* Radar chart */}
                       {result.band.taskResponse != null && (
                         <div className="flex justify-center py-2">
                           <RadarChart
                             size={180}
-                            color="#3b82f6"
+                            color="#1CB0F6"
                             dims={[
-                              { label: taskType === 'task1' ? "Task Ach." : "Task", shortLabel: taskType === 'task1' ? "Ach." : "Task", value: result.band.taskResponse ?? 0 },
-                              { label: "Coherence", shortLabel: "Coh.", value: result.band.coherence ?? 0 },
-                              { label: "Lexical", shortLabel: "Lex.", value: result.band.lexical ?? 0 },
-                              { label: "Grammar", shortLabel: "Gram.", value: result.band.grammar ?? 0 },
+                              { label: taskType === 'task1' ? "任務達成" : "任務回應", shortLabel: taskType === 'task1' ? "達成" : "回應", value: result.band.taskResponse ?? 0 },
+                              { label: "連貫性", shortLabel: "連貫", value: result.band.coherence ?? 0 },
+                              { label: "詞彙", shortLabel: "詞彙", value: result.band.lexical ?? 0 },
+                              { label: "文法", shortLabel: "文法", value: result.band.grammar ?? 0 },
                             ]}
                           />
                         </div>
                       )}
-                      <ScoreRow compact label={taskType === 'task1' ? 'Task Achievement' : 'Task Response'} value={result.band.taskResponse} />
-                      <ScoreRow compact label="Coherence & Cohesion" value={result.band.coherence} />
-                      <ScoreRow compact label="Lexical Resource" value={result.band.lexical} />
-                      <ScoreRow compact label="Grammar Range & Accuracy" value={result.band.grammar} />
+                      <ScoreRow compact label={taskType === 'task1' ? '任務達成' : '任務回應'} value={result.band.taskResponse} color="#58CC02" />
+                      <ScoreRow compact label="連貫與銜接" value={result.band.coherence} color="#1CB0F6" />
+                      <ScoreRow compact label="詞彙資源" value={result.band.lexical} color="#CE82FF" />
+                      <ScoreRow compact label="文法範疇與正確性" value={result.band.grammar} color="#FFD900" />
                       <ShareScoreCard
                         type="writing"
                         overall={result.band.overall}
                         scores={[
-                          { label: taskType === 'task1' ? 'Task Achievement' : 'Task Response', value: result.band.taskResponse },
-                          { label: 'Coherence', value: result.band.coherence },
-                          { label: 'Lexical', value: result.band.lexical },
-                          { label: 'Grammar', value: result.band.grammar },
+                          { label: taskType === 'task1' ? '任務達成' : '任務回應', value: result.band.taskResponse },
+                          { label: '連貫性', value: result.band.coherence },
+                          { label: '詞彙', value: result.band.lexical },
+                          { label: '文法', value: result.band.grammar },
                         ]}
                       />
                     </div>
@@ -585,15 +597,15 @@ export default function WritingTaskPage() {
 
                   {/* Improvements */}
                   {!!result?.improvements?.length && (
-                    <details className="mt-4 border-t border-zinc-100 pt-3" open>
+                    <details className="mt-4 border-t-2 border-zinc-100 pt-3" open>
                       <summary className="flex cursor-pointer list-none items-center justify-between">
-                        <span className="text-[12px] font-medium text-zinc-700">改善建議</span>
-                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{result.improvements.length}</span>
+                        <span className="text-sm font-bold text-zinc-700">改善建議</span>
+                        <span className="rounded-full bg-[#FFD900] px-2 py-0.5 text-xs font-bold text-amber-800">{result.improvements.length}</span>
                       </summary>
-                      <ul className="mt-2 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
+                      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-700">
                         {result.improvements.map((s, i) => (
                           <li key={i} className="flex items-start gap-2">
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#58CC02]" />
                             <span className="flex-1">{s}</span>
                             <SaveToNotebookBtn text={s} examType="writing" />
                           </li>
@@ -604,16 +616,16 @@ export default function WritingTaskPage() {
 
                   {/* Paragraph feedback */}
                   {!!result?.paragraphFeedback?.length && (
-                    <details className="mt-3 border-t border-zinc-100 pt-3">
+                    <details className="mt-3 border-t-2 border-zinc-100 pt-3">
                       <summary className="flex cursor-pointer list-none items-center justify-between">
-                        <span className="text-[12px] font-medium text-zinc-700">逐段建議</span>
-                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{result.paragraphFeedback.length}</span>
+                        <span className="text-sm font-bold text-zinc-700">逐段建議</span>
+                        <span className="rounded-full bg-[#1CB0F6] px-2 py-0.5 text-xs font-bold text-white">{result.paragraphFeedback.length}</span>
                       </summary>
-                      <div className="mt-2 space-y-1">
+                      <div className="mt-2 space-y-1.5">
                         {result.paragraphFeedback.map((p) => (
                           <div key={p.index}
-                            className="rounded-lg border border-zinc-200 bg-white/70 px-2 py-1.5 text-[12px] leading-relaxed text-zinc-700">
-                            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-zinc-300 text-[11px] text-zinc-700">
+                            className="rounded-2xl border-2 border-zinc-200 bg-white px-3 py-2 text-sm leading-relaxed text-zinc-700">
+                            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1CB0F6] text-xs font-bold text-white">
                               {p.index + 1}
                             </span>
                             {p.comment}
@@ -634,12 +646,12 @@ export default function WritingTaskPage() {
                   )}
 
                   {!!result?.tokensUsed && (
-                    <div className="mt-3 text-right text-[11px] text-zinc-400">
+                    <div className="mt-3 text-right text-xs font-bold text-zinc-300">
                       tokens {result.tokensUsed}
                     </div>
                   )}
                   {result?.agentMeta != null && (
-                    <div className="mt-1 text-right text-[10px] text-zinc-300">
+                    <div className="mt-1 text-right text-[10px] font-bold text-zinc-300">
                       {result.agentMeta.agentsRan.length} agents · {result.agentMeta.durationMs}ms
                     </div>
                   )}
@@ -656,21 +668,21 @@ export default function WritingTaskPage() {
 /* ---------------- helpers ---------------- */
 
 const DIM_LABEL: Record<string, string> = {
-  taskResponse: 'Task Response',
-  coherence: 'Coherence & Cohesion',
-  lexical: 'Lexical Resource',
-  grammar: 'Grammar',
+  taskResponse: '任務回應',
+  coherence: '連貫與銜接',
+  lexical: '詞彙資源',
+  grammar: '文法',
 };
 
 const TASK_LABEL: Record<string, string> = {
-  task1_paraphrase: 'Task 1 — Paraphrase Practice',
-  task1_data: 'Task 1 — Data Description',
-  task1_process: 'Task 1 — Process Description',
-  task2_argument: 'Task 2 — Argument Essay',
-  task2_discuss: 'Task 2 — Discussion Essay',
-  task2_problem: 'Task 2 — Problem–Solution',
-  task2_mixed: 'Task 2 — Mixed Essay',
-  task2_structure: 'Task 2 — Structure Practice',
+  task1_paraphrase: 'Task 1 — 改寫練習',
+  task1_data: 'Task 1 — 數據描述',
+  task1_process: 'Task 1 — 流程描述',
+  task2_argument: 'Task 2 — 論證文',
+  task2_discuss: 'Task 2 — 討論文',
+  task2_problem: 'Task 2 — 問題解決',
+  task2_mixed: 'Task 2 — 混合題型',
+  task2_structure: 'Task 2 — 結構練習',
 };
 
 function draftKey(taskId: string) { return `draft:writing:${taskId}`; }
@@ -718,8 +730,8 @@ function CopyBtn({ text, label, onDone }: { text: string; label: string; onDone:
       onClick={async () => { if (await copySafe(text)) onDone(); }}
       disabled={!text}
       className={[
-        "rounded-lg border px-3 py-1.5 text-[12px]",
-        text ? "border-zinc-300 bg-white hover:bg-zinc-50" : "cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400"
+        "rounded-xl border-2 px-3 py-1.5 text-xs font-bold",
+        text ? "border-zinc-300 bg-white hover:bg-zinc-50 shadow-[2px_2px_0_0_rgba(0,0,0,0.08)]" : "cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400"
       ].join(" ")}
     >
       {label}
@@ -733,16 +745,16 @@ function BandBadge({ overall, margin }: { overall?: number; margin?: number }) {
   const display = isNaN(value) ? '-' : value.toFixed(1).replace(/\.0$/, '');
   const pct = Math.max(0, Math.min(100, (value / 9) * 100));
   return (
-    <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white/70 p-2">
-      <div className="text-[11px] text-zinc-600">Overall Band</div>
+    <div className="flex items-center justify-between rounded-2xl border-2 border-[#1CB0F6] bg-[#E8F7FE] p-3">
+      <div className="text-sm font-bold text-sky-700">整體分數</div>
       <div className="flex items-center gap-2">
-        <div className="h-1.5 w-28 overflow-hidden rounded-full bg-zinc-200">
-          <div className="h-full bg-blue-500/80" style={{ width: `${pct}%` }} aria-label={`overall ${display}/9`} />
+        <div className="h-3 w-28 overflow-hidden rounded-full bg-sky-200">
+          <div className="h-full rounded-full bg-[#1CB0F6]" style={{ width: `${pct}%` }} aria-label={`overall ${display}/9`} />
         </div>
         <div className="flex items-baseline gap-0.5">
-          <div className="text-[13px] font-semibold text-zinc-900">{display}</div>
+          <div className="text-lg font-bold text-sky-800">{display}</div>
           {margin != null && (
-            <div className="text-[10px] text-zinc-400" title={`±${margin} band margin of error (measured MAE)`}>
+            <div className="text-[10px] font-bold text-sky-400" title={`±${margin} band margin of error (measured MAE)`}>
               ±{margin}
             </div>
           )}
@@ -752,17 +764,17 @@ function BandBadge({ overall, margin }: { overall?: number; margin?: number }) {
   );
 }
 
-function ScoreRow({ label, value, compact }: { label: string; value?: number; compact?: boolean }) {
+function ScoreRow({ label, value, compact, color = '#58CC02' }: { label: string; value?: number; compact?: boolean; color?: string }) {
   if (value == null) return null;
   const pct = Math.max(0, Math.min(100, (value / 9) * 100));
   return (
-    <div className={["flex items-center justify-between rounded-md border border-zinc-200 bg-white/60", compact ? "px-2 py-1.5" : "px-3 py-2"].join(" ")}>
-      <div className={compact ? "text-[11px] text-zinc-600" : "text-[12px] text-zinc-600"}>{label}</div>
+    <div className={["flex items-center justify-between rounded-2xl border-2 border-zinc-200 bg-white", compact ? "px-3 py-2" : "px-4 py-3"].join(" ")}>
+      <div className={compact ? "text-xs font-bold text-zinc-600" : "text-sm font-bold text-zinc-600"}>{label}</div>
       <div className="flex items-center gap-2">
-        <div className={compact ? "h-1 w-24 overflow-hidden rounded-full bg-zinc-200" : "h-1.5 w-32 overflow-hidden rounded-full bg-zinc-200"}>
-          <div className="h-full bg-zinc-700" style={{ width: `${pct}%` }} />
+        <div className={compact ? "h-3 w-24 overflow-hidden rounded-full bg-zinc-100" : "h-3 w-32 overflow-hidden rounded-full bg-zinc-100"}>
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
         </div>
-        <div className={compact ? "text-[11px] font-medium text-zinc-800" : "text-[12px] font-medium text-zinc-800"}>
+        <div className={compact ? "text-sm font-bold text-zinc-800" : "text-base font-bold text-zinc-800"}>
           {value.toFixed(1).replace(/\.0$/, '')}
         </div>
       </div>
@@ -798,10 +810,10 @@ function SaveToNotebookBtn({ text, examType }: { text: string; examType: "writin
       disabled={saved !== 'idle'}
       title="加入錯題本"
       className={[
-        'shrink-0 rounded px-1.5 py-0.5 text-[10px] transition-colors',
+        'shrink-0 rounded-lg px-2 py-0.5 text-xs font-bold transition-colors',
         saved === 'done'
-          ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-          : 'border border-zinc-200 bg-white text-zinc-400 hover:text-zinc-700 hover:border-zinc-300',
+          ? 'border-2 border-[#58CC02] bg-[#F0FDE4] text-[#58CC02]'
+          : 'border-2 border-zinc-200 bg-white text-zinc-400 hover:text-zinc-700 hover:border-zinc-300',
       ].join(' ')}
     >
       {saved === 'done' ? '✓' : '+'}

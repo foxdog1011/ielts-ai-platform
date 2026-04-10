@@ -46,9 +46,9 @@ type EvalResp = {
 };
 
 const PART_CONFIG: Record<SpeakingPart, { label: string; desc: string; apiPart: string }> = {
-  1: { label: 'Part 1', desc: 'Short Q&A (4-5 mins)', apiPart: 'part1' },
-  2: { label: 'Part 2', desc: 'Long Turn / Cue Card (2 mins)', apiPart: 'part2' },
-  3: { label: 'Part 3', desc: 'Discussion (4-5 mins)', apiPart: 'part3' },
+  1: { label: 'Part 1', desc: '簡答問答（4-5 分鐘）', apiPart: 'part1' },
+  2: { label: 'Part 2', desc: '長篇口說 / 提示卡（2 分鐘）', apiPart: 'part2' },
+  3: { label: 'Part 3', desc: '深度討論（4-5 分鐘）', apiPart: 'part3' },
 };
 
 function parsePartParam(val: string | null): SpeakingPart {
@@ -305,30 +305,29 @@ export default function SpeakingPage() {
   const ss = (durationSec % 60).toString().padStart(2, '0');
 
   return (
-    <main className="relative min-h-dvh bg-white text-zinc-900 font-brand">
+    <main className="relative min-h-dvh bg-[#f7f5ff] text-zinc-900 font-brand">
       <header className="mx-auto max-w-6xl px-4 sm:px-8 pt-6 sm:pt-8 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-[14px] sm:text-[13px] text-zinc-500 hover:text-zinc-800 min-h-[44px] flex items-center">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Link href="/" className="text-[14px] sm:text-[13px] font-bold text-[#1CB0F6] hover:text-[#1899d6] min-h-[44px] flex items-center">
               ← 回首頁
             </Link>
-            <h1 className="text-[18px] font-medium tracking-tight">
-              Speaking（{PART_CONFIG[activePart].label}）
+            <h1 className="text-xl font-bold tracking-tight">
+              口說練習（{PART_CONFIG[activePart].label}）
             </h1>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Part selector */}
-            <div className="flex rounded-xl border border-zinc-200 overflow-hidden">
+            {/* Part selector — Duolingo segment pills */}
+            <div className="flex rounded-2xl bg-white p-1 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)] border-2 border-zinc-200">
               {([1, 2, 3] as SpeakingPart[]).map((p) => (
                 <button
                   key={p}
                   onClick={() => switchPart(p)}
                   className={[
-                    'px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] transition-colors',
+                    'rounded-xl px-4 py-2 min-h-[44px] text-sm font-bold transition-all',
                     p === activePart
-                      ? 'bg-amber-50 text-amber-900 font-medium'
-                      : 'bg-white text-zinc-600 hover:bg-zinc-50',
-                    p !== 1 ? 'border-l border-zinc-200' : '',
+                      ? 'bg-[#FFD900] text-amber-900 shadow-[0_3px_0_0_#e6c300]'
+                      : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50',
                   ].join(' ')}
                 >
                   P{p}
@@ -339,17 +338,17 @@ export default function SpeakingPage() {
               onClick={() => fetchRandomPrompt()}
               disabled={loadingPrompt}
               className={[
-                'rounded-xl border px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px]',
+                'rounded-xl border-2 px-4 py-2 min-h-[44px] text-sm font-bold transition-all',
                 loadingPrompt
                   ? 'cursor-wait border-zinc-200 bg-zinc-100 text-zinc-400'
-                  : 'border-zinc-300 bg-white hover:bg-zinc-50',
+                  : 'border-[#1CB0F6] bg-white text-[#1CB0F6] hover:bg-[#1CB0F6] hover:text-white shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]',
               ].join(' ')}
             >
               {loadingPrompt ? '抽題中...' : '換一題'}
             </button>
             <button
               onClick={() => resetAll(true)}
-              className="rounded-xl border border-zinc-300 bg-white px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] hover:bg-zinc-50"
+              className="rounded-xl border-2 border-zinc-300 bg-white px-4 py-2 min-h-[44px] text-sm font-bold hover:bg-zinc-50 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
               title="清空錄音/稿/結果並重新開始"
             >
               開始新一輪
@@ -360,14 +359,14 @@ export default function SpeakingPage() {
                 {prepMode ? (
                   <button
                     onClick={cancelPrepMode}
-                    className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-red-700 hover:bg-red-100"
+                    className="rounded-xl border-2 border-[#FF4B4B] bg-[#FFF0F0] px-4 py-2 min-h-[44px] text-sm font-bold text-[#FF4B4B] hover:bg-[#FFE0E0] shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
                   >
                     取消
                   </button>
                 ) : recState === 'idle' ? (
                   <button
                     onClick={startPrepMode}
-                    className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-2 min-h-[44px] text-[13px] sm:text-[12px] text-purple-800 hover:bg-purple-100"
+                    className="rounded-xl border-2 border-[#CE82FF] bg-[#F5EEFF] px-4 py-2 min-h-[44px] text-sm font-bold text-[#7B2FBE] hover:bg-[#EDE0FF] shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
                     title="1分鐘準備，時間到自動開始錄音"
                   >
                     模擬考
@@ -375,18 +374,22 @@ export default function SpeakingPage() {
                 ) : null}
               </>
             )}
-            <div className="text-[12px] sm:text-[11px] text-zinc-500">Task #{taskId}</div>
+            <div className="rounded-xl bg-white border-2 border-zinc-200 px-3 py-1.5 text-xs font-bold text-zinc-500">
+              任務 #{taskId}
+            </div>
           </div>
         </div>
-        <div className="mt-1 text-[12px] text-zinc-400">{PART_CONFIG[activePart].desc}</div>
+        <div className="mt-2 inline-block rounded-xl bg-[#FFD900]/20 px-3 py-1 text-xs font-bold text-amber-700">
+          {PART_CONFIG[activePart].desc}
+        </div>
       </header>
 
       {/* Prep countdown banner */}
       {prepMode && (
-        <div className="sticky top-0 z-20 mx-auto max-w-6xl px-4 sm:px-8 py-3 sm:py-2 flex items-center justify-center gap-3 bg-purple-50 border-b border-purple-200">
-          <span className="text-[12px] font-medium text-zinc-700">準備時間</span>
-          <span className="text-[20px] font-bold tabular-nums text-purple-700">{prepMM}:{prepSS}</span>
-          <span className="text-[11px] text-zinc-500">時間到自動開始錄音</span>
+        <div className="sticky top-0 z-20 mx-auto max-w-6xl px-4 sm:px-8 py-3 sm:py-2 flex items-center justify-center gap-3 bg-[#CE82FF] text-white rounded-b-2xl">
+          <span className="text-sm font-bold">準備時間</span>
+          <span className="text-2xl font-bold tabular-nums">{prepMM}:{prepSS}</span>
+          <span className="text-xs font-bold opacity-80">時間到自動開始錄音</span>
         </div>
       )}
 
@@ -395,67 +398,79 @@ export default function SpeakingPage() {
           {/* 左側：題目 + 錄音 */}
           <div className="space-y-6">
             {/* 題目卡 */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-5 sm:p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
               {activePart === 2 ? (
                 <>
-                  <div className="text-[12px] font-medium tracking-wide text-amber-700">CUE CARD</div>
+                  <div className="inline-block rounded-xl bg-[#FFD900] px-3 py-1 text-xs font-bold text-amber-900">
+                    提示卡
+                  </div>
                   {loadingPrompt ? (
-                    <div className="mt-2 h-16 animate-pulse rounded-xl bg-zinc-100" />
+                    <div className="mt-3 h-16 animate-pulse rounded-2xl bg-zinc-100" />
                   ) : (
-                    <div className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.7] text-zinc-900">
+                    <div className="mt-3 whitespace-pre-wrap text-base leading-[1.8] text-zinc-900 font-medium">
                       {prompt || '（尚未取得題目）'}
                     </div>
                   )}
                 </>
               ) : (
                 <>
-                  <div className="text-[12px] font-medium tracking-wide text-amber-700">
-                    {activePart === 1 ? 'PART 1 — SHORT Q&A' : 'PART 3 — DISCUSSION'}
+                  <div className="inline-block rounded-xl bg-[#FFD900] px-3 py-1 text-xs font-bold text-amber-900">
+                    {activePart === 1 ? 'Part 1 — 簡答問答' : 'Part 3 — 深度討論'}
                   </div>
                   {loadingPrompt ? (
-                    <div className="mt-2 h-16 animate-pulse rounded-xl bg-zinc-100" />
+                    <div className="mt-3 h-16 animate-pulse rounded-2xl bg-zinc-100" />
                   ) : questions.length > 0 ? (
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-3 space-y-2">
                       {questions.map((q, i) => (
                         <div
                           key={i}
                           className={[
-                            'rounded-lg border px-3 py-2 text-[14px] leading-[1.6] transition-colors',
+                            'rounded-2xl border-2 px-4 py-3 text-sm leading-[1.6] transition-all font-medium',
                             i === currentQuestionIdx
-                              ? 'border-amber-300 bg-amber-50/60 text-zinc-900'
+                              ? 'border-[#FFD900] bg-[#FFFDE7] text-zinc-900 shadow-[0_3px_0_0_#e6c300]'
                               : i < currentQuestionIdx
-                                ? 'border-zinc-200 bg-zinc-50 text-zinc-400 line-through'
+                                ? 'border-[#58CC02] bg-[#F0FDE4] text-zinc-500 line-through'
                                 : 'border-zinc-200 bg-white text-zinc-600',
                           ].join(' ')}
                         >
-                          <span className="text-[12px] text-zinc-400 mr-1">Q{i + 1}.</span> {q}
+                          <span className={[
+                            'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold mr-2',
+                            i === currentQuestionIdx
+                              ? 'bg-[#FFD900] text-amber-900'
+                              : i < currentQuestionIdx
+                                ? 'bg-[#58CC02] text-white'
+                                : 'bg-zinc-200 text-zinc-500',
+                          ].join(' ')}>
+                            {i < currentQuestionIdx ? '✓' : `${i + 1}`}
+                          </span>
+                          {q}
                         </div>
                       ))}
                       <div className="flex items-center gap-2 pt-1">
-                        <span className="text-[11px] text-zinc-400">
-                          Question {Math.min(currentQuestionIdx + 1, questions.length)} of {questions.length}
+                        <span className="text-xs font-bold text-zinc-400">
+                          第 {Math.min(currentQuestionIdx + 1, questions.length)} 題，共 {questions.length} 題
                         </span>
                         {currentQuestionIdx < questions.length - 1 && recState === 'idle' && (
                           <button
                             onClick={() => setCurrentQuestionIdx((i) => Math.min(i + 1, questions.length - 1))}
-                            className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] text-amber-800 hover:bg-amber-100"
+                            className="rounded-xl border-2 border-[#FFD900] bg-[#FFFDE7] px-3 py-1 text-xs font-bold text-amber-800 hover:bg-[#FFF9C4] shadow-[2px_2px_0_0_rgba(0,0,0,0.08)]"
                           >
-                            Next question
+                            下一題
                           </button>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-2 text-[15px] text-zinc-500">（尚未取得題目）</div>
+                    <div className="mt-3 text-base font-medium text-zinc-500">（尚未取得題目）</div>
                   )}
                 </>
               )}
-              <details className="mt-3 group">
-                <summary className="cursor-pointer list-none text-[12px] text-zinc-500 transition-colors group-open:text-zinc-800">
+              <details className="mt-4 group">
+                <summary className="cursor-pointer list-none text-xs font-bold text-zinc-500 transition-colors group-open:text-zinc-800">
                   修改題目（可選）
                 </summary>
                 <textarea
-                  className="mt-2 w-full rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 text-[13px] leading-relaxed outline-none focus:bg-white focus:ring-2 focus:ring-zinc-300"
+                  className="mt-2 w-full rounded-2xl border-2 border-zinc-200 bg-zinc-50/60 p-3 text-sm leading-relaxed outline-none focus:bg-white focus:ring-2 focus:ring-[#1CB0F6] focus:border-[#1CB0F6]"
                   rows={2}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -464,46 +479,63 @@ export default function SpeakingPage() {
             </div>
 
             {/* 錄音卡 */}
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 sm:p-6 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-4 sm:p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
               <div className="flex items-center justify-between">
-                <div className="text-[15px] sm:text-[14px] font-medium">
-                  {activePart === 1 ? '短答錄音' : activePart === 3 ? '討論錄音' : '兩分鐘口說'}
+                <div className="text-base font-bold">
+                  {activePart === 1 ? '簡答錄音' : activePart === 3 ? '討論錄音' : '兩分鐘口說'}
                 </div>
-                <div className="rounded-lg border border-zinc-200 px-3 py-1.5 text-[13px] sm:text-[12px] text-zinc-700 font-medium tabular-nums">
+                <div className="rounded-xl border-2 border-[#FFD900] bg-[#FFFDE7] px-4 py-2 text-sm font-bold text-amber-800 tabular-nums">
                   {mm}:{ss}
                 </div>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-4 flex flex-col items-center gap-3">
+                {/* Big Record Button */}
                 {recState !== 'recording' ? (
                   <button
                     onClick={startRec}
-                    className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm text-amber-900 hover:bg-amber-100"
+                    className="flex h-20 w-20 items-center justify-center rounded-full bg-[#FF4B4B] text-white shadow-[0_6px_0_0_#cc3c3c] hover:bg-[#e64444] active:shadow-none active:translate-y-1.5 transition-all"
+                    aria-label="開始錄音"
                   >
-                    開始錄音
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                    </svg>
                   </button>
                 ) : (
                   <button
                     onClick={stopRec}
-                    className="rounded-xl border border-red-300 bg-red-50 px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm text-red-900 hover:bg-red-100"
+                    className="flex h-20 w-20 items-center justify-center rounded-full bg-[#FF4B4B] text-white shadow-[0_6px_0_0_#cc3c3c] animate-pulse hover:bg-[#e64444] active:shadow-none active:translate-y-1.5 transition-all"
+                    aria-label="停止錄音"
                   >
-                    停止
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="6" width="12" height="12" rx="2" />
+                    </svg>
                   </button>
                 )}
-                <button
-                  onClick={() => resetAll(true)}
-                  className="rounded-xl border border-zinc-300 bg-white px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm hover:bg-zinc-50"
-                >
-                  重新開始
-                </button>
+
+                <div className="text-sm font-bold text-zinc-500">
+                  {recState === 'idle' && '點擊開始錄音'}
+                  {recState === 'recording' && '錄音中... 點擊停止'}
+                  {recState === 'finished' && '錄音完成'}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => resetAll(true)}
+                    className="rounded-xl border-2 border-zinc-300 bg-white px-4 py-2 text-sm font-bold hover:bg-zinc-50 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]"
+                  >
+                    重新開始
+                  </button>
+                </div>
                 {audioUrl && <audio className="mt-2 block w-full" controls src={audioUrl} />}
               </div>
 
               {/* 人工逐字稿（可選） */}
               <div className="mt-4">
-                <div className="text-[13px] sm:text-[12px] text-zinc-500">若想跳過自動轉寫，可直接貼上逐字稿：</div>
+                <div className="text-xs font-bold text-zinc-500">若想跳過自動轉寫，可直接貼上逐字稿：</div>
                 <textarea
-                  className="mt-2 w-full min-h-[100px] rounded-xl border border-zinc-200 bg-white p-3 text-[14px] sm:text-[13px] leading-relaxed outline-none focus:ring-2 focus:ring-zinc-300"
+                  className="mt-2 w-full min-h-[100px] rounded-2xl border-2 border-zinc-200 bg-white p-3 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[#1CB0F6] focus:border-[#1CB0F6]"
                   placeholder="（可選）在此輸入口說逐字稿..."
                   value={manualTranscript}
                   onChange={(e) => setManualTranscript(e.target.value)}
@@ -515,10 +547,10 @@ export default function SpeakingPage() {
                   onClick={submit}
                   disabled={submitting || (!audioUrl && !manualTranscript.trim()) || !prompt}
                   className={[
-                    'rounded-xl border px-4 py-2.5 sm:py-2 min-h-[44px] text-[14px] sm:text-sm transition-colors w-full sm:w-auto',
+                    'rounded-xl border-2 px-5 py-2.5 sm:py-2 min-h-[44px] text-sm font-bold transition-all w-full sm:w-auto',
                     submitting
                       ? 'cursor-not-allowed border-zinc-200 bg-zinc-100 text-zinc-400'
-                      : 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100',
+                      : 'border-[#58CC02] bg-[#58CC02] text-white hover:bg-[#46a302] shadow-[0_4px_0_0_#46a302] active:shadow-none active:translate-y-1',
                   ].join(' ')}
                 >
                   {submitting ? '分析中...' : '送出並取得評分'}
@@ -529,11 +561,11 @@ export default function SpeakingPage() {
 
           {/* 右側：結果 */}
           <aside className="lg:sticky lg:top-6 self-start">
-            <div className="rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm backdrop-blur">
+            <div className="rounded-3xl border-2 border-zinc-200 bg-white p-4 shadow-[4px_4px_0_0_rgba(0,0,0,0.08)]">
               <div className="flex items-center gap-2">
-                <h3 className="text-[13px] font-medium tracking-tight">AI 評分</h3>
+                <h3 className="text-base font-bold tracking-tight">AI 評分</h3>
                 {resp?.content?.band?.overall != null && (
-                  <span className="rounded-md bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700">
+                  <span className="rounded-xl bg-[#FFD900] px-2.5 py-1 text-xs font-bold text-amber-900 shadow-[0_2px_0_0_#e6c300]">
                     Band {resp.content.band.overall}
                   </span>
                 )}
@@ -541,7 +573,7 @@ export default function SpeakingPage() {
 
               {/* Empty state */}
               {!resp && !submitting && (
-                <div className="mt-4 rounded-lg border border-dashed border-zinc-200 p-4 text-center text-[12px] text-zinc-400">
+                <div className="mt-4 rounded-2xl border-2 border-dashed border-zinc-200 p-6 text-center text-sm font-bold text-zinc-400">
                   送出後顯示評分與語音分析
                 </div>
               )}
@@ -549,49 +581,51 @@ export default function SpeakingPage() {
               {/* Loading skeleton */}
               {submitting && (
                 <div className="mt-3 space-y-2">
-                  <div className="h-8 animate-pulse rounded-lg bg-zinc-100" />
-                  <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
-                  <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
-                  <div className="h-5 animate-pulse rounded-md bg-zinc-100" />
+                  <div className="h-8 animate-pulse rounded-2xl bg-zinc-100" />
+                  <div className="h-5 animate-pulse rounded-xl bg-zinc-100" />
+                  <div className="h-5 animate-pulse rounded-xl bg-zinc-100" />
+                  <div className="h-5 animate-pulse rounded-xl bg-zinc-100" />
                 </div>
               )}
 
               {/* Content scores */}
               {resp?.content?.band && (
                 <div className="mt-3">
-                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Content</div>
+                  <div className="mb-2 inline-block rounded-xl bg-[#58CC02] px-3 py-1 text-xs font-bold text-white">
+                    內容評分
+                  </div>
                   {/* Radar chart */}
                   {resp.content.band.taskResponse != null && resp.speech?.band?.fluency != null && (
                     <div className="flex justify-center py-2">
                       <RadarChart
                         size={180}
-                        color="#f59e0b"
+                        color="#FFD900"
                         dims={[
-                          { label: "Task", value: resp.content.band.taskResponse ?? 0 },
-                          { label: "Vocab", value: resp.content.band.vocabulary ?? 0 },
-                          { label: "Grammar", value: resp.content.band.grammar ?? 0 },
-                          { label: "Fluency", value: resp.speech?.band?.fluency ?? 0 },
-                          { label: "Pronunciation", value: resp.speech?.band?.pronunciation ?? 0 },
+                          { label: "任務", value: resp.content.band.taskResponse ?? 0 },
+                          { label: "詞彙", value: resp.content.band.vocabulary ?? 0 },
+                          { label: "文法", value: resp.content.band.grammar ?? 0 },
+                          { label: "流暢度", value: resp.speech?.band?.fluency ?? 0 },
+                          { label: "發音", value: resp.speech?.band?.pronunciation ?? 0 },
                         ]}
                       />
                     </div>
                   )}
-                  <div className="space-y-1">
-                    <Score label="Overall" v={resp.content.band.overall} />
-                    <Score label="Task Response" v={resp.content.band.taskResponse} />
-                    <Score label="Vocabulary" v={resp.content.band.vocabulary} />
-                    <Score label="Grammar" v={resp.content.band.grammar} />
+                  <div className="space-y-2">
+                    <Score label="整體" v={resp.content.band.overall} color="#FFD900" />
+                    <Score label="任務回應" v={resp.content.band.taskResponse} color="#58CC02" />
+                    <Score label="詞彙" v={resp.content.band.vocabulary} color="#1CB0F6" />
+                    <Score label="文法" v={resp.content.band.grammar} color="#CE82FF" />
                   </div>
                   {!!resp.content.suggestions?.length && (
-                    <details className="mt-2">
+                    <details className="mt-3">
                       <summary className="flex cursor-pointer list-none items-center justify-between pt-2">
-                        <span className="text-[12px] font-medium text-zinc-700">建議</span>
-                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{resp.content.suggestions.length}</span>
+                        <span className="text-sm font-bold text-zinc-700">建議</span>
+                        <span className="rounded-full bg-[#FFD900] px-2 py-0.5 text-xs font-bold text-amber-800">{resp.content.suggestions.length}</span>
                       </summary>
-                      <ul className="mt-1.5 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
+                      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-700">
                         {resp.content.suggestions.map((s, i) => (
                           <li key={i} className="flex gap-2">
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#58CC02]" />
                             <span>{s}</span>
                           </li>
                         ))}
@@ -603,37 +637,39 @@ export default function SpeakingPage() {
 
               {/* Speech scores */}
               {resp?.speech?.band && (
-                <div className="mt-4 border-t border-zinc-100 pt-3">
-                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Speech</div>
-                  <div className="space-y-1">
-                    <Score label="Overall" v={resp.speech.band.overall} />
-                    <Score label="Pronunciation" v={resp.speech.band.pronunciation} />
-                    <Score label="Fluency" v={resp.speech.band.fluency} />
+                <div className="mt-4 border-t-2 border-zinc-100 pt-3">
+                  <div className="mb-2 inline-block rounded-xl bg-[#CE82FF] px-3 py-1 text-xs font-bold text-white">
+                    語音評分
+                  </div>
+                  <div className="space-y-2">
+                    <Score label="整體" v={resp.speech.band.overall} color="#CE82FF" />
+                    <Score label="發音" v={resp.speech.band.pronunciation} color="#FF4B4B" />
+                    <Score label="流暢度" v={resp.speech.band.fluency} color="#1CB0F6" />
                   </div>
                   {!!resp.speech.metrics && (
-                    <div className="mt-2 grid grid-cols-2 gap-1">
-                      <Metric label="Duration" v={`${resp.speech.metrics.durationSec ?? 0}s`} />
-                      <Metric label="WPM" v={`${resp.speech.metrics.wpm ?? '-'}`} />
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <Metric label="語料長度" v={`${resp.speech.metrics.durationSec ?? 0}s`} />
+                      <Metric label="語速" v={`${resp.speech.metrics.wpm ?? '-'}`} />
                       <Metric
-                        label="Pause Rate"
+                        label="停頓比例"
                         v={resp.speech.metrics.pauseRate != null ? `${Math.round((resp.speech.metrics.pauseRate || 0) * 100)}%` : 'n/a'}
                       />
                       <Metric
-                        label="Avg Pause"
+                        label="平均停頓"
                         v={resp.speech.metrics.avgPauseSec != null ? `${resp.speech.metrics.avgPauseSec}s` : 'n/a'}
                       />
                     </div>
                   )}
                   {!!resp.speech.suggestions?.length && (
-                    <details className="mt-2">
+                    <details className="mt-3">
                       <summary className="flex cursor-pointer list-none items-center justify-between pt-2">
-                        <span className="text-[12px] font-medium text-zinc-700">建議</span>
-                        <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] text-zinc-500">{resp.speech.suggestions.length}</span>
+                        <span className="text-sm font-bold text-zinc-700">建議</span>
+                        <span className="rounded-full bg-[#CE82FF] px-2 py-0.5 text-xs font-bold text-white">{resp.speech.suggestions.length}</span>
                       </summary>
-                      <ul className="mt-1.5 space-y-1.5 text-[12px] leading-relaxed text-zinc-700">
+                      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-zinc-700">
                         {resp.speech.suggestions.map((s, i) => (
                           <li key={i} className="flex gap-2">
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-400" />
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#CE82FF]" />
                             <span>{s}</span>
                           </li>
                         ))}
@@ -649,11 +685,11 @@ export default function SpeakingPage() {
                   type="speaking"
                   overall={resp.content.band.overall}
                   scores={[
-                    { label: 'Task Response', value: resp.content.band.taskResponse },
-                    { label: 'Vocabulary', value: resp.content.band.vocabulary },
-                    { label: 'Grammar', value: resp.content.band.grammar },
-                    { label: 'Fluency', value: resp.speech?.band?.fluency },
-                    { label: 'Pronunciation', value: resp.speech?.band?.pronunciation },
+                    { label: '任務回應', value: resp.content.band.taskResponse },
+                    { label: '詞彙', value: resp.content.band.vocabulary },
+                    { label: '文法', value: resp.content.band.grammar },
+                    { label: '流暢度', value: resp.speech?.band?.fluency },
+                    { label: '發音', value: resp.speech?.band?.pronunciation },
                   ]}
                 />
               )}
@@ -669,10 +705,10 @@ export default function SpeakingPage() {
               )}
 
               {!!resp?.tokensUsed && (
-                <div className="mt-3 text-right text-[11px] text-zinc-400">tokens {resp.tokensUsed}</div>
+                <div className="mt-3 text-right text-xs font-bold text-zinc-300">tokens {resp.tokensUsed}</div>
               )}
               {resp?.agentMeta != null && (
-                <div className="mt-1 text-right text-[10px] text-zinc-300">
+                <div className="mt-1 text-right text-[10px] font-bold text-zinc-300">
                   {resp.agentMeta.agentsRan.length} agents · {resp.agentMeta.durationMs}ms
                 </div>
               )}
@@ -685,33 +721,33 @@ export default function SpeakingPage() {
 }
 
 const SPK_DIM_LABEL: Record<string, string> = {
-  content: 'Content',
-  vocab: 'Vocabulary',
-  grammar: 'Grammar',
-  fluency: 'Fluency',
-  pronunciation: 'Pronunciation',
+  content: '內容',
+  vocab: '詞彙',
+  grammar: '文法',
+  fluency: '流暢度',
+  pronunciation: '發音',
 };
 
 const SPK_TASK_LABEL: Record<string, string> = {
-  speaking_part1_short_qa: 'Part 1 — Short Q&A',
-  speaking_part2_long_turn: 'Part 2 — Long Turn',
-  speaking_pronunciation_drill: 'Pronunciation Drill',
-  speaking_part3_discussion: 'Part 3 — Discussion',
-  speaking_vocabulary_practice: 'Vocabulary Practice',
-  speaking_grammar_accuracy: 'Grammar Accuracy',
+  speaking_part1_short_qa: 'Part 1 — 簡答問答',
+  speaking_part2_long_turn: 'Part 2 — 長篇口說',
+  speaking_pronunciation_drill: '發音練習',
+  speaking_part3_discussion: 'Part 3 — 深度討論',
+  speaking_vocabulary_practice: '詞彙練習',
+  speaking_grammar_accuracy: '文法正確性',
 };
 
-function Score({ label, v }: { label: string; v?: number }) {
+function Score({ label, v, color = '#FFD900' }: { label: string; v?: number; color?: string }) {
   if (v == null) return null;
   const pct = Math.max(0, Math.min(100, (Number(v) / 9) * 100));
   return (
-    <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white/60 px-2 py-1.5">
-      <span className="text-[11px] text-zinc-600">{label}</span>
+    <div className="flex items-center justify-between rounded-2xl border-2 border-zinc-200 bg-white px-3 py-2">
+      <span className="text-xs font-bold text-zinc-600">{label}</span>
       <div className="flex items-center gap-2">
-        <div className="h-1 w-20 overflow-hidden rounded-full bg-zinc-200">
-          <div className="h-full bg-amber-500/80" style={{ width: `${pct}%` }} />
+        <div className="h-3 w-20 overflow-hidden rounded-full bg-zinc-100">
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
         </div>
-        <span className="text-[11px] font-medium text-zinc-800">{Number(v).toFixed(1).replace(/\.0$/, '')}</span>
+        <span className="text-sm font-bold text-zinc-800">{Number(v).toFixed(1).replace(/\.0$/, '')}</span>
       </div>
     </div>
   );
@@ -719,9 +755,9 @@ function Score({ label, v }: { label: string; v?: number }) {
 
 function Metric({ label, v }: { label: string; v: string }) {
   return (
-    <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white/60 px-2 py-1">
-      <span className="text-[10px] text-zinc-500">{label}</span>
-      <span className="text-[10px] font-medium text-zinc-700">{v}</span>
+    <div className="flex items-center justify-between rounded-xl border-2 border-zinc-200 bg-white px-3 py-2">
+      <span className="text-xs font-bold text-zinc-500">{label}</span>
+      <span className="text-xs font-bold text-zinc-700">{v}</span>
     </div>
   );
 }

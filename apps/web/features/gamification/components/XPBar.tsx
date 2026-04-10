@@ -47,29 +47,29 @@ export function XPBar({ initialXP }: XPBarProps) {
   const pct = levelRange > 0 ? Math.min(100, (progressInLevel / levelRange) * 100) : 0;
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2">
+    <div className="flex items-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)]">
       {/* Level badge */}
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-400 text-[11px] font-bold text-white shadow-sm">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#CE82FF] to-[#A855F7] text-[14px] font-bold text-white shadow-[2px_2px_0_0_rgba(0,0,0,0.15)]">
         {xp.level}
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="font-medium text-zinc-700">
-            Lv.{xp.level}
+        <div className="flex items-center justify-between text-[12px]">
+          <span className="font-bold text-gray-700">
+            等級 {xp.level}
           </span>
-          <span className="text-zinc-400">
+          <span className="font-bold text-[#CE82FF]">
             {xp.totalXP} XP
           </span>
         </div>
         {/* Progress bar */}
-        <div className="mt-1 h-1.5 w-full rounded-full bg-zinc-100 overflow-hidden">
+        <div className="mt-1.5 h-3 w-full rounded-full bg-gray-100 overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-700 ease-out"
+            className="h-full rounded-full bg-gradient-to-r from-[#CE82FF] to-[#A855F7] transition-all duration-700 ease-out"
             style={{ width: animateWidth ? `${pct}%` : "0%" }}
           />
         </div>
-        <div className="mt-0.5 text-[10px] text-zinc-400">
+        <div className="mt-1 text-[11px] font-bold text-gray-400">
           還需 {xp.xpToNextLevel} XP 升級
         </div>
       </div>

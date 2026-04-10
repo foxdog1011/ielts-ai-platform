@@ -45,9 +45,12 @@ export function StreakBadge({ initialStreak }: StreakBadgeProps) {
 
   if (streak.currentStreak === 0) {
     return (
-      <div className="flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-[12px] text-zinc-400">
-        <span>{"🔥"}</span>
-        <span>0 天</span>
+      <div className="flex items-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)]">
+        <span className="text-2xl">{"🔥"}</span>
+        <div>
+          <div className="text-[13px] font-bold text-gray-400">連續練習</div>
+          <div className="text-lg font-bold text-gray-300">0 天</div>
+        </div>
       </div>
     );
   }
@@ -55,18 +58,21 @@ export function StreakBadge({ initialStreak }: StreakBadgeProps) {
   return (
     <div
       className={[
-        "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-medium transition-all duration-300",
+        "flex items-center gap-3 rounded-2xl border-2 px-4 py-3 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] transition-all duration-300",
         streak.currentStreak >= 7
-          ? "border-orange-300 bg-orange-50 text-orange-800"
-          : "border-amber-200 bg-amber-50 text-amber-800",
-        animate ? "scale-110" : "scale-100",
+          ? "border-[#FF4B4B] bg-[#FF4B4B]/10"
+          : "border-[#FFD900] bg-[#FFD900]/10",
+        animate ? "scale-105" : "scale-100",
       ].join(" ")}
     >
-      <span className={animate ? "animate-bounce" : ""}>{"🔥"}</span>
-      <span>{streak.currentStreak} 天</span>
+      <span className={`text-2xl ${animate ? "animate-bounce" : ""}`}>{"🔥"}</span>
+      <div>
+        <div className="text-[13px] font-bold text-gray-500">連續練習</div>
+        <div className="text-xl font-bold text-gray-800">{streak.currentStreak} 天</div>
+      </div>
       {streak.streakFreezes > 0 && (
         <span
-          className="ml-1 rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-700"
+          className="ml-auto rounded-xl bg-[#1CB0F6]/15 px-2.5 py-1 text-[12px] font-bold text-[#1CB0F6]"
           title={`${streak.streakFreezes} 個保護卡`}
         >
           {"🛡️"} {streak.streakFreezes}

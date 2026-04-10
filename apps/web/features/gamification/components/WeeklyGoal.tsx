@@ -76,7 +76,7 @@ export function WeeklyGoal() {
 
   if (loading) {
     return (
-      <div className="animate-pulse text-sm text-zinc-400 dark:text-zinc-500">
+      <div className="animate-pulse text-sm font-bold text-gray-400">
         載入週目標...
       </div>
     );
@@ -93,68 +93,68 @@ export function WeeklyGoal() {
   return (
     <div
       className={[
-        "rounded-xl border px-4 py-4 transition-all duration-300",
+        "rounded-2xl border-2 px-5 py-5 transition-all duration-300 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)]",
         isComplete
-          ? "border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
-          : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800",
+          ? "border-[#58CC02] bg-[#58CC02]/10"
+          : "border-gray-200 bg-white",
       ].join(" ")}
     >
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-[15px] font-bold text-gray-800">
           {isComplete ? "🎉 週目標達成!" : "📅 本週目標"}
         </span>
-        <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+        <span className="rounded-xl bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-400">
           {goal.weekId}
         </span>
       </div>
 
       {/* Progress count */}
-      <div className="mb-2 text-center">
-        <span className="text-3xl font-bold text-zinc-800 dark:text-zinc-100">
+      <div className="mb-3 text-center">
+        <span className={`text-4xl font-bold ${isComplete ? "text-[#58CC02]" : "text-gray-800"}`}>
           {goal.completed}
         </span>
-        <span className="text-lg text-zinc-400 dark:text-zinc-500">
+        <span className="text-xl font-bold text-gray-400">
           {" / "}
           {goal.target}
         </span>
-        <div className="mt-0.5 text-[12px] text-zinc-400 dark:text-zinc-500">
+        <div className="mt-1 text-[13px] font-bold text-gray-400">
           次練習
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-3 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-700">
+      <div className="mb-4 h-4 overflow-hidden rounded-full bg-gray-100 border-2 border-gray-200">
         <div
           className={[
             "h-full rounded-full transition-all duration-500 ease-out",
             isComplete
-              ? "bg-gradient-to-r from-green-400 to-emerald-500"
-              : "bg-gradient-to-r from-blue-400 to-indigo-500",
+              ? "bg-gradient-to-r from-[#58CC02] to-[#4CAD02]"
+              : "bg-gradient-to-r from-[#1CB0F6] to-[#1899D6]",
           ].join(" ")}
           style={{ width: `${percentage}%` }}
         />
       </div>
 
       {/* Adjust target buttons */}
-      <div className="flex items-center justify-center gap-3">
+      <div className="flex items-center justify-center gap-4">
         <button
           type="button"
           onClick={() => adjustTarget(-1)}
           disabled={adjusting || goal.target <= 1}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 transition-colors hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-700"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-gray-200 text-lg font-bold text-gray-500 transition-colors hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 shadow-[2px_2px_0_0_rgba(0,0,0,0.1)] active:shadow-[1px_1px_0_0_rgba(0,0,0,0.1)] active:translate-x-[1px] active:translate-y-[1px]"
           aria-label="減少目標"
         >
           −
         </button>
-        <span className="text-xs text-zinc-400 dark:text-zinc-500">
+        <span className="text-[13px] font-bold text-gray-400">
           調整目標
         </span>
         <button
           type="button"
           onClick={() => adjustTarget(1)}
           disabled={adjusting || goal.target >= 14}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 text-zinc-500 transition-colors hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-700"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-gray-200 text-lg font-bold text-gray-500 transition-colors hover:bg-gray-50 hover:border-gray-300 disabled:opacity-30 shadow-[2px_2px_0_0_rgba(0,0,0,0.1)] active:shadow-[1px_1px_0_0_rgba(0,0,0,0.1)] active:translate-x-[1px] active:translate-y-[1px]"
           aria-label="增加目標"
         >
           +

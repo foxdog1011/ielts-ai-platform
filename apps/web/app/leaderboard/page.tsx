@@ -1,6 +1,6 @@
 // app/leaderboard/page.tsx
 //
-// Full-page leaderboard view.
+// Full-page leaderboard view — Duolingo-inspired design.
 
 import Link from "next/link";
 import { Leaderboard } from "@/features/leaderboard/components/Leaderboard";
@@ -12,17 +12,22 @@ export default async function LeaderboardPage() {
   const userId = await getUserId().catch(() => "anonymous");
 
   return (
-    <main className="min-h-dvh bg-[var(--bg)] text-[var(--text)] font-brand">
+    <main className="min-h-dvh bg-[#F7F5FF] text-gray-800 font-brand">
       <header className="mx-auto max-w-3xl px-4 sm:px-8 pt-8 pb-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[12px] min-h-[44px] flex items-center hover:border-[var(--color-primary-200)] hover:text-[var(--color-primary)] theme-transition"
+              className="rounded-2xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold min-h-[44px] flex items-center hover:border-[#58CC02] hover:text-[#58CC02] transition-all shadow-[3px_3px_0_0_rgba(0,0,0,0.08)]"
             >
-              &larr; Home
+              &larr; 首頁
             </Link>
-            <h1 className="text-[20px] font-semibold tracking-tight">排行榜</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-3xl">🏆</span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+                排行榜
+              </h1>
+            </div>
           </div>
         </div>
       </header>

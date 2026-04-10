@@ -3,7 +3,7 @@
 // features/gamification/components/PersonalRecords.tsx
 //
 // Displays a grid of personal record cards per skill dimension.
-// New PRs are highlighted with a gold border and "NEW PR!" badge.
+// New PRs are highlighted with a gold border and badge.
 
 import { useEffect, useState, useCallback } from "react";
 import type { PersonalRecord } from "@/features/gamification/pr-service";
@@ -69,7 +69,7 @@ export function PersonalRecords({ newPRDimensions = [] }: PersonalRecordsProps) 
 
   if (loading) {
     return (
-      <div className="animate-pulse text-sm text-zinc-400 dark:text-zinc-500">
+      <div className="animate-pulse text-sm font-bold text-gray-400">
         載入個人紀錄...
       </div>
     );
@@ -77,38 +77,38 @@ export function PersonalRecords({ newPRDimensions = [] }: PersonalRecordsProps) 
 
   if (records.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500">
-        尚無個人紀錄 — 完成練習後即可追蹤!
+      <div className="rounded-2xl border-2 border-gray-200 bg-gray-50 px-6 py-8 text-center text-sm font-bold text-gray-400 shadow-[4px_4px_0_0_rgba(0,0,0,0.05)]">
+        🏅 尚無個人紀錄 — 完成練習後即可追蹤!
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-4">
       {records.map((pr) => {
         const isNew = newSet.has(pr.dimension);
         return (
           <div
             key={`${pr.type}:${pr.dimension}`}
             className={[
-              "relative rounded-xl border px-4 py-3 transition-all duration-300",
+              "relative rounded-2xl border-2 px-4 py-4 transition-all duration-300 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)]",
               isNew
-                ? "border-yellow-400 bg-yellow-50 shadow-md shadow-yellow-100 dark:border-yellow-500 dark:bg-yellow-900/20 dark:shadow-yellow-900/30"
-                : "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800",
+                ? "border-[#FFD900] bg-[#FFD900]/10 shadow-[4px_4px_0_0_rgba(255,217,0,0.3)]"
+                : "border-gray-200 bg-white",
             ].join(" ")}
           >
             {isNew && (
-              <span className="absolute -top-2 right-2 rounded-md bg-yellow-400 px-1.5 py-0.5 text-[10px] font-bold text-yellow-900">
-                NEW PR!
+              <span className="absolute -top-2.5 right-2 rounded-xl bg-[#FFD900] px-2 py-0.5 text-[11px] font-bold text-[#7A6200] shadow-[2px_2px_0_0_rgba(0,0,0,0.1)]">
+                🏆 新紀錄!
               </span>
             )}
-            <div className="text-[11px] font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+            <div className="text-[12px] font-bold uppercase tracking-wide text-gray-400">
               {typeLabel(pr.type)} · {pr.dimension}
             </div>
-            <div className="mt-1 text-xl font-bold text-zinc-800 dark:text-zinc-100">
+            <div className="mt-1 text-2xl font-bold text-gray-800">
               {pr.value.toFixed(1)}
             </div>
-            <div className="mt-0.5 text-[11px] text-zinc-400 dark:text-zinc-500">
+            <div className="mt-1 text-[12px] font-bold text-gray-400">
               {formatDate(pr.achievedAt)}
             </div>
           </div>

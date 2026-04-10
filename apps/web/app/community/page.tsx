@@ -11,32 +11,37 @@ import type {
 } from "@/features/community/types";
 
 const TABS: readonly { value: QuestionType; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "writing", label: "Writing" },
-  { value: "speaking", label: "Speaking" },
+  { value: "all", label: "全部" },
+  { value: "writing", label: "寫作" },
+  { value: "speaking", label: "口說" },
 ];
 
 const SORTS: readonly { value: SortOption; label: string }[] = [
-  { value: "popular", label: "\u71B1\u9580" },
-  { value: "newest", label: "\u6700\u65B0" },
-  { value: "highest", label: "\u9AD8\u5206" },
+  { value: "popular", label: "🔥 熱門" },
+  { value: "newest", label: "✨ 最新" },
+  { value: "highest", label: "⭐ 高分" },
 ];
 
 const DIFFICULTY_STYLES: Record<string, string> = {
-  easy: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  medium: "bg-amber-50 text-amber-700 border-amber-200",
-  hard: "bg-red-50 text-red-700 border-red-200",
+  easy: "bg-[#E8F5E9] text-[#58CC02] border-[#58CC02]",
+  medium: "bg-[#FFF8E1] text-[#FFA000] border-[#FFD900]",
+  hard: "bg-[#FFEBEE] text-[#FF4B4B] border-[#FF4B4B]",
 };
 
 const DIFFICULTY_LABELS: Record<string, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
+  easy: "簡單",
+  medium: "中等",
+  hard: "困難",
 };
 
 const TYPE_STYLES: Record<string, string> = {
-  writing: "bg-blue-50 text-blue-700 border-blue-200",
-  speaking: "bg-amber-50 text-amber-700 border-amber-200",
+  writing: "bg-[#E3F2FD] text-[#1CB0F6] border-[#1CB0F6]",
+  speaking: "bg-[#F3E5F5] text-[#CE82FF] border-[#CE82FF]",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  writing: "✍️ 寫作",
+  speaking: "🗣️ 口說",
 };
 
 function formatDate(ts: number): string {
@@ -102,7 +107,7 @@ export default function CommunityPage() {
       const json: CommunityApiResponse<CommunityQuestion> = await res.json();
 
       if (!json.success) {
-        setSubmitError(json.error ?? "Submission failed.");
+        setSubmitError(json.error ?? "提交失敗，請再試一次。");
       } else {
         setSubmitSuccess(true);
         form.reset();
@@ -113,47 +118,50 @@ export default function CommunityPage() {
         fetchQuestions();
       }
     } catch {
-      setSubmitError("Network error. Please try again.");
+      setSubmitError("網路錯誤，請再試一次。");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <main className="relative min-h-dvh bg-[var(--bg)] text-[var(--text)] font-brand">
+    <main className="relative min-h-dvh bg-[#F7F5FF] text-gray-800 font-brand">
       <div className="mx-auto max-w-6xl px-4 sm:px-8 py-8">
         {/* Back link */}
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-[13px] text-[var(--text-muted)] hover:text-[var(--color-primary)] theme-transition mb-6"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-gray-400 hover:text-[#58CC02] transition-all mb-6 rounded-2xl border-2 border-gray-200 bg-white px-4 py-2 shadow-[3px_3px_0_0_rgba(0,0,0,0.08)] hover:border-[#58CC02]"
         >
-          &larr; Back
+          &larr; 首頁
         </Link>
 
         {/* Header */}
-        <header className="animate-fade-up">
-          <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight">
-            {"\u793E\u7FA4\u984C\u5EAB"}
-          </h1>
-          <p className="mt-2 text-[14px] leading-relaxed text-[var(--text-secondary)] max-w-2xl">
-            {"\u7531\u793E\u7FA4\u6210\u54E1\u51FA\u984C\uFF0C\u5927\u5BB6\u4E00\u8D77\u7DF4\u7FD2\u3002\u50CF Strava \u7684 Segments \u4E00\u6A23\u2014\u2014\u4F60\u51FA\u984C\uFF0C\u5225\u4EBA\u7DF4\u7FD2\uFF0C\u4E92\u76F8\u9032\u6B65\u3002"}
+        <header>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">📚</span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+              社群題庫
+            </h1>
+          </div>
+          <p className="mt-3 text-base leading-relaxed text-gray-500 max-w-2xl font-medium">
+            由社群成員出題，大家一起練習。你出題，別人練習，互相進步！
           </p>
         </header>
 
         {/* Controls */}
-        <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-up animate-fade-up-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Tab filter */}
-            <div className="flex items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">
+        <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Tab filter — Duolingo pills */}
+            <div className="flex items-center bg-gray-100 rounded-2xl p-1.5 gap-1">
               {TABS.map((t) => (
                 <button
                   key={t.value}
                   onClick={() => setTab(t.value)}
                   className={[
-                    "rounded-lg px-3 py-1.5 text-[13px] font-medium theme-transition",
+                    "rounded-xl px-4 py-2 text-sm font-bold transition-all min-h-[40px]",
                     tab === t.value
-                      ? "bg-[var(--color-primary)] text-white shadow-sm"
-                      : "text-[var(--text-muted)] hover:text-[var(--text)]",
+                      ? "bg-[#58CC02] text-white shadow-[0_3px_0_0_#46A302]"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-200",
                   ].join(" ")}
                 >
                   {t.label}
@@ -161,17 +169,17 @@ export default function CommunityPage() {
               ))}
             </div>
 
-            {/* Sort */}
-            <div className="flex items-center rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1">
+            {/* Sort pills */}
+            <div className="flex items-center bg-gray-100 rounded-2xl p-1.5 gap-1">
               {SORTS.map((s) => (
                 <button
                   key={s.value}
                   onClick={() => setSort(s.value)}
                   className={[
-                    "rounded-lg px-3 py-1.5 text-[13px] font-medium theme-transition",
+                    "rounded-xl px-3 py-2 text-sm font-bold transition-all min-h-[40px]",
                     sort === s.value
-                      ? "bg-[var(--color-primary-50)] text-[var(--color-primary)] border border-[var(--color-primary-200)]"
-                      : "text-[var(--text-muted)] hover:text-[var(--text)]",
+                      ? "bg-white text-[#1CB0F6] border-2 border-[#1CB0F6] shadow-[0_2px_0_0_#1CB0F6]"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-200 border-2 border-transparent",
                   ].join(" ")}
                 >
                   {s.label}
@@ -182,74 +190,79 @@ export default function CommunityPage() {
 
           <button
             onClick={() => setShowForm((prev) => !prev)}
-            className="btn-primary flex items-center gap-1.5 min-h-[44px]"
+            className={[
+              "rounded-2xl px-6 py-3 text-sm font-bold min-h-[44px] transition-all",
+              showForm
+                ? "bg-[#FF4B4B] text-white shadow-[0_4px_0_0_#CC3C3C] hover:brightness-110"
+                : "bg-[#58CC02] text-white shadow-[0_4px_0_0_#46A302] hover:brightness-110",
+            ].join(" ")}
           >
-            {showForm ? "\u53D6\u6D88" : "\u6211\u8981\u51FA\u984C"}
+            {showForm ? "✕ 取消" : "➕ 我要出題"}
           </button>
         </div>
 
         {/* Submit form (collapsible) */}
         {showForm && (
-          <div className="mt-6 glass-card p-6 animate-fade-up">
-            <h2 className="text-[16px] font-semibold mb-4">
-              {"\u63D0\u4EA4\u65B0\u984C\u76EE"}
+          <div className="mt-6 rounded-3xl bg-white border-2 border-gray-200 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] p-6">
+            <h2 className="text-lg font-bold mb-5 flex items-center gap-2">
+              <span>✏️</span> 提交新題目
             </h2>
             <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="text-[13px] text-[var(--text-secondary)] mb-1 block">
-                  {"\u986F\u793A\u540D\u7A31"} *
+                <span className="text-sm text-gray-500 mb-1.5 block font-bold">
+                  顯示名稱 *
                 </span>
                 <input
                   name="authorName"
                   required
                   maxLength={30}
-                  placeholder="Your display name"
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--text)] focus-ring theme-transition"
+                  placeholder="你的暱稱"
+                  className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-medium focus:border-[#58CC02] focus:outline-none transition-all"
                 />
               </label>
               <div className="flex gap-3">
                 <label className="block flex-1">
-                  <span className="text-[13px] text-[var(--text-secondary)] mb-1 block">Type *</span>
+                  <span className="text-sm text-gray-500 mb-1.5 block font-bold">類型 *</span>
                   <select
                     name="type"
                     required
-                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--text)] focus-ring theme-transition"
+                    className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-medium focus:border-[#58CC02] focus:outline-none transition-all"
                   >
-                    <option value="writing">Writing</option>
-                    <option value="speaking">Speaking</option>
+                    <option value="writing">寫作</option>
+                    <option value="speaking">口說</option>
                   </select>
                 </label>
                 <label className="block flex-1">
-                  <span className="text-[13px] text-[var(--text-secondary)] mb-1 block">
-                    {"\u96E3\u5EA6"} *
+                  <span className="text-sm text-gray-500 mb-1.5 block font-bold">
+                    難度 *
                   </span>
                   <select
                     name="difficulty"
                     required
-                    className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--text)] focus-ring theme-transition"
+                    className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-medium focus:border-[#58CC02] focus:outline-none transition-all"
                   >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
+                    <option value="easy">簡單</option>
+                    <option value="medium">中等</option>
+                    <option value="hard">困難</option>
                   </select>
                 </label>
               </div>
               <label className="block sm:col-span-2">
-                <span className="text-[13px] text-[var(--text-secondary)] mb-1 block">
-                  {"\u984C\u76EE\u6A19\u984C"} *
+                <span className="text-sm text-gray-500 mb-1.5 block font-bold">
+                  題目標題 *
                 </span>
                 <input
                   name="title"
                   required
                   minLength={2}
                   maxLength={120}
-                  placeholder="e.g. Should governments invest more in public transport?"
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--text)] focus-ring theme-transition"
+                  placeholder="例：政府是否應該增加公共交通投資？"
+                  className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-medium focus:border-[#58CC02] focus:outline-none transition-all"
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="text-[13px] text-[var(--text-secondary)] mb-1 block">
-                  Prompt *
+                <span className="text-sm text-gray-500 mb-1.5 block font-bold">
+                  題目內容 *
                 </span>
                 <textarea
                   name="prompt"
@@ -257,35 +270,35 @@ export default function CommunityPage() {
                   minLength={10}
                   maxLength={2000}
                   rows={4}
-                  placeholder="Full question prompt for the candidate..."
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--text)] focus-ring theme-transition resize-y"
+                  placeholder="完整的題目描述..."
+                  className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-medium focus:border-[#58CC02] focus:outline-none transition-all resize-y"
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="text-[13px] text-[var(--text-secondary)] mb-1 block">
-                  Tips ({"\u9078\u586B"})
+                <span className="text-sm text-gray-500 mb-1.5 block font-bold">
+                  提示（選填）
                 </span>
                 <input
                   name="tips"
                   maxLength={500}
-                  placeholder="Any tips or notes for this question..."
-                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--text)] focus-ring theme-transition"
+                  placeholder="給其他練習者的建議..."
+                  className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-medium focus:border-[#58CC02] focus:outline-none transition-all"
                 />
               </label>
               <div className="sm:col-span-2 flex items-center gap-3">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="btn-primary min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-2xl bg-[#58CC02] text-white px-6 py-3 text-sm font-bold min-h-[44px] shadow-[0_4px_0_0_#46A302] hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? "\u63D0\u4EA4\u4E2D..." : "\u63D0\u4EA4\u984C\u76EE"}
+                  {submitting ? "提交中..." : "🚀 提交題目"}
                 </button>
                 {submitError && (
-                  <span className="text-[13px] text-[var(--color-error)]">{submitError}</span>
+                  <span className="text-sm text-[#FF4B4B] font-bold">{submitError}</span>
                 )}
                 {submitSuccess && (
-                  <span className="text-[13px] text-[var(--color-success)]">
-                    {"\u63D0\u4EA4\u6210\u529F\uFF01"}
+                  <span className="text-sm text-[#58CC02] font-bold">
+                    提交成功！
                   </span>
                 )}
               </div>
@@ -294,23 +307,27 @@ export default function CommunityPage() {
         )}
 
         {/* Question grid */}
-        <section className="mt-8 animate-fade-up animate-fade-up-2">
+        <section className="mt-8">
           {loading ? (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="glass-card-sm p-5 h-48 animate-shimmer" />
+                <div
+                  key={i}
+                  className="rounded-3xl bg-white border-2 border-gray-100 p-5 h-52 animate-pulse"
+                />
               ))}
             </div>
           ) : questions.length === 0 ? (
-            <div className="glass-card p-12 text-center">
-              <p className="text-[16px] text-[var(--text-muted)]">
-                {"\u9084\u6C92\u6709\u984C\u76EE\u3002\u4F86\u7576\u7B2C\u4E00\u500B\u51FA\u984C\u8005\u5427\uFF01"}
+            <div className="rounded-3xl bg-white border-2 border-gray-200 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] p-12 text-center">
+              <span className="text-5xl block mb-4">🌟</span>
+              <p className="text-lg text-gray-400 font-bold">
+                還沒有題目。來當第一個出題者吧！
               </p>
               <button
                 onClick={() => setShowForm(true)}
-                className="btn-primary mt-4 min-h-[44px]"
+                className="rounded-2xl bg-[#58CC02] text-white px-6 py-3 text-sm font-bold mt-5 min-h-[44px] shadow-[0_4px_0_0_#46A302] hover:brightness-110 transition-all"
               >
-                {"\u6211\u8981\u51FA\u984C"}
+                ➕ 我要出題
               </button>
             </div>
           ) : (
@@ -337,20 +354,20 @@ function QuestionCard({ question }: { readonly question: CommunityQuestion }) {
       : `/tasks/1/speaking?prompt=${encodeURIComponent(question.prompt)}`;
 
   return (
-    <div className="glass-card-sm p-5 flex flex-col hover-lift theme-transition">
+    <div className="rounded-3xl bg-white border-2 border-gray-200 p-5 flex flex-col hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all">
       {/* Top row: badges */}
       <div className="flex items-center gap-2 mb-3">
         <span
           className={[
-            "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
+            "rounded-xl border-2 px-2.5 py-1 text-xs font-bold",
             TYPE_STYLES[question.type],
           ].join(" ")}
         >
-          {question.type === "writing" ? "Writing" : "Speaking"}
+          {TYPE_LABELS[question.type]}
         </span>
         <span
           className={[
-            "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
+            "rounded-xl border-2 px-2.5 py-1 text-xs font-bold",
             DIFFICULTY_STYLES[question.difficulty],
           ].join(" ")}
         >
@@ -359,42 +376,40 @@ function QuestionCard({ question }: { readonly question: CommunityQuestion }) {
       </div>
 
       {/* Title */}
-      <h3 className="text-[15px] font-semibold text-[var(--text)] line-clamp-2 mb-2">
+      <h3 className="text-base font-bold text-gray-800 line-clamp-2 mb-2">
         {question.title}
       </h3>
 
       {/* Prompt preview */}
-      <p className="text-[12px] text-[var(--text-muted)] line-clamp-3 mb-4 flex-1">
+      <p className="text-xs text-gray-400 line-clamp-3 mb-4 flex-1 font-medium">
         {question.prompt}
       </p>
 
       {/* Stats */}
-      <div className="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mb-4">
-        <span>{question.authorName}</span>
-        <span className="text-[var(--border)]">|</span>
-        <span>{question.practiceCount} {"\u7DF4\u7FD2"}</span>
+      <div className="flex items-center gap-2 text-xs text-gray-400 mb-4 font-bold flex-wrap">
+        <span className="bg-gray-100 px-2 py-0.5 rounded-lg">{question.authorName}</span>
+        <span className="bg-gray-100 px-2 py-0.5 rounded-lg">{question.practiceCount} 次練習</span>
         {question.avgScore !== null && (
-          <>
-            <span className="text-[var(--border)]">|</span>
-            <span>Avg {question.avgScore.toFixed(1)}</span>
-          </>
+          <span className="bg-[#FFF3E0] text-[#FF9800] px-2 py-0.5 rounded-lg">
+            平均 {question.avgScore.toFixed(1)}
+          </span>
         )}
-        <span className="ml-auto text-[var(--text-faint)]">{formatDate(question.createdAt)}</span>
+        <span className="ml-auto text-gray-300">{formatDate(question.createdAt)}</span>
       </div>
 
       {/* Tips */}
       {question.tips && (
-        <p className="text-[11px] text-[var(--text-muted)] italic mb-3 border-l-2 border-[var(--border)] pl-2">
-          {question.tips}
+        <p className="text-xs text-gray-400 italic mb-3 border-l-4 border-[#FFD900] pl-3 bg-[#FFFDE7] py-1.5 rounded-r-xl font-medium">
+          💡 {question.tips}
         </p>
       )}
 
       {/* Action */}
       <Link
         href={practiceUrl}
-        className="btn-primary text-center text-[13px] min-h-[40px] flex items-center justify-center"
+        className="rounded-2xl bg-[#1CB0F6] text-white text-center text-sm font-bold min-h-[44px] flex items-center justify-center shadow-[0_4px_0_0_#1899D6] hover:brightness-110 transition-all"
       >
-        {"\u958B\u59CB\u7DF4\u7FD2"}
+        開始練習
       </Link>
     </div>
   );

@@ -13,22 +13,34 @@ interface LeaderboardEntry {
 type TabType = "all" | "writing" | "speaking";
 
 const TABS: readonly { readonly key: TabType; readonly label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "writing", label: "Writing" },
-  { key: "speaking", label: "Speaking" },
+  { key: "all", label: "全部" },
+  { key: "writing", label: "寫作" },
+  { key: "speaking", label: "口說" },
 ];
 
-const MEDAL: Record<number, string> = { 1: "\u{1F947}", 2: "\u{1F948}", 3: "\u{1F949}" };
-const MEDAL_BG: Record<number, string> = {
-  1: "rgba(255,215,0,0.15)",
-  2: "rgba(192,192,192,0.15)",
-  3: "rgba(205,127,50,0.15)",
+const MEDAL: Record<number, string> = { 1: "👑", 2: "🥈", 3: "🥉" };
+
+const RANK_BG: Record<number, string> = {
+  1: "bg-[#FFF8E1]",
+  2: "bg-[#F5F5F5]",
+  3: "bg-[#FFF3E0]",
 };
-const MEDAL_BORDER: Record<number, string> = {
-  1: "#FFD700",
+
+const RANK_BORDER: Record<number, string> = {
+  1: "border-l-[#FFD900]",
+  2: "border-l-[#C0C0C0]",
+  3: "border-l-[#CD7F32]",
+};
+
+const RANK_ACCENT: Record<number, string> = {
+  1: "#FFD900",
   2: "#C0C0C0",
   3: "#CD7F32",
 };
+
+function getInitials(name: string): string {
+  return name.slice(0, 2).toUpperCase();
+}
 
 export function Leaderboard({ currentUserId }: { readonly currentUserId?: string }) {
   const [tab, setTab] = useState<TabType>("all");
@@ -45,18 +57,18 @@ export function Leaderboard({ currentUserId }: { readonly currentUserId?: string
   }, [tab]);
 
   return (
-    <div className="glass-card p-4 sm:p-6">
-      {/* Tabs */}
-      <div className="flex gap-2 mb-5">
+    <div className="rounded-3xl bg-white border-2 border-gray-200 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] p-4 sm:p-6">
+      {/* Duolingo-style segment pills */}
+      <div className="flex gap-2 mb-6 bg-gray-100 rounded-2xl p-1.5">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={[
-              "rounded-xl px-4 py-2 text-[13px] font-medium theme-transition min-h-[44px]",
+              "flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition-all min-h-[44px]",
               tab === t.key
-                ? "bg-[var(--color-primary)] text-white shadow-sm"
-                : "border border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--color-primary-200)]",
+                ? "bg-[#58CC02] text-white shadow-[0_4px_0_0_#46A302]"
+                : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-200",
             ].join(" ")}
           >
             {t.label}
@@ -64,47 +76,84 @@ export function Leaderboard({ currentUserId }: { readonly currentUserId?: string
         ))}
       </div>
 
-      {loading && <p className="text-[13px] text-[var(--text-muted)] py-8 text-center">Loading...</p>}
+      {loading && (
+        <p className="text-sm text-gray-400 py-8 text-center font-bold">載入中...</p>
+      )}
 
       {!loading && entries.length === 0 && (
-        <p className="text-[13px] text-[var(--text-muted)] py-8 text-center">No entries yet. Complete a practice to appear!</p>
+        <div className="py-12 text-center">
+          <span className="text-4xl block mb-3">📝</span>
+          <p className="text-base text-gray-400 font-bold">
+            還沒有人上榜，完成練習成為第一名！
+          </p>
+        </div>
       )}
 
       {/* Desktop table */}
       {!loading && entries.length > 0 && (
         <div className="hidden sm:block">
-          <table className="w-full text-[13px]">
-            <thead>
-              <tr className="text-left text-[var(--text-muted)] text-[11px] uppercase tracking-wide">
-                <th className="pb-3 pl-3 w-16">Rank</th>
-                <th className="pb-3">Name</th>
-                <th className="pb-3 text-right">Best Band</th>
-                <th className="pb-3 text-right pr-3">Practices</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((e, i) => {
-                const rank = i + 1;
-                const isMe = currentUserId === e.userId;
-                const isTop3 = rank <= 3;
-                return (
-                  <tr
-                    key={e.userId}
-                    className="theme-transition"
-                    style={{
-                      backgroundColor: isMe ? "var(--color-primary-50)" : isTop3 ? MEDAL_BG[rank] : undefined,
-                      borderLeft: isTop3 ? `3px solid ${MEDAL_BORDER[rank]}` : isMe ? "3px solid var(--color-primary)" : "3px solid transparent",
-                    }}
-                  >
-                    <td className="py-2.5 pl-3 font-semibold">{MEDAL[rank] ?? `#${rank}`}</td>
-                    <td className="py-2.5 font-medium text-[var(--text)]">{e.displayName}{isMe && <span className="ml-2 text-[11px] text-[var(--color-primary)]">(you)</span>}</td>
-                    <td className="py-2.5 text-right font-bold text-[var(--text)]">{e.bestBand.toFixed(1)}</td>
-                    <td className="py-2.5 text-right pr-3 text-[var(--text-muted)]">{e.practiceCount}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="grid grid-cols-[60px_1fr_100px_100px] gap-0 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-4">
+            <span>排名</span>
+            <span>名稱</span>
+            <span className="text-right">最高分</span>
+            <span className="text-right">練習數</span>
+          </div>
+          <div className="space-y-2">
+            {entries.map((e, i) => {
+              const rank = i + 1;
+              const isMe = currentUserId === e.userId;
+              const isTop3 = rank <= 3;
+              return (
+                <div
+                  key={e.userId}
+                  className={[
+                    "grid grid-cols-[60px_1fr_100px_100px] gap-0 items-center px-4 py-3 rounded-2xl border-2 border-l-4 transition-all",
+                    isMe
+                      ? "border-[#58CC02] bg-[#F0FFF0] shadow-[0_2px_0_0_#58CC02]"
+                      : isTop3
+                        ? `${RANK_BG[rank]} ${RANK_BORDER[rank]} border-gray-100`
+                        : "border-gray-100 border-l-transparent hover:bg-gray-50",
+                  ].join(" ")}
+                >
+                  <span className="text-xl font-bold text-center">
+                    {MEDAL[rank] ?? (
+                      <span className="text-sm text-gray-400">#{rank}</span>
+                    )}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
+                      style={{
+                        backgroundColor: isTop3
+                          ? RANK_ACCENT[rank]
+                          : isMe
+                            ? "#58CC02"
+                            : "#CE82FF",
+                      }}
+                    >
+                      {getInitials(e.displayName)}
+                    </div>
+                    <span className="font-bold text-gray-800 text-sm">
+                      {e.displayName}
+                      {isMe && (
+                        <span className="ml-2 text-xs bg-[#58CC02] text-white px-2 py-0.5 rounded-full font-bold">
+                          你
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <span className="text-right">
+                    <span className="inline-block bg-[#FFF3E0] text-[#FF9800] font-bold text-sm px-3 py-1 rounded-xl">
+                      {e.bestBand.toFixed(1)}
+                    </span>
+                  </span>
+                  <span className="text-right text-sm text-gray-500 font-bold">
+                    {e.practiceCount} 次
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -118,18 +167,46 @@ export function Leaderboard({ currentUserId }: { readonly currentUserId?: string
             return (
               <div
                 key={e.userId}
-                className="glass-card-sm px-4 py-3 flex items-center gap-3 theme-transition"
-                style={{
-                  backgroundColor: isMe ? "var(--color-primary-50)" : isTop3 ? MEDAL_BG[rank] : undefined,
-                  borderColor: isTop3 ? MEDAL_BORDER[rank] : isMe ? "var(--color-primary)" : undefined,
-                }}
+                className={[
+                  "flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-l-4 transition-all",
+                  isMe
+                    ? "border-[#58CC02] bg-[#F0FFF0] shadow-[0_2px_0_0_#58CC02]"
+                    : isTop3
+                      ? `${RANK_BG[rank]} ${RANK_BORDER[rank]} border-gray-100`
+                      : "border-gray-100 border-l-transparent",
+                ].join(" ")}
               >
-                <span className="text-[16px] font-bold w-8 text-center shrink-0">{MEDAL[rank] ?? `#${rank}`}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-[var(--text)] truncate">{e.displayName}{isMe && <span className="ml-1 text-[11px] text-[var(--color-primary)]">(you)</span>}</div>
-                  <div className="text-[11px] text-[var(--text-muted)]">{e.practiceCount} practices</div>
+                <span className="text-lg font-bold w-8 text-center shrink-0">
+                  {MEDAL[rank] ?? (
+                    <span className="text-sm text-gray-400">#{rank}</span>
+                  )}
+                </span>
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                  style={{
+                    backgroundColor: isTop3
+                      ? RANK_ACCENT[rank]
+                      : isMe
+                        ? "#58CC02"
+                        : "#CE82FF",
+                  }}
+                >
+                  {getInitials(e.displayName)}
                 </div>
-                <span className="text-[15px] font-bold text-[var(--text)] shrink-0">{e.bestBand.toFixed(1)}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold text-gray-800 truncate">
+                    {e.displayName}
+                    {isMe && (
+                      <span className="ml-1 text-xs bg-[#58CC02] text-white px-1.5 py-0.5 rounded-full font-bold">
+                        你
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 font-bold">{e.practiceCount} 次練習</div>
+                </div>
+                <span className="inline-block bg-[#FFF3E0] text-[#FF9800] font-bold text-sm px-3 py-1 rounded-xl shrink-0">
+                  {e.bestBand.toFixed(1)}
+                </span>
               </div>
             );
           })}
