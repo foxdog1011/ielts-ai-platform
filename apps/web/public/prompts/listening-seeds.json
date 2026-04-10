@@ -1,0 +1,208 @@
+{
+  "sections": [
+    {
+      "id": "section-1",
+      "title": "Section 1 - University Enrollment",
+      "description": "A conversation between a student and a university enrollment officer about course registration.",
+      "transcript": "Officer: Good morning, welcome to Greenfield University enrollment office. How can I help you today?\n\nStudent: Hi, I'd like to register for some courses for the autumn semester. My name is Sarah Mitchell.\n\nOfficer: Of course, Sarah. Let me pull up your student record. Could you confirm your student ID number?\n\nStudent: Yes, it's GU-2845.\n\nOfficer: Perfect. I can see you're in your second year of the Business Administration programme. Now, which courses are you interested in?\n\nStudent: Well, I definitely need to take Marketing Principles — that's a required course for my degree. And I was thinking about adding International Economics as well.\n\nOfficer: Marketing Principles is available on Tuesdays and Thursdays, from 10 to 11:30 in the morning. The lecturer is Professor Williams. International Economics runs on Mondays and Wednesdays, 2 to 3:30 in the afternoon, taught by Dr. Chen.\n\nStudent: That works well for my schedule. Is there a limit on class size?\n\nOfficer: Marketing Principles has a cap of 85 students, and there are currently 62 enrolled, so you're fine there. International Economics is smaller — only 40 places, and 37 are taken. I'd recommend enrolling today.\n\nStudent: I'll do that right away then. What about the fees?\n\nOfficer: Each course is 750 pounds per semester. Since you're taking two, that's 1,500 pounds total. There's also a 45-pound materials fee for Marketing Principles — they provide a textbook and case study pack.\n\nStudent: Can I pay by instalments?\n\nOfficer: Yes, you can split it into three monthly payments. The first payment would be due on September the 15th. You'll need to set that up through the online student portal — the address is portal.greenfield.ac.uk.\n\nStudent: Great, I'll do that. One more thing — I heard there's a study group for International Economics. How do I join?\n\nOfficer: Yes, Dr. Chen organises a weekly study group on Fridays at 4 pm in the library seminar room, room B12. You just need to email the department secretary at econ@greenfield.ac.uk to register your interest.\n\nStudent: Perfect, thank you so much for your help.\n\nOfficer: You're welcome, Sarah. Good luck with your studies!",
+      "questions": [
+        {
+          "id": "s1-q1",
+          "number": 1,
+          "type": "fill-in-blank",
+          "text": "學生的學號是 _______。",
+          "correctAnswer": "GU-2845"
+        },
+        {
+          "id": "s1-q2",
+          "number": 2,
+          "type": "multiple-choice",
+          "text": "Sarah 就讀的是哪個學程？",
+          "options": [
+            { "label": "A", "text": "International Relations" },
+            { "label": "B", "text": "Business Administration" },
+            { "label": "C", "text": "Marketing and Communications" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": "s1-q3",
+          "number": 3,
+          "type": "multiple-choice",
+          "text": "Marketing Principles 的上課時間是？",
+          "options": [
+            { "label": "A", "text": "週一和週三下午" },
+            { "label": "B", "text": "週二和週四上午" },
+            { "label": "C", "text": "週二和週四下午" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": "s1-q4",
+          "number": 4,
+          "type": "fill-in-blank",
+          "text": "International Economics 的授課教師是 _______。",
+          "correctAnswer": "Dr. Chen"
+        },
+        {
+          "id": "s1-q5",
+          "number": 5,
+          "type": "multiple-choice",
+          "text": "International Economics 目前還剩多少名額？",
+          "options": [
+            { "label": "A", "text": "3 個" },
+            { "label": "B", "text": "23 個" },
+            { "label": "C", "text": "37 個" }
+          ],
+          "correctAnswer": "A"
+        },
+        {
+          "id": "s1-q6",
+          "number": 6,
+          "type": "fill-in-blank",
+          "text": "每門課程每學期的費用是 _______ 英鎊。",
+          "correctAnswer": "750"
+        },
+        {
+          "id": "s1-q7",
+          "number": 7,
+          "type": "fill-in-blank",
+          "text": "Marketing Principles 的教材費用是 _______ 英鎊。",
+          "correctAnswer": "45"
+        },
+        {
+          "id": "s1-q8",
+          "number": 8,
+          "type": "multiple-choice",
+          "text": "第一期付款的截止日期是？",
+          "options": [
+            { "label": "A", "text": "9 月 1 日" },
+            { "label": "B", "text": "9 月 15 日" },
+            { "label": "C", "text": "10 月 1 日" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": "s1-q9",
+          "number": 9,
+          "type": "fill-in-blank",
+          "text": "讀書小組在每週 _______ 下午 4 點舉行。",
+          "correctAnswer": "Fridays"
+        },
+        {
+          "id": "s1-q10",
+          "number": 10,
+          "type": "matching",
+          "text": "將以下項目與正確的資訊配對：",
+          "matchItems": [
+            { "left": "線上學生入口網址", "options": ["portal.greenfield.ac.uk", "econ@greenfield.ac.uk", "greenfield.ac.uk/enroll"], "correctAnswer": "portal.greenfield.ac.uk" },
+            { "left": "經濟系秘書信箱", "options": ["portal.greenfield.ac.uk", "econ@greenfield.ac.uk", "greenfield.ac.uk/enroll"], "correctAnswer": "econ@greenfield.ac.uk" },
+            { "left": "讀書小組地點", "options": ["圖書館 A08", "圖書館 B12", "教學樓 C03"], "correctAnswer": "圖書館 B12" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "section-2",
+      "title": "Section 2 - Library Tour",
+      "description": "A librarian giving a guided tour to new students at Westbrook College library.",
+      "transcript": "Librarian: Welcome, everyone, to the Westbrook College library tour. My name is David, and I'll be showing you around today. Our library is one of the largest in the region, with over 120,000 books and 15,000 electronic journals.\n\nFirst, let me explain the layout. We're currently on the ground floor, which houses the main reception desk, the self-service borrowing machines, and the general reference collection. The reference books are arranged alphabetically by subject — from Accounting through to Zoology.\n\nOn the first floor, you'll find the quiet study area. This floor has 200 individual study desks and 30 group study rooms. The group rooms need to be booked in advance through the library website. Each room can hold between 4 and 8 people, and bookings are available in 2-hour blocks.\n\nThe second floor is dedicated to our digital resources centre. There are 80 computers available for student use, all equipped with the standard university software package. Printing costs 5 pence per page for black and white, and 20 pence per page for colour. You'll need to top up your printing credit through your student account.\n\nNow, about borrowing. Undergraduate students can borrow up to 10 books at a time. The standard loan period is 14 days, but you can renew online up to 3 times, giving you a maximum of 56 days total. Overdue fines are 50 pence per day per book, so do keep track of your due dates.\n\nFor postgraduate students, the limit is 15 books with a 28-day loan period. Research students have access to our special collections room on the third floor, which requires a separate access card.\n\nOur opening hours vary throughout the year. During term time, we're open Monday to Friday, 8 am to 10 pm, and weekends from 10 am to 6 pm. During holidays, hours are reduced to 9 am to 5 pm on weekdays only.\n\nWe also offer several support services. There are research skills workshops every Wednesday at 2 pm in the training room on the ground floor. We have a 24-hour online chat service for quick questions. And for dissertation support, you can book a one-to-one session with a subject librarian — just email library-help@westbrook.ac.uk.\n\nOne last thing — please remember that food and drinks are not allowed on the first and second floors. There is a cafe on the ground floor near the entrance where you can take a break. Any questions?",
+      "questions": [
+        {
+          "id": "s2-q1",
+          "number": 11,
+          "type": "fill-in-blank",
+          "text": "圖書館擁有超過 _______ 本藏書。",
+          "correctAnswer": "120,000"
+        },
+        {
+          "id": "s2-q2",
+          "number": 12,
+          "type": "multiple-choice",
+          "text": "團體自習室位於哪一層？",
+          "options": [
+            { "label": "A", "text": "地面層" },
+            { "label": "B", "text": "一樓" },
+            { "label": "C", "text": "二樓" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": "s2-q3",
+          "number": 13,
+          "type": "fill-in-blank",
+          "text": "團體自習室每次可預約 _______ 小時。",
+          "correctAnswer": "2"
+        },
+        {
+          "id": "s2-q4",
+          "number": 14,
+          "type": "multiple-choice",
+          "text": "彩色列印每頁多少錢？",
+          "options": [
+            { "label": "A", "text": "5 便士" },
+            { "label": "B", "text": "15 便士" },
+            { "label": "C", "text": "20 便士" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": "s2-q5",
+          "number": 15,
+          "type": "fill-in-blank",
+          "text": "大學部學生一次最多可借 _______ 本書。",
+          "correctAnswer": "10"
+        },
+        {
+          "id": "s2-q6",
+          "number": 16,
+          "type": "multiple-choice",
+          "text": "標準借閱期限是多少天？",
+          "options": [
+            { "label": "A", "text": "7 天" },
+            { "label": "B", "text": "14 天" },
+            { "label": "C", "text": "28 天" }
+          ],
+          "correctAnswer": "B"
+        },
+        {
+          "id": "s2-q7",
+          "number": 17,
+          "type": "fill-in-blank",
+          "text": "逾期罰款為每本書每天 _______ 便士。",
+          "correctAnswer": "50"
+        },
+        {
+          "id": "s2-q8",
+          "number": 18,
+          "type": "multiple-choice",
+          "text": "學期期間週末的開放時間是？",
+          "options": [
+            { "label": "A", "text": "上午 8 點到晚上 10 點" },
+            { "label": "B", "text": "上午 9 點到下午 5 點" },
+            { "label": "C", "text": "上午 10 點到下午 6 點" }
+          ],
+          "correctAnswer": "C"
+        },
+        {
+          "id": "s2-q9",
+          "number": 19,
+          "type": "fill-in-blank",
+          "text": "研究技巧工作坊在每週 _______ 下午 2 點舉行。",
+          "correctAnswer": "Wednesday"
+        },
+        {
+          "id": "s2-q10",
+          "number": 20,
+          "type": "matching",
+          "text": "將以下服務與正確描述配對：",
+          "matchItems": [
+            { "left": "一對一論文輔導", "options": ["email library-help@westbrook.ac.uk 預約", "每週三下午 2 點", "24 小時線上聊天"], "correctAnswer": "email library-help@westbrook.ac.uk 預約" },
+            { "left": "快速問答服務", "options": ["email library-help@westbrook.ac.uk 預約", "每週三下午 2 點", "24 小時線上聊天"], "correctAnswer": "24 小時線上聊天" },
+            { "left": "研究技巧工作坊", "options": ["email library-help@westbrook.ac.uk 預約", "每週三下午 2 點", "24 小時線上聊天"], "correctAnswer": "每週三下午 2 點" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -360,6 +360,16 @@ body {
   animation: slide-in-right 0.4s var(--ease-out-expo) both;
 }
 
+/* Slide up from bottom (mobile bottom sheet) */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 /* ═══════════════════════════════════════════════════════
    GRADIENT HERO SECTION
    ═══════════════════════════════════════════════════════ */

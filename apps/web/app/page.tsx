@@ -48,7 +48,7 @@ export default async function HomePage() {
   const speakingTrend = buildTrend(recentHistory, "speaking");
 
   return (
-    <main className="relative min-h-dvh bg-[#F7F7F7] text-gray-800 font-brand">
+    <main className="relative min-h-dvh bg-[#F7F7F7] dark:bg-[var(--bg)] text-gray-800 dark:text-[var(--text)] font-brand theme-transition">
       {/* ---- Header ---- */}
       <header className="mx-auto max-w-5xl px-4 sm:px-8 pt-8 pb-4">
         <div className="flex items-center justify-between">
@@ -56,7 +56,7 @@ export default async function HomePage() {
             <div className="h-11 w-11 rounded-2xl bg-[#58CC02] flex items-center justify-center shadow-[3px_3px_0_0_rgba(0,0,0,0.15)]">
               <span className="text-white text-[13px] font-bold tracking-wide">AI</span>
             </div>
-            <h1 className="text-xl font-bold tracking-tight">IELTS AI</h1>
+            <h1 className="text-xl font-bold tracking-tight dark:text-[var(--text)]">IELTS AI</h1>
           </div>
 
           <nav className="hidden sm:flex items-center gap-2 text-[13px]">
@@ -65,13 +65,14 @@ export default async function HomePage() {
               { href: "/prompts", label: "題庫", icon: "📝" },
               { href: "/goals", label: "練習目標", icon: "🎯" },
               { href: "/notebook", label: "錯題本", icon: "📓" },
+              { href: "/mock-exam", label: "模擬考", icon: "📝" },
               { href: "/calibration", label: "校準曲線", icon: "📊" },
               { href: "/leaderboard", label: "排行榜", icon: "🏆" },
             ].map(({ href, label, icon }) => (
               <Link
                 key={href}
                 href={href}
-                className="rounded-xl border-2 border-gray-200 bg-white px-3.5 py-2.5 min-h-[44px] flex items-center gap-1.5 font-bold hover:border-[#58CC02] hover:text-[#58CC02] transition-all shadow-[2px_2px_0_0_rgba(0,0,0,0.05)] hover:shadow-[2px_2px_0_0_rgba(88,204,2,0.2)]"
+                className="rounded-xl border-2 border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] dark:text-[var(--text)] px-3.5 py-2.5 min-h-[44px] flex items-center gap-1.5 font-bold hover:border-[#58CC02] hover:text-[#58CC02] transition-all shadow-[2px_2px_0_0_rgba(0,0,0,0.05)] dark:shadow-[2px_2px_0_0_rgba(0,0,0,0.2)] hover:shadow-[2px_2px_0_0_rgba(88,204,2,0.2)]"
               >
                 <span>{icon}</span>
                 {label}
@@ -130,7 +131,7 @@ export default async function HomePage() {
 
         {/* Learning Progress */}
         {allHistory.length > 0 && (
-          <details open className="group rounded-2xl border-2 border-gray-200 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] overflow-hidden">
+          <details open className="group rounded-2xl border-2 border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] overflow-hidden theme-transition">
             <CollapsibleSummary label="📈 學習進度" />
             <div className="px-6 pb-6 space-y-6">
               <LearningCalendar history={allHistory} />
@@ -146,7 +147,7 @@ export default async function HomePage() {
 
         {/* Recent Sessions */}
         {recentHistory.length > 0 && (
-          <details open className="group rounded-2xl border-2 border-gray-200 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] overflow-hidden">
+          <details open className="group rounded-2xl border-2 border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] overflow-hidden theme-transition">
             <CollapsibleSummary label="🕐 最近練習" trailingHref="/history" trailingLabel="查看全部" />
             <div className="px-6 pb-6">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -159,7 +160,7 @@ export default async function HomePage() {
         )}
 
         {/* Features */}
-        <details className="group rounded-2xl border-2 border-gray-200 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] overflow-hidden">
+        <details className="group rounded-2xl border-2 border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] overflow-hidden theme-transition">
           <CollapsibleSummary label="✨ 功能特色" />
           <div className="px-6 pb-6 grid gap-4 sm:grid-cols-3">
             {[
@@ -167,10 +168,10 @@ export default async function HomePage() {
               { icon: "📊", t: "雷達圖分析", d: "一目了然地視覺化你的強項與弱點" },
               { icon: "📈", t: "追蹤進步", d: "每次練習都會儲存為趨勢數據，幫助針對性提升" },
             ].map((it) => (
-              <div key={it.t} className="rounded-2xl border-2 border-gray-200 bg-white p-5 shadow-[3px_3px_0_0_rgba(0,0,0,0.07)] hover:border-[#58CC02]/50 transition-all">
+              <div key={it.t} className="rounded-2xl border-2 border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] p-5 shadow-[3px_3px_0_0_rgba(0,0,0,0.07)] dark:shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] hover:border-[#58CC02]/50 transition-all theme-transition">
                 <div className="text-2xl mb-2">{it.icon}</div>
-                <div className="text-[14px] font-bold text-gray-800">{it.t}</div>
-                <div className="mt-1 text-[13px] leading-relaxed text-gray-500">{it.d}</div>
+                <div className="text-[14px] font-bold text-gray-800 dark:text-[var(--text)]">{it.t}</div>
+                <div className="mt-1 text-[13px] leading-relaxed text-gray-500 dark:text-[var(--text-secondary)]">{it.d}</div>
               </div>
             ))}
           </div>
@@ -179,7 +180,7 @@ export default async function HomePage() {
 
       {/* Footer */}
       <footer className="mx-auto max-w-5xl px-4 sm:px-8 py-8">
-        <p className="text-[13px] font-bold text-gray-400">&copy; {new Date().getFullYear()} IELTS AI &middot; Powered by GPT-4o / o3-mini</p>
+        <p className="text-[13px] font-bold text-gray-400 dark:text-[var(--text-muted)]">&copy; {new Date().getFullYear()} IELTS AI &middot; Powered by GPT-4o / o3-mini</p>
       </footer>
     </main>
   );
@@ -230,10 +231,10 @@ function CollapsibleSummary({
   trailingLabel?: string;
 }) {
   return (
-    <summary className="flex items-center justify-between cursor-pointer px-6 py-4 select-none list-none [&::-webkit-details-marker]:hidden hover:bg-gray-50 transition-colors">
+    <summary className="flex items-center justify-between cursor-pointer px-6 py-4 select-none list-none [&::-webkit-details-marker]:hidden hover:bg-gray-50 dark:hover:bg-[var(--surface-raised)] transition-colors">
       <div className="flex items-center gap-2">
-        <span className="text-[15px] font-bold text-gray-800">{label}</span>
-        <span className="text-[13px] text-gray-400 transition-transform group-open:rotate-90">&#9654;</span>
+        <span className="text-[15px] font-bold text-gray-800 dark:text-[var(--text)]">{label}</span>
+        <span className="text-[13px] text-gray-400 dark:text-[var(--text-muted)] transition-transform group-open:rotate-90">&#9654;</span>
       </div>
       {trailingHref && (
         <Link href={trailingHref} className="rounded-xl bg-[#58CC02]/10 px-3 py-1.5 text-[12px] font-bold text-[#58CC02] hover:bg-[#58CC02]/20 transition-all">
@@ -259,23 +260,23 @@ function ActionCard(props: {
   const bandStr = props.latestBand != null ? `最新: ${props.latestBand.toFixed(1).replace(/\.0$/, "")} /9` : "尚無紀錄";
 
   return (
-    <div className={`rounded-2xl border-2 ${borderColor} bg-white p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] transition-all hover:shadow-[6px_6px_0_0_rgba(0,0,0,0.12)]`}>
+    <div className={`rounded-2xl border-2 ${borderColor} bg-white dark:bg-[var(--surface)] p-6 shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_0_rgba(0,0,0,0.3)] transition-all hover:shadow-[6px_6px_0_0_rgba(0,0,0,0.12)] dark:hover:shadow-[6px_6px_0_0_rgba(0,0,0,0.4)] theme-transition`}>
       <div className={`inline-block rounded-xl ${accentBg} px-3 py-1 mb-3`}>
-        <h3 className="text-[17px] font-bold tracking-tight text-gray-800">{props.title}</h3>
+        <h3 className="text-[17px] font-bold tracking-tight text-gray-800 dark:text-[var(--text)]">{props.title}</h3>
       </div>
-      <p className="text-[13px] leading-relaxed text-gray-500 font-medium">{props.desc}</p>
+      <p className="text-[13px] leading-relaxed text-gray-500 dark:text-[var(--text-secondary)] font-medium">{props.desc}</p>
       {props.trend && props.trend.length >= 2 && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2">
-          <span className="text-[12px] font-bold text-gray-400">趨勢</span>
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-gray-50 dark:bg-[rgba(30,41,59,0.6)] px-3 py-2">
+          <span className="text-[12px] font-bold text-gray-400 dark:text-[var(--text-muted)]">趨勢</span>
           <SparkLine values={props.trend} width={100} height={28} color={color} />
-          <span className="text-[12px] font-bold text-gray-600">{props.trend[props.trend.length - 1].toFixed(1).replace(/\.0$/, "")} /9</span>
+          <span className="text-[12px] font-bold text-gray-600 dark:text-[var(--text-secondary)]">{props.trend[props.trend.length - 1].toFixed(1).replace(/\.0$/, "")} /9</span>
         </div>
       )}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Link href={props.historyHref} className="rounded-xl border-2 border-gray-200 bg-gray-50 px-3 py-1.5 text-[12px] font-bold text-gray-500 hover:border-[#58CC02] hover:text-[#58CC02] transition-all">{bandStr}</Link>
+        <Link href={props.historyHref} className="rounded-xl border-2 border-gray-200 dark:border-[var(--border)] bg-gray-50 dark:bg-[rgba(30,41,59,0.6)] px-3 py-1.5 text-[12px] font-bold text-gray-500 dark:text-[var(--text-muted)] hover:border-[#58CC02] hover:text-[#58CC02] transition-all">{bandStr}</Link>
         <div className="ml-auto flex items-center gap-2">
           {props.actions.map((a) => (
-            <Link key={a.href + a.label} href={a.href} className={["rounded-xl border-2 px-4 py-2.5 text-[13px] font-bold transition-all min-h-[44px] flex items-center active:scale-[0.97]", a.primary ? primaryBtn : "border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 shadow-[2px_2px_0_0_rgba(0,0,0,0.07)]"].join(" ")}>{a.label}</Link>
+            <Link key={a.href + a.label} href={a.href} className={["rounded-xl border-2 px-4 py-2.5 text-[13px] font-bold transition-all min-h-[44px] flex items-center active:scale-[0.97]", a.primary ? primaryBtn : "border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] dark:text-[var(--text)] hover:bg-gray-50 dark:hover:bg-[var(--surface-raised)] hover:border-gray-300 shadow-[2px_2px_0_0_rgba(0,0,0,0.07)] dark:shadow-[2px_2px_0_0_rgba(0,0,0,0.2)]"].join(" ")}>{a.label}</Link>
           ))}
         </div>
       </div>
@@ -294,16 +295,16 @@ function RecentCard({ rec }: { rec: HistoryRecord }) {
     : "bg-[#FFD900]/20 text-[#B8960F] border-[#FFD900]/40";
 
   return (
-    <div className="rounded-2xl border-2 border-gray-200 bg-white px-4 py-3 flex items-center gap-3 shadow-[3px_3px_0_0_rgba(0,0,0,0.07)] hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] transition-all">
+    <div className="rounded-2xl border-2 border-gray-200 dark:border-[var(--border)] bg-white dark:bg-[var(--surface)] px-4 py-3 flex items-center gap-3 shadow-[3px_3px_0_0_rgba(0,0,0,0.07)] dark:shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.1)] dark:hover:shadow-[4px_4px_0_0_rgba(0,0,0,0.4)] transition-all theme-transition">
       <div className={`shrink-0 rounded-xl px-2.5 py-1.5 text-[11px] font-bold border-2 ${badge}`}>{isW ? "寫" : "說"}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <span className="text-[13px] font-bold text-gray-800">
+          <span className="text-[13px] font-bold text-gray-800 dark:text-[var(--text)]">
             {overall != null ? `${overall.toFixed(1).replace(/\.0$/, "")} 分` : "\u2014"}
           </span>
-          <span className="text-[12px] font-bold text-gray-400">{fmtDate(rec)}</span>
+          <span className="text-[12px] font-bold text-gray-400 dark:text-[var(--text-muted)]">{fmtDate(rec)}</span>
         </div>
-        <div className="mt-2 h-3 w-full rounded-full bg-gray-100 overflow-hidden">
+        <div className="mt-2 h-3 w-full rounded-full bg-gray-100 dark:bg-[rgba(30,41,59,0.6)] overflow-hidden">
           <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
         </div>
       </div>
@@ -317,19 +318,19 @@ function WeeklySummaryCard({ summary }: { summary: ExamTypeSummary }) {
   const colors: Record<string, string> = { improving: "text-[#58CC02]", stable: "text-gray-500", declining: "text-[#FF4B4B]", first_session: "text-[#1CB0F6]", insufficient_data: "text-gray-400" };
 
   return (
-    <div className={`rounded-2xl border-2 p-5 shadow-[3px_3px_0_0_rgba(0,0,0,0.07)] transition-all ${isW ? "border-[#1CB0F6]/30 hover:border-[#1CB0F6]/60 bg-white" : "border-[#FFD900]/40 hover:border-[#FFD900]/70 bg-white"}`}>
+    <div className={`rounded-2xl border-2 p-5 shadow-[3px_3px_0_0_rgba(0,0,0,0.07)] dark:shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] transition-all theme-transition ${isW ? "border-[#1CB0F6]/30 hover:border-[#1CB0F6]/60 bg-white dark:bg-[var(--surface)]" : "border-[#FFD900]/40 hover:border-[#FFD900]/70 bg-white dark:bg-[var(--surface)]"}`}>
       <span className={`text-[14px] font-bold mb-2 block ${isW ? "text-[#1CB0F6]" : "text-[#B8960F]"}`}>
         {isW ? "✍️ 寫作" : "🎙️ 口說"}
       </span>
       <div className="flex items-baseline gap-2">
         {summary.latestBand != null
-          ? <><span className="text-3xl font-bold text-gray-800">{summary.latestBand.toFixed(1).replace(/\.0$/, "")}</span><span className="text-[12px] font-bold text-gray-400">/9</span></>
-          : <span className="text-[14px] font-bold text-gray-400">尚無紀錄</span>}
+          ? <><span className="text-3xl font-bold text-gray-800 dark:text-[var(--text)]">{summary.latestBand.toFixed(1).replace(/\.0$/, "")}</span><span className="text-[12px] font-bold text-gray-400 dark:text-[var(--text-muted)]">/9</span></>
+          : <span className="text-[14px] font-bold text-gray-400 dark:text-[var(--text-muted)]">尚無紀錄</span>}
         {summary.trend !== "insufficient_data" && <span className={`text-[16px] font-bold ${colors[summary.trend]}`}>{icons[summary.trend]}</span>}
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] font-bold text-gray-400">
-        <span className="rounded-xl bg-gray-100 px-2 py-1">本週: {summary.sessionCount} 次</span>
-        {summary.avgBand != null && <span className="rounded-xl bg-gray-100 px-2 py-1">平均: {summary.avgBand}</span>}
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] font-bold text-gray-400 dark:text-[var(--text-muted)]">
+        <span className="rounded-xl bg-gray-100 dark:bg-[rgba(30,41,59,0.6)] px-2 py-1">本週: {summary.sessionCount} 次</span>
+        {summary.avgBand != null && <span className="rounded-xl bg-gray-100 dark:bg-[rgba(30,41,59,0.6)] px-2 py-1">平均: {summary.avgBand}</span>}
         {summary.bandDelta != null && summary.bandDelta !== 0 && (
           <span className={`rounded-xl px-2 py-1 ${summary.bandDelta > 0 ? "bg-[#58CC02]/10 text-[#58CC02]" : "bg-[#FF4B4B]/10 text-[#FF4B4B]"}`}>{summary.bandDelta > 0 ? "+" : ""}{summary.bandDelta}</span>
         )}

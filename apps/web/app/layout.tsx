@@ -8,8 +8,42 @@ import { ToastProvider } from "../components/Toast";
 import { SessionProvider } from "@/features/auth/components/SessionProvider";
 
 export const metadata: Metadata = {
-  title: "IELTS AI",
-  description: "IELTS Writing & Speaking",
+  title: {
+    default: "IELTS AI - AI 驅動的雅思備考平台",
+    template: "%s | IELTS AI",
+  },
+  description:
+    "IELTS AI 是一個 AI 驅動的雅思備考平台，提供即時寫作批改、口說練習、模擬考試、社群題庫與遊戲化學習。免費開始，快速提升你的 IELTS 成績。",
+  keywords: [
+    "IELTS",
+    "雅思",
+    "雅思備考",
+    "AI 寫作批改",
+    "IELTS Writing",
+    "IELTS Speaking",
+    "雅思口說練習",
+    "雅思模擬考",
+    "IELTS 線上練習",
+  ],
+  authors: [{ name: "IELTS AI" }],
+  openGraph: {
+    title: "IELTS AI - AI 驅動的雅思備考平台",
+    description:
+      "AI 即時評分、口說練習、寫作批改、模擬考試。免費開始，快速提升你的雅思成績。",
+    type: "website",
+    locale: "zh_TW",
+    siteName: "IELTS AI",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "IELTS AI - AI 驅動的雅思備考平台",
+    description:
+      "AI 即時評分、口說練習、寫作批改、模擬考試。免費開始，快速提升你的雅思成績。",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 const inter = Inter({
@@ -45,7 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="font-brand antialiased">
+      <body className="font-brand antialiased theme-transition">
         <SessionProvider>
           <ToastProvider>{children}</ToastProvider>
         </SessionProvider>

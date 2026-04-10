@@ -1,0 +1,188 @@
+[
+  {
+    "id": "reading-seed-001",
+    "title": "The Remarkable Navigation of Arctic Terns",
+    "passages": [
+      {
+        "number": 1,
+        "heading": "The Remarkable Navigation of Arctic Terns",
+        "paragraphs": [
+          {
+            "label": "A",
+            "text": "The Arctic tern (Sterna paradisaea) undertakes the longest known migration of any animal on the planet. Each year, this small seabird travels from its breeding grounds in the Arctic to its wintering areas in the Antarctic and back again, covering a distance of approximately 70,000 kilometres. Over its lifespan of around 30 years, an Arctic tern may fly more than two million kilometres -- roughly equivalent to three return trips to the Moon."
+          },
+          {
+            "label": "B",
+            "text": "For decades, scientists believed that Arctic terns followed a relatively straightforward north-south route along the coastlines of Europe and Africa. However, research published in 2010 by a team from the Greenland Institute of Natural Resources fundamentally changed this understanding. By attaching miniature geolocators weighing just 1.4 grams to the legs of breeding terns, researchers were able to track the birds' actual flight paths for the first time. The results were astonishing: rather than following the expected coastal route, the terns made a massive detour into the central Atlantic Ocean, following an S-shaped path that took advantage of prevailing wind systems."
+          },
+          {
+            "label": "C",
+            "text": "The question of how Arctic terns navigate with such precision over vast, featureless oceans has puzzled ornithologists for over a century. Several mechanisms have been proposed. One leading hypothesis suggests that the birds possess a form of magnetic sense, allowing them to detect the Earth's magnetic field and use it as a compass. Laboratory experiments have demonstrated that many bird species contain magnetite crystals in their beaks, which could function as a biological compass. However, the magnetic sense alone cannot explain the terns' ability to reach specific destinations, as a compass only provides directional information, not positional data."
+          },
+          {
+            "label": "D",
+            "text": "A complementary theory proposes that Arctic terns use celestial navigation, orienting themselves by the position of the sun during the day and the stars at night. This hypothesis is supported by the observation that terns become disoriented under overcast skies, though they typically recover their bearings once the sky clears. Professor Henrik Mouritsen of the University of Oldenburg has suggested that the birds may integrate magnetic and celestial cues to create a comprehensive navigational map, much like early human sailors who combined compass readings with star charts."
+          },
+          {
+            "label": "E",
+            "text": "Recent studies have added another dimension to our understanding. Research conducted at the University of Oxford revealed that Arctic terns are highly sensitive to olfactory cues -- in other words, they can smell their way across the ocean. The oceans are not uniform in their chemical composition; different regions have distinct scent signatures created by varying concentrations of dimethyl sulphide (DMS), a compound produced by marine phytoplankton. Experiments showed that terns with temporarily blocked nasal passages had significantly more difficulty locating their nesting colonies than unimpaired birds."
+          },
+          {
+            "label": "F",
+            "text": "The energy demands of such an extraordinary migration are immense. Arctic terns must consume large quantities of fish and crustaceans to fuel their journey. They employ a distinctive feeding technique known as plunge-diving, in which they hover above the water surface before diving headfirst to catch prey. Interestingly, the S-shaped Atlantic route that initially puzzled researchers actually passes through some of the most productive fishing grounds in the world, including the nutrient-rich waters where the Labrador Current meets the Gulf Stream. This suggests that the apparent detour is in fact an energy-optimisation strategy."
+          },
+          {
+            "label": "G",
+            "text": "Climate change poses a significant threat to Arctic terns and their migratory patterns. Rising ocean temperatures are shifting the distribution of the plankton that form the base of the marine food chain, which in turn affects the availability of the small fish on which terns depend. Researchers at the British Antarctic Survey have documented a decline of approximately 15% in Arctic tern breeding populations in the North Atlantic over the past two decades. Furthermore, the melting of Arctic sea ice is altering wind patterns that the birds have relied upon for millennia, potentially forcing them to expend more energy during migration or to find entirely new routes."
+          }
+        ],
+        "questions": [
+          {
+            "id": "q1",
+            "number": 1,
+            "type": "true-false-not-given",
+            "text": "Arctic terns fly approximately 70,000 kilometres during each one-way trip from the Arctic to the Antarctic.",
+            "answer": "False",
+            "explanation": "文章指出 70,000 公里是往返（round trip）的距離，不是單程。"
+          },
+          {
+            "id": "q2",
+            "number": 2,
+            "type": "true-false-not-given",
+            "text": "The geolocators used in the 2010 study were powered by solar energy.",
+            "answer": "Not Given",
+            "explanation": "文章只提到定位器重 1.4 克，並未說明其電力來源。"
+          },
+          {
+            "id": "q3",
+            "number": 3,
+            "type": "true-false-not-given",
+            "text": "Before the 2010 research, it was generally thought that Arctic terns migrated along coastal routes.",
+            "answer": "True",
+            "explanation": "文章第二段明確指出科學家過去認為北極燕鷗沿歐洲和非洲海岸線飛行。"
+          },
+          {
+            "id": "q4",
+            "number": 4,
+            "type": "true-false-not-given",
+            "text": "Magnetite crystals have been found in the beaks of Arctic terns specifically.",
+            "answer": "Not Given",
+            "explanation": "文章說 many bird species 的喙中含有磁鐵礦晶體，但未特別提及北極燕鷗。"
+          },
+          {
+            "id": "q5",
+            "number": 5,
+            "type": "true-false-not-given",
+            "text": "Arctic tern populations in the North Atlantic have decreased by about 15% in the last twenty years.",
+            "answer": "True",
+            "explanation": "文章最後一段明確提到繁殖數量在過去二十年下降約 15%。"
+          },
+          {
+            "id": "q6",
+            "number": 6,
+            "type": "matching-headings",
+            "text": "段落 B",
+            "options": [
+              "i. 磁場感應的侷限性",
+              "ii. 追蹤技術帶來的新發現",
+              "iii. 氣候變遷的威脅",
+              "iv. 整合多種導航線索",
+              "v. 嗅覺在海洋導航中的角色",
+              "vi. 遷徙路線的能量最佳化",
+              "vii. 北極燕鷗驚人的飛行距離",
+              "viii. 科學家對遷徙路線的傳統認知被顛覆"
+            ],
+            "answer": "viii",
+            "explanation": "段落 B 講述 2010 年研究如何顛覆了過去對遷徙路線的認知。"
+          },
+          {
+            "id": "q7",
+            "number": 7,
+            "type": "matching-headings",
+            "text": "段落 D",
+            "options": [
+              "i. 磁場感應的侷限性",
+              "ii. 追蹤技術帶來的新發現",
+              "iii. 氣候變遷的威脅",
+              "iv. 整合多種導航線索",
+              "v. 嗅覺在海洋導航中的角色",
+              "vi. 遷徙路線的能量最佳化",
+              "vii. 北極燕鷗驚人的飛行距離",
+              "viii. 科學家對遷徙路線的傳統認知被顛覆"
+            ],
+            "answer": "iv",
+            "explanation": "段落 D 描述 Mouritsen 教授提出整合磁場與天體導航線索的理論。"
+          },
+          {
+            "id": "q8",
+            "number": 8,
+            "type": "matching-headings",
+            "text": "段落 F",
+            "options": [
+              "i. 磁場感應的侷限性",
+              "ii. 追蹤技術帶來的新發現",
+              "iii. 氣候變遷的威脅",
+              "iv. 整合多種導航線索",
+              "v. 嗅覺在海洋導航中的角色",
+              "vi. 遷徙路線的能量最佳化",
+              "vii. 北極燕鷗驚人的飛行距離",
+              "viii. 科學家對遷徙路線的傳統認知被顛覆"
+            ],
+            "answer": "vi",
+            "explanation": "段落 F 解釋 S 形路線實際上是能量最佳化策略。"
+          },
+          {
+            "id": "q9",
+            "number": 9,
+            "type": "matching-headings",
+            "text": "段落 G",
+            "options": [
+              "i. 磁場感應的侷限性",
+              "ii. 追蹤技術帶來的新發現",
+              "iii. 氣候變遷的威脅",
+              "iv. 整合多種導航線索",
+              "v. 嗅覺在海洋導航中的角色",
+              "vi. 遷徙路線的能量最佳化",
+              "vii. 北極燕鷗驚人的飛行距離",
+              "viii. 科學家對遷徙路線的傳統認知被顛覆"
+            ],
+            "answer": "iii",
+            "explanation": "段落 G 討論氣候變遷對北極燕鷗的威脅。"
+          },
+          {
+            "id": "q10",
+            "number": 10,
+            "type": "fill-in-blank",
+            "text": "北極燕鷗一生可飛行超過 ______ 公里。",
+            "answer": "two million",
+            "explanation": "文章第一段提到 more than two million kilometres。"
+          },
+          {
+            "id": "q11",
+            "number": 11,
+            "type": "fill-in-blank",
+            "text": "海洋中的 ______ 是由海洋浮游植物產生的化合物，為燕鷗提供嗅覺線索。",
+            "answer": "dimethyl sulphide",
+            "explanation": "文章第五段提到 dimethyl sulphide (DMS) 由海洋浮游植物產生。"
+          },
+          {
+            "id": "q12",
+            "number": 12,
+            "type": "fill-in-blank",
+            "text": "北極燕鷗使用一種叫做 ______ 的捕食技巧來捕捉獵物。",
+            "answer": "plunge-diving",
+            "explanation": "文章第六段提到 plunge-diving 技術。"
+          },
+          {
+            "id": "q13",
+            "number": 13,
+            "type": "fill-in-blank",
+            "text": "研究人員附著在燕鷗腿上的定位器僅重 ______ 克。",
+            "answer": "1.4",
+            "explanation": "文章第二段提到 miniature geolocators weighing just 1.4 grams。"
+          }
+        ]
+      }
+    ]
+  }
+]
